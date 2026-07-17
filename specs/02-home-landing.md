@@ -1,6 +1,6 @@
 # SPEC 02 — Home landing de Arcade Vault
 
-> **Status:** Approved
+> **Status:** Completado
 > **Depends on:** 01-mvp-visual
 > **Date:** 2026-07-17
 > **Objective:** Añadir la landing page "Inicio" del template `home-about` como nueva ruta `/` de Arcade Vault, mudando la Biblioteca actual a `/games` y actualizando el Nav y los enlaces internos en consecuencia.
@@ -39,7 +39,7 @@ Este spec no introduce estructuras de datos nuevas: la sección "Juegos disponib
 3. Actualizar los 3 enlaces "VOLVER AL VAULT" / "VOLVER A LA BIBLIOTECA" (`app/games/[id]/page.tsx`, `components/game-player.tsx`, `app/hall-of-fame/page.tsx`) de `href="/"` a `href="/games"`. Test manual: desde el detalle de un juego, el reproductor y el salón de la fama, el botón de volver lleva a `/games`.
 4. Reescribir `components/nav.tsx`: agregar el link "Inicio" → `/`, cambiar el link "Biblioteca" para que apunte a `/games`, cambiar el logo para que apunte a `/`, y actualizar la lógica `isHome`/`isBiblioteca` según el pathname. Test manual: desde cualquier ruta, los links del Nav (escritorio y menú móvil) resaltan la página activa correctamente y navegan a las rutas correctas.
 5. Crear `app/page.tsx` (Home, client component por el `IntersectionObserver` del reveal-on-scroll) — puerto de `home.jsx`: hero con siluetas flotantes y CTAs, sección "¿Por qué Arcade Vault?", preview de juegos (mini-rail con los primeros 6 de `GAMES`, cada mini-card navega a `/games/[id]`), sección de stats, "Actividad en vivo" (datos estáticos), sección de precios con FAQ, CTA final. Test manual: `/` muestra el nuevo landing completo sin errores de consola; las animaciones reveal-on-scroll se activan al hacer scroll; los CTAs navegan a `/games` y `/login` correctamente; las mini-cards navegan al detalle correcto.
-6. Repaso final de fidelidad visual y responsive: recorrer `/` (Home) y `/games` (Biblioteca) en escritorio y en un viewport móvil, comparar contra el template de referencia y ajustar cualquier detalle de CSS que falte (siluetas, feature cards, mini-rail, stats, activity-grid, pricing-grid).
+6. Repaso final de fidelidad visual y responsive: recorrer `/` (Home) y `/games` (Biblioteca) en escritorio y en un viewport móvil, comparar contra el template de referencia y ajustar cualquier detalle de CSS que falte (siluetas, feature cards, mini-rail, stats, activity-grid, pricing-grid). Usa playwright para esto.
 
 ## Acceptance criteria
 
