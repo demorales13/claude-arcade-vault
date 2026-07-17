@@ -4,17 +4,6 @@
 
 Arcade Vault ("Es una plataforma para jugar online y competir por la mayor cantidad de puntos") is a Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 project. It is currently the unmodified `create-next-app` scaffold — `app/page.tsx` and `app/layout.tsx` still hold the default template content, and no `specs/` directory exists yet.
 
-## Commands
-
-```
-npm run dev      # start dev server (Turbopack, next dev)
-npm run build    # production build
-npm run start    # run the production build
-npm run lint     # eslint (flat config via eslint.config.mjs)
-```
-
-There is no test runner configured yet.
-
 ## Next.js version warning
 
 `package.json` pins `next@16.2.10`, which is **not** the Next.js you know from training data — APIs, conventions, and file structure may differ. Before writing or changing any Next.js-specific code (routing, data fetching, config, metadata, images, fonts, etc.), read the relevant page under `node_modules/next/dist/docs/` (organized as `01-app/`, `02-pages/`, `03-architecture/`, `04-community/`) rather than relying on prior knowledge. Pay attention to deprecation notices there.
@@ -32,6 +21,11 @@ Implications for any work in this repo:
 - Never implement a spec whose status isn't `Approved` (or a same-meaning word in another language) — that gate is intentional and enforced by the human, not by the agent.
 - Spec status values: `Draft` → `In review` → `Approved` → `Implemented` → `Obsolete` (or the equivalent terms in whatever language the repo's specs use — stay consistent with what's already there).
 - Numbering is sequential (`01-`, `02-`, ...); check `specs/` for the next free number and existing naming conventions before creating a new spec.
+
+## Skills
+
+Always use /frontend-design for designing frontend user interfaces
+
 
 ## Architecture notes
 
