@@ -30,6 +30,7 @@ export function Nav() {
   const isHome = pathname === "/";
   const isBiblioteca = pathname.startsWith("/games");
   const isSalon = pathname === "/hall-of-fame";
+  const isAbout = pathname === "/about";
   const isAuth = pathname === "/login";
 
   const handleSignOut = () => {
@@ -57,6 +58,9 @@ export function Nav() {
           </Link>
           <Link href="/hall-of-fame" className={isSalon ? "active" : ""}>
             Salón de la Fama
+          </Link>
+          <Link href="/about" className={isAbout ? "active" : ""}>
+            Acerca de
           </Link>
         </div>
         <div className="spacer"></div>
@@ -102,6 +106,9 @@ export function Nav() {
           onClick={() => setOpen(false)}
         >
           Salón de la Fama
+        </Link>
+        <Link href="/about" className={isAbout ? "active" : ""} onClick={() => setOpen(false)}>
+          Acerca de
         </Link>
         {user ? (
           <a onClick={handleSignOut}>Cerrar Sesión</a>
