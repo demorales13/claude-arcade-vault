@@ -2,7 +2,9 @@
 
 ## Project
 
-Arcade Vault ("Es una plataforma para jugar online y competir por la mayor cantidad de puntos") is a Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 project. It is currently the unmodified `create-next-app` scaffold — `app/page.tsx` and `app/layout.tsx` still hold the default template content, and no `specs/` directory exists yet.
+Arcade Vault ("Es una plataforma para jugar online y competir por la mayor cantidad de puntos") is a Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 project. It is a visual/mock port of the `references/templates/home-about` reference template — see `specs/` for what has been implemented so far and in what order.
+
+Current routes: `/` (Home landing), `/games` (Biblioteca), `/games/[id]` (Detalle), `/games/[id]/play` (Reproductor), `/login` (Auth), `/hall-of-fame` (Salón de la Fama), `/about` (Acerca de + formulario de contacto). Session and scores are mocked via `localStorage` (`av_user`, `av_scores`); the contact form's email send is mocked via a Server Action (`app/actions/contact.ts`) — see `.env.example` for the Resend-shaped env vars it is written against, none of which are read yet.
 
 ## Next.js version warning
 
@@ -33,3 +35,4 @@ Always use /frontend-design for designing frontend user interfaces
 - Styling is Tailwind CSS v4 via `@tailwindcss/postcss` (see `postcss.config.mjs`), plus `app/globals.css`.
 - Path alias `@/*` maps to the repo root (`tsconfig.json`).
 - `eslint.config.mjs` uses the flat config format (`eslint/config` + `eslint-config-next/core-web-vitals` and `eslint-config-next/typescript`), not the legacy `.eslintrc`.
+- Reference templates the specs port from live in `references/templates/` (plain React-via-CDN `.jsx`/`.css`, not part of the Next.js build) — consult them for markup/CSS fidelity, but never import them directly.
