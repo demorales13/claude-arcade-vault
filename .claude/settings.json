@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "statusMessage": "Formateando y lint del archivo...",
+            "command": "$j=[Console]::In.ReadToEnd()|ConvertFrom-Json;$f=$j.tool_input.file_path;if($f -and (Test-Path $f)){if($f -match '\\.(m?[jt]sx?|cjs)$'){npx --no-install eslint --fix -- \"$f\" 2>$null};npx --no-install prettier --write --ignore-unknown -- \"$f\" 2>$null};exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}
