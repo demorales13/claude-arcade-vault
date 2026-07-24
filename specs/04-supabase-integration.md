@@ -1,6 +1,6 @@
 # SPEC 04 — Integración de Supabase (Auth + Database)
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** 01-mvp-visual, 02-home-landing, 03-about-contact
 > **Date:** 2026-07-24
 > **Objective:** Instalar y configurar los clientes de Supabase (Auth + Database) en Arcade Vault mediante `@supabase/supabase-js` y `@supabase/ssr`, dejando lista la infraestructura base de conexión para que specs futuros implementen autenticación real y persistencia de datos, sin migrar todavía ninguna feature existente.
@@ -104,3 +104,10 @@ Convenciones:
 - Corrección de la regla `.env*` de `.gitignore`.
 
 Cada uno de estos, si se implementa, va en su propio spec.
+
+## Desviaciones al implementar
+
+Dos detalles del texto literal del spec no coincidían con la realidad del proyecto/librería, confirmados en vivo contra el proyecto Supabase real durante la implementación:
+
+- **Nombre de variable:** el proyecto real ya usa `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (el nombre vigente de Supabase para la anon key pública), no `NEXT_PUBLIC_SUPABASE_ANON_KEY` como decía el spec. `.env.example`/`.env.local` y ambos clientes (`lib/supabase/client.ts`, `lib/supabase/server.ts`) usan `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+- **Código de error de tabla inexistente:** `@supabase/supabase-js` habla con Postgres a través de PostgREST, que envuelve el error de tabla inexistente en su propio código `PGRST205` ("Could not find the table ... in the schema cache"), no en el código crudo de Postgres `42P01` que asumía el spec — ese código nunca llega a través del cliente JS. `app/debug/supabase/page.tsx` (ya eliminado) verificó "Database: conectado" comprobando `error.code === "PGRST205"`.
