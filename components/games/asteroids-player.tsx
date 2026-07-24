@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { Game } from "@/app/data/games";
+import type { GameWithStats } from "@/lib/data/games";
+import { insertScore } from "@/lib/data/scores";
 import { GameOverModal } from "@/components/game-over-modal";
 import {
   createAsteroidsGame,
@@ -19,15 +20,7 @@ function readUserName(): string {
   }
 }
 
-function saveScore(entry: { game: string; score: number; name: string }) {
-  try {
-    const all = JSON.parse(localStorage.getItem("av_scores") || "[]");
-    all.push({ ...entry, at: Date.now() });
-    localStorage.setItem("av_scores", JSON.stringify(all));
-  } catch {}
-}
-
-export function AsteroidsPlayer({ game }: { game: Game }) {
+export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<AsteroidsGame | null>(null);
 
@@ -229,9 +222,13 @@ export function AsteroidsPlayer({ game }: { game: Game }) {
           name={name}
           onNameChange={setName}
           saved={saved}
-          onSave={() => {
-            saveScore({ game: game.id, score, name });
-            setSaved(true);
+          onSave={async () => {
+            try {
+              await insertScore({ game: game.id, score, name });
+              setSaved(true);
+            } catch (err) {
+              console.error("No se pudo guardar la puntuación", err);
+            }
           }}
           onRestart={restart}
           backHref="/games"
