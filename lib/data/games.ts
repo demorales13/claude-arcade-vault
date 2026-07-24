@@ -1,17 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import type { GameCategory, ScoreRow } from "@/app/data/games";
+import type { GameWithStats, ScoreRow } from "@/app/data/games";
 
-export type GameWithStats = {
-  id: string;
-  title: string;
-  short: string;
-  long: string;
-  cat: GameCategory;
-  cover: string;
-  color: "cyan" | "magenta" | "yellow" | "green";
-  best: number;
-  plays: number;
-};
+export type { GameWithStats } from "@/app/data/games";
 
 type ScoreRowRaw = {
   player_name: string;

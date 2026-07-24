@@ -1,6 +1,6 @@
 # SPEC 06 — Leaderboard y catálogo de juegos en Supabase
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** 04-supabase-integration, 05-asteroids-game
 > **Date:** 2026-07-24
 > **Objective:** Migrar el catálogo de juegos y las puntuaciones de datos mock (`GAMES` estático, `seededScores()`, `av_scores` en `localStorage`) a tablas reales de Supabase (`games` y `scores`), conectando `/games`, `/games/[id]`, `/hall-of-fame`, la vista previa de la home y el guardado de puntuación en `GameOverModal` a esos datos reales.
@@ -12,7 +12,7 @@
 - SQL de migración completo (`CREATE TABLE games`, `CREATE TABLE scores`, políticas RLS, seed inicial) documentado en el spec para que lo ejecutes manualmente en el SQL Editor de Supabase — mismo patrón que el paso manual de `.env.local` del spec 04.
 - Vista o query agregada para calcular `best` (máximo score) y `plays` (nº de partidas) **en vivo** desde `scores`, por juego (ej. vista SQL `games_with_stats` con `LEFT JOIN`/`GROUP BY`).
 - `app/data/games.ts`: se elimina el array `GAMES`, `seededScores()` y `PLAYERS` (ya no hacen falta). Se conservan los tipos (`Game`, `GameCategory`, `ScoreRow` o equivalente) y `CATS`.
-- Nuevo módulo de acceso a datos (ej. `lib/data/games.ts`) con funciones tipadas: `getGames()`, `getGame(id)`, `getTopScores(gameId, limit)`, `getRecentScores(limit)`, `getTopPlayers(limit)`, `insertScore({ game, score, name })` — usando `lib/supabase/server.ts` para lecturas en Server Components y `lib/supabase/client.ts` para el insert desde el cliente.
+- Nuevo módulo de acceso a datos (ej. `lib/data/games.ts`) con funciones tipadas: `getGames()`, `getGame(id)`, `getTopScores(gameId, limit)`, `getRecentScores(limit)`, `getTopPlayers(limit)`, `insertScore({ game, score, name })` — usando `lib/supabase/server.ts` para lecturas en Server Components y `lib/supabase/client.ts` para el insert desde el cliente. (Ver Decisions: `insertScore` termina en un archivo separado, `lib/data/scores.ts`, por una restricción técnica de Next.js.)
 - `app/games/page.tsx`: pasa a ser Server Component (`getGames()`), delegando el filtro por texto/categoría (estado de cliente) a un nuevo Client Component que conserva el comportamiento actual.
 - `app/games/[id]/page.tsx`: reemplaza `GAMES.find`/`seededScores` por `getGame(id)` + `getTopScores(id, 10)` reales.
 - `app/hall-of-fame/page.tsx`: Server Component (`getGames()`) + Client Component para tabs/podio/tabla que pide `getTopScores(tab, 12)` real al cambiar de pestaña.
@@ -137,6 +137,12 @@ export async function getRecentScores(
 export async function getTopPlayers(
   limit: number,
 ): Promise<{ rank: number; player: string; score: number }[]>;
+```
+
+```ts
+// lib/data/scores.ts — separado de games.ts por restricción de Next.js
+// (ver Decisions): mezclar next/headers (server) con código importable
+// desde un Client Component rompe el build.
 export async function insertScore(entry: {
   game: string;
   score: number;
@@ -146,7 +152,7 @@ export async function insertScore(entry: {
 
 Convenciones:
 
-- `getGames`/`getGame`/`getTopScores`/`getRecentScores`/`getTopPlayers` usan `lib/supabase/server.ts` y se llaman desde Server Components. `insertScore` usa `lib/supabase/client.ts` porque se dispara desde un Client Component (`GameOverModal`) al hacer clic en "GUARDAR PUNTUACIÓN".
+- `getGames`/`getGame`/`getTopScores`/`getRecentScores`/`getTopPlayers` (en `lib/data/games.ts`) usan `lib/supabase/server.ts` y se llaman desde Server Components. `insertScore` (en `lib/data/scores.ts`) usa `lib/supabase/client.ts` porque se dispara desde un Client Component (`GameOverModal`, vía `game-player.tsx`/`asteroids-player.tsx`) al hacer clic en "GUARDAR PUNTUACIÓN".
 - `getTopScores`/`getTopPlayers` calculan `rank` en el propio módulo (posición en el array ya ordenado por `score desc`), igual que hacía `seededScores()`.
 - `plays` ya no se formatea con sufijo "K" (ej. "12.4K") — se muestra el conteo real (`toLocaleString("es-ES")`), consecuencia esperada de que ahora es un dato real y no decorativo.
 
@@ -158,24 +164,24 @@ Convenciones:
 4. Actualizar `app/games/[id]/page.tsx`: reemplazar `GAMES.find`/`seededScores` por `getGame(id)` + `getTopScores(id, 10)`. Test: `/games/asteroids` (y otro id cualquiera) muestra cover/tags/descripción/stat-strip con `best`/`plays` reales y el leaderboard lateral con las 10 mejores puntuaciones reales de ese juego.
 5. Actualizar `app/hall-of-fame/page.tsx`: separar en Server Component (`getGames()` para las tabs) + Client Component que pide `getTopScores(tab, 12)` al montar y al cambiar de tab. Test: `/hall-of-fame` muestra podio + tabla reales por cada juego al cambiar de pestaña.
 6. Actualizar `app/page.tsx` (home): la sección "JUEGOS DISPONIBLES AHORA" usa `getGames()` (primeros 6); "ACTIVIDAD EN VIVO" usa `getRecentScores()` (reemplaza `LATEST_SCORES`) y `getTopPlayers()` (reemplaza `TOP_PLAYERS`). Test: la home compila como Server Component y muestra datos reales en ambas secciones, sin romper el resto de la página (hero, features, stats decorativos sin tocar).
-7. Añadir `insertScore(entry)` a `lib/data/games.ts` (vía `lib/supabase/client.ts`) y reemplazar `saveScore()` (localStorage) por esta función en `components/game-player.tsx` y `components/games/asteroids-player.tsx`; `av_user`/`readUserName()` no cambia (sigue solo prellenando el nombre). Test manual: jugar cualquier juego mock y "ASTEROIDES", terminar la partida, guardar puntuación, y verificar en Supabase (o refrescando `/hall-of-fame`) que la fila nueva aparece con el `score`/`name`/`game_id` correctos.
+7. Añadir `insertScore(entry)` (vía `lib/supabase/client.ts`; terminó en `lib/data/scores.ts`, ver Decisions) y reemplazar `saveScore()` (localStorage) por esta función en `components/game-player.tsx` y `components/games/asteroids-player.tsx`; también se actualiza `app/games/[id]/play/page.tsx` (usaba `GAMES.find` síncrono, ahora `getGame(id)` async) porque alimenta a ambos players con datos reales. `av_user`/`readUserName()` no cambia (sigue solo prellenando el nombre). Test manual: jugar "ASTEROIDES" (único juego en el catálogo real por ahora), terminar la partida, guardar puntuación, y verificar en Supabase (o refrescando `/hall-of-fame`) que la fila nueva aparece con el `score`/`name`/`game_id` correctos. (`GamePlayer`, el player mock genérico, queda sin juegos que lo usen hasta que se agregue otro juego al catálogo real, pero su código también se actualiza para no romper el build.)
 8. Limpieza: eliminar `GAMES`, `seededScores()` y `PLAYERS` de `app/data/games.ts`, dejando solo `Game`, `GameWithStats`, `ScoreRow`, `GameCategory`, `CATS`. Test: `npm run build` termina sin errores y sin imports rotos en todo el repo.
 9. Repaso final con Playwright: recorrer `/`, `/games`, `/games/[id]`, `/hall-of-fame` y el flujo completo de guardar puntuación, comparando contra el comportamiento visual anterior (mismo look & feel, solo cambia la fuente de datos). Test: no hay errores de consola en ninguna ruta; el estado "sin puntuaciones todavía" en `/games/[id]` y `/hall-of-fame` se ve intencional (no como un error o un parpadeo roto).
 
 ## Acceptance criteria
 
-- [ ] Ejecutado el SQL en Supabase: `games` tiene 1 fila (`asteroids`, el único juego implementado); `scores` arranca vacía (0 filas) — sin seed de puntuaciones.
-- [ ] `select * from games_with_stats` devuelve `best = 0`/`plays = 0` para `asteroids` mientras `scores` esté vacía, y valores reales en cuanto se inserte alguna puntuación.
-- [ ] `npm run dev` levanta sin errores de consola en `/`, `/games`, `/games/[id]` (asteroids) y `/hall-of-fame`.
-- [ ] `/games` muestra la(s) tarjeta(s) leídas de Supabase (1 por ahora), con búsqueda por texto y filtro por categoría funcionando igual que antes.
-- [ ] `/games/[id]` muestra `best`/`plays` reales en el stat-strip y las 10 mejores puntuaciones reales de ese juego en el aside "MEJORES PUNTUACIONES".
-- [ ] `/hall-of-fame` muestra, para cada juego (tab), un podio (top 3) y una tabla (top 12) con datos reales de Supabase, actualizando al cambiar de pestaña.
-- [ ] La home ("JUEGOS DISPONIBLES AHORA" y "ACTIVIDAD EN VIVO") muestra juegos y puntuaciones reales en vez de los arrays hardcodeados `GAMES.slice(0,6)`, `LATEST_SCORES`, `TOP_PLAYERS`.
-- [ ] Al terminar una partida (mock o "ASTEROIDES") y guardar la puntuación en `GameOverModal`, la fila se inserta en la tabla `scores` de Supabase (verificable en el dashboard o refrescando `/hall-of-fame`); ya no se escribe en `localStorage` `av_scores`.
-- [ ] El nombre prellenado en `GameOverModal` sigue viniendo de `av_user` (localStorage) sin cambios de comportamiento.
-- [ ] `app/data/games.ts` ya no exporta `GAMES`, `seededScores` ni `PLAYERS`.
-- [ ] `npm run build` termina sin errores.
-- [ ] Ninguna página cambia su diseño/CSS visible — el cambio es exclusivamente la fuente de datos.
+- [x] Ejecutado el SQL en Supabase: `games` tiene 1 fila (`asteroids`, el único juego implementado); `scores` arranca vacía (0 filas) — sin seed de puntuaciones.
+- [x] `select * from games_with_stats` devuelve `best = 0`/`plays = 0` para `asteroids` mientras `scores` esté vacía, y valores reales en cuanto se inserte alguna puntuación.
+- [x] `npm run dev` levanta sin errores de consola en `/`, `/games`, `/games/[id]` (asteroids) y `/hall-of-fame`.
+- [x] `/games` muestra la(s) tarjeta(s) leídas de Supabase (1 por ahora), con búsqueda por texto y filtro por categoría funcionando igual que antes.
+- [x] `/games/[id]` muestra `best`/`plays` reales en el stat-strip y las 10 mejores puntuaciones reales de ese juego en el aside "MEJORES PUNTUACIONES".
+- [x] `/hall-of-fame` muestra, para cada juego (tab), un podio (top 3) y una tabla (top 12) con datos reales de Supabase, actualizando al cambiar de pestaña.
+- [x] La home ("JUEGOS DISPONIBLES AHORA" y "ACTIVIDAD EN VIVO") muestra juegos y puntuaciones reales en vez de los arrays hardcodeados `GAMES.slice(0,6)`, `LATEST_SCORES`, `TOP_PLAYERS`.
+- [x] Al terminar una partida (mock o "ASTEROIDES") y guardar la puntuación en `GameOverModal`, la fila se inserta en la tabla `scores` de Supabase (verificable en el dashboard o refrescando `/hall-of-fame`); ya no se escribe en `localStorage` `av_scores`.
+- [x] El nombre prellenado en `GameOverModal` sigue viniendo de `av_user` (localStorage) sin cambios de comportamiento.
+- [x] `app/data/games.ts` ya no exporta `GAMES`, `seededScores` ni `PLAYERS`.
+- [x] `npm run build` termina sin errores.
+- [x] Ninguna página cambia su diseño/CSS visible — el cambio es exclusivamente la fuente de datos (se añadieron textos mínimos de estado vacío en `/hall-of-fame` y la home, necesarios porque el leaderboard real puede arrancar sin puntuaciones; ver Decisions/Risks).
 
 ## Decisions
 
@@ -195,6 +201,7 @@ Convenciones:
 - **No:** Supabase Realtime/subscripciones para que el leaderboard se actualice solo. Los datos se cargan al entrar/cambiar de pestaña; no fue pedido y añade complejidad de sincronización fuera de alcance.
 - **No:** conectar los stat-blocks decorativos de la home ("12+ JUEGOS", "MILES DE PARTIDAS", "GLOBAL RANKING") a conteos reales. Son copy de marketing intencionalmente aspiracional, no datos.
 - **Yes:** `plays` se muestra como conteo real sin formatear con sufijo "K" (a diferencia del mock, que tenía cifras como "12.4K"). Consecuencia esperada de que ahora es un dato real y empezará bajo; no se intenta simular volumen falso.
+- **Yes (ajuste técnico en Paso 7):** `insertScore` vive en un archivo separado, `lib/data/scores.ts`, en vez de junto a las funciones de lectura en `lib/data/games.ts`. Motivo: `lib/data/games.ts` importa `lib/supabase/server.ts`, que depende de `next/headers` (solo válido en Server Components); si un Client Component (`game-player.tsx`/`asteroids-player.tsx`) importa una función de ese mismo archivo, Turbopack falla el build completo ("You're importing a module that depends on next/headers... Pages Router" — aunque el proyecto es 100% App Router, es como Next.js reporta el conflicto de límite Server/Client). Separar `insertScore` en su propio módulo, que solo importa `lib/supabase/client.ts`, resuelve el conflicto sin cambiar ningún comportamiento.
 
 ## Risks
 
