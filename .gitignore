@@ -7,7 +7,6 @@
 .playwright-mcp/*
 !.playwright-mcp/.gitkeep
 
-references/*
 
 
 # dependencies

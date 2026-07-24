@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Game } from "@/app/data/games";
 import { GameOverModal } from "@/components/game-over-modal";
+import {
+  createAsteroidsGame,
+  type AsteroidsCallbacks,
+  type AsteroidsGame,
+} from "@/components/games/asteroids/engine";
 
 function readUserName(): string {
   try {
@@ -22,10 +27,14 @@ function saveScore(entry: { game: string; score: number; name: string }) {
   } catch {}
 }
 
-export function GamePlayer({ game }: { game: Game }) {
+export function AsteroidsPlayer({ game }: { game: Game }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const gameRef = useRef<AsteroidsGame | null>(null);
+
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [level, setLevel] = useState(1);
+  const [tripleShot, setTripleShot] = useState(0);
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
   const [name, setName] = useState("INVITADO");
@@ -35,28 +44,66 @@ export function GamePlayer({ game }: { game: Game }) {
     setName(readUserName());
   }, []);
 
-  useEffect(() => {
-    if (over || paused) return;
-    const t = setInterval(
-      () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
-      220,
-    );
-    return () => clearInterval(t);
-  }, [over, paused]);
+  const buildCallbacks = (): AsteroidsCallbacks => ({
+    onScoreChange: setScore,
+    onLivesChange: setLives,
+    onLevelChange: setLevel,
+    onTripleShotChange: setTripleShot,
+    onGameOver: (finalScore) => {
+      setScore(finalScore);
+      setOver(true);
+    },
+  });
 
   useEffect(() => {
-    if (score > 0 && score % 2500 < 100) setLevel((l) => l + 1);
-  }, [score]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-  const endGame = () => setOver(true);
+    const instance = createAsteroidsGame(canvas, buildCallbacks());
+    gameRef.current = instance;
+
+    return () => {
+      instance.destroy();
+      gameRef.current = null;
+    };
+  }, []);
+
+  const togglePause = () => {
+    if (paused) {
+      gameRef.current?.resume();
+      setPaused(false);
+    } else {
+      gameRef.current?.pause();
+      setPaused(true);
+    }
+  };
+
+  const endGame = () => {
+    gameRef.current?.forceGameOver();
+  };
+
   const restart = () => {
-    setScore(0);
-    setLives(3);
-    setLevel(1);
+    const canvas = canvasRef.current;
+    gameRef.current?.destroy();
+    gameRef.current = null;
     setPaused(false);
     setOver(false);
     setSaved(false);
+
+    if (canvas) {
+      gameRef.current = createAsteroidsGame(canvas, buildCallbacks());
+    }
   };
+
+  const bindKey = (code: string) => ({
+    onPointerDown: (e: React.PointerEvent) => {
+      e.preventDefault();
+      gameRef.current?.setKey(code, true);
+    },
+    onPointerUp: () => gameRef.current?.setKey(code, false),
+    onPointerLeave: () => gameRef.current?.setKey(code, false),
+    onPointerCancel: () => gameRef.current?.setKey(code, false),
+  });
 
   return (
     <div className="av-player fade-in">
@@ -74,15 +121,23 @@ export function GamePlayer({ game }: { game: Game }) {
           </div>
           <div className="hud-stat lives">
             <div className="l">Vidas</div>
-            <div className="v">{"♥ ".repeat(lives).trim() || "—"}</div>
+            <div className="v">
+              {"♥ ".repeat(Math.max(lives, 0)).trim() || "—"}
+            </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
+          {tripleShot > 0 && (
+            <div className="hud-stat">
+              <div className="l">Disparo Triple</div>
+              <div className="v">{tripleShot.toFixed(1)}s</div>
+            </div>
+          )}
         </div>
         <div className="hud-actions">
-          <button className="btn yellow" onClick={() => setPaused((p) => !p)}>
+          <button className="btn yellow" onClick={togglePause}>
             {paused ? "REANUDAR" : "PAUSA"}
           </button>
           <button className="btn magenta" onClick={endGame}>
@@ -96,13 +151,12 @@ export function GamePlayer({ game }: { game: Game }) {
 
       <div className="crt">
         <div className="crt-screen">
-          <div className="game-arena">
-            <div className="grid-floor"></div>
-            <div className="enemy e1"></div>
-            <div className="enemy e2"></div>
-            <div className="enemy e3"></div>
-            <div className="player-ship"></div>
-          </div>
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            className="asteroids-canvas"
+          />
           {paused && (
             <div
               className="crt-content"
@@ -131,6 +185,41 @@ export function GamePlayer({ game }: { game: Game }) {
           <span className="led">SEÑAL OK</span>
           <span>{game.title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
+        </div>
+      </div>
+
+      <div className="asteroids-touch-controls">
+        <div className="td-pad">
+          <button
+            className="td-btn"
+            aria-label="Rotar izquierda"
+            {...bindKey("ArrowLeft")}
+          >
+            ◀
+          </button>
+          <button
+            className="td-btn"
+            aria-label="Rotar derecha"
+            {...bindKey("ArrowRight")}
+          >
+            ▶
+          </button>
+        </div>
+        <div className="td-actions">
+          <button
+            className="td-btn td-thrust"
+            aria-label="Propulsar"
+            {...bindKey("ArrowUp")}
+          >
+            PROPULSAR
+          </button>
+          <button
+            className="td-btn td-fire"
+            aria-label="Disparar"
+            {...bindKey("Space")}
+          >
+            DISPARAR
+          </button>
         </div>
       </div>
 
