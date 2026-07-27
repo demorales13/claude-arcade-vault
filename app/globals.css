@@ -832,6 +832,35 @@ a {
   text-shadow: 0 0 8px var(--cyan);
 }
 
+.cover-tetris {
+  background: radial-gradient(circle at 50% 15%, #3a0026, #0a0018);
+}
+.cover-tetris::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 40%;
+  background:
+    linear-gradient(var(--magenta), var(--magenta)) 8% 0/16% 50%,
+    linear-gradient(#f5ff00, #f5ff00) 24% 50%/16% 50%,
+    linear-gradient(#00ff88, #00ff88) 40% 0/16% 50%,
+    linear-gradient(#00aaff, #00aaff) 56% 50%/16% 50%,
+    linear-gradient(var(--magenta), var(--magenta)) 72% 0/16% 50%,
+    linear-gradient(#ff9500, #ff9500) 88% 50%/16% 50%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 -2px 6px rgba(255, 0, 110, 0.35));
+}
+.cover-tetris::before {
+  content: "";
+  position: absolute;
+  left: 44%;
+  top: 8%;
+  width: 10%;
+  height: 46%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+}
+
 .cover-rana {
   background: linear-gradient(180deg, #001f2a, #0a0a18);
 }
@@ -1048,6 +1077,26 @@ a {
 .hud-actions {
   display: flex;
   gap: 10px;
+  align-items: center;
+}
+
+.hud-select {
+  height: 100%;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  background: var(--bg-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.hud-select:hover {
+  border-color: var(--cyan);
+}
+.hud-select:focus-visible {
+  outline: 1px solid var(--cyan);
+  outline-offset: 2px;
 }
 
 .crt {
@@ -1149,6 +1198,25 @@ a {
   display: block;
 }
 
+.tetris-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.tetris-canvas.flash {
+  animation: tetris-flash 0.2s ease-out;
+}
+@keyframes tetris-flash {
+  0% {
+    filter: brightness(2.2);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
 .asteroids-touch-controls {
   display: none;
   flex-direction: column;
@@ -1192,6 +1260,53 @@ a {
 
 @media (max-width: 840px) {
   .asteroids-touch-controls {
+    display: flex;
+  }
+}
+
+.tetris-touch-controls {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+.tetris-touch-controls .td-pad,
+.tetris-touch-controls .td-actions {
+  display: flex;
+  gap: 12px;
+}
+.tetris-touch-controls .td-btn {
+  flex: 1;
+  min-height: 56px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--cyan);
+  font-family: var(--pixel);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  touch-action: none;
+  user-select: none;
+}
+.tetris-touch-controls .td-btn:active {
+  background: var(--cyan);
+  color: #000;
+}
+.tetris-touch-controls .td-fire {
+  border-color: var(--magenta);
+  color: var(--magenta);
+}
+.tetris-touch-controls .td-fire:active {
+  background: var(--magenta);
+  color: #000;
+}
+
+@media (max-width: 840px) {
+  .tetris-touch-controls {
     display: flex;
   }
 }
