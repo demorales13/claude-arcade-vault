@@ -3,6 +3,7 @@ import { getGame } from "@/lib/data/games";
 import { GamePlayer } from "@/components/game-player";
 import { AsteroidsPlayer } from "@/components/games/asteroids-player";
 import { TetrisPlayer } from "@/components/games/tetris-player";
+import { ArkanoidPlayer } from "@/components/games/arkanoid-player";
 
 export default async function GamePlayerPage({
   params,
@@ -15,6 +16,7 @@ export default async function GamePlayerPage({
 
   if (game.id === "asteroids") return <AsteroidsPlayer game={game} />;
   if (game.id === "tetris") return <TetrisPlayer game={game} />;
+  if (game.id === "arkanoid") return <ArkanoidPlayer game={game} />;
 
   return <GamePlayer game={game} />;
 }
