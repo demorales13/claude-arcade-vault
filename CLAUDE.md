@@ -12,9 +12,10 @@ Current routes: `/` (Home landing), `/games` (Biblioteca), `/games/[id]` (Detall
 
 ## Spec-driven workflow
 
-This repo works by spec, not by ad hoc prompting. Two custom skills drive it, defined in `.claude/skills/`:
+This repo works by spec, not by ad hoc prompting. Three custom skills drive it, defined in `.claude/skills/`:
 
 - **`/spec`** (`.claude/skills/spec/SKILL.md`) — interactively designs a new feature spec. Asks clarifying questions in phases, builds the spec section by section against `.claude/skills/spec/template.md`, and saves the result to `specs/NN-slug.md` in `Draft` state. Never writes code.
+- **`/add-game`** (`.claude/skills/add-game/SKILL.md`) — the same thing, specialized for adding one playable game (plus its leaderboard) to the catalog, either porting existing code from a folder (e.g. `references/started-games/`) or designing it from scratch. It already knows the wiring recipe (`.claude/skills/add-game/recipe.md`: the manual `insert into games` SQL, `.cover-<id>`, `components/games/<id>/engine.ts`, `components/games/<id>-player.tsx`, the branch in `app/games/[id]/play/page.tsx`), so it asks about the game instead of the plumbing. Also ends at `specs/NN-slug.md` in `Draft`, never writes code. Use it for a new game; use `/spec` for anything else.
 - **`/spec-impl`** (`.claude/skills/spec-impl/SKILL.md`) — implements a spec, but **only if its status line reads `Approved`** (or an equivalent word in another language). It creates/switches to a branch named `spec-NN-slug` (see `AutoCreateBranch` in `specs/.spec-config.yml`, default `true`), then implements the plan one step at a time, pausing for review after each step.
 
 Implications for any work in this repo:
@@ -27,7 +28,6 @@ Implications for any work in this repo:
 ## Skills
 
 Always use /frontend-design for designing frontend user interfaces
-
 
 ## Architecture notes
 
