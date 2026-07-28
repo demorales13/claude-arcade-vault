@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 type AvUser = { name: string } | null;
 
@@ -14,10 +15,33 @@ function readUser(): AvUser {
   }
 }
 
+function LanguageToggle() {
+  const { language, setLanguage } = useLanguage();
+  return (
+    <div className="lang-toggle" role="group" aria-label="ES / EN">
+      <button
+        type="button"
+        className={language === "es" ? "active" : ""}
+        onClick={() => setLanguage("es")}
+      >
+        ES
+      </button>
+      <button
+        type="button"
+        className={language === "en" ? "active" : ""}
+        onClick={() => setLanguage("en")}
+      >
+        EN
+      </button>
+    </div>
+  );
+}
+
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<AvUser>(null);
+  const { dict } = useLanguage();
 
   useEffect(() => {
     setUser(readUser());
@@ -51,36 +75,37 @@ export function Nav() {
         </Link>
         <div className="links">
           <Link href="/" className={isHome ? "active" : ""}>
-            Inicio
+            {dict.nav.home}
           </Link>
           <Link href="/games" className={isBiblioteca ? "active" : ""}>
-            Biblioteca
+            {dict.nav.library}
           </Link>
           <Link href="/hall-of-fame" className={isSalon ? "active" : ""}>
-            Salón de la Fama
+            {dict.nav.hallOfFame}
           </Link>
           <Link href="/about" className={isAbout ? "active" : ""}>
-            Acerca de
+            {dict.nav.about}
           </Link>
         </div>
         <div className="spacer"></div>
         <div className="coin-counter">
           <span className="coin"></span>
-          <span>CRÉDITOS · 03</span>
+          <span>{dict.nav.credits}</span>
         </div>
+        <LanguageToggle />
         {user ? (
           <button className="btn ghost auth-btn" onClick={handleSignOut}>
             {user.name} ▾
           </button>
         ) : (
           <Link href="/login" className="btn auth-btn">
-            Iniciar Sesión
+            {dict.nav.signIn}
           </Link>
         )}
         <button
           className="btn ghost hamburger"
           onClick={() => setOpen(true)}
-          aria-label="Menú"
+          aria-label={dict.nav.menu}
         >
           ≡
         </button>
@@ -91,38 +116,62 @@ export function Nav() {
         onClick={() => setOpen(false)}
       ></div>
       <aside className={"av-mobile-panel" + (open ? " open" : "")}>
-        <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>
-          MENÚ
+        <div
+          className="pixel neon-cyan"
+          style={{ fontSize: 11, marginBottom: 16 }}
+        >
+          {dict.nav.menu.toUpperCase()}
         </div>
-        <Link href="/" className={isHome ? "active" : ""} onClick={() => setOpen(false)}>
-          Inicio
+        <LanguageToggle />
+        <Link
+          href="/"
+          className={isHome ? "active" : ""}
+          onClick={() => setOpen(false)}
+        >
+          {dict.nav.home}
         </Link>
-        <Link href="/games" className={isBiblioteca ? "active" : ""} onClick={() => setOpen(false)}>
-          Biblioteca
+        <Link
+          href="/games"
+          className={isBiblioteca ? "active" : ""}
+          onClick={() => setOpen(false)}
+        >
+          {dict.nav.library}
         </Link>
         <Link
           href="/hall-of-fame"
           className={isSalon ? "active" : ""}
           onClick={() => setOpen(false)}
         >
-          Salón de la Fama
+          {dict.nav.hallOfFame}
         </Link>
-        <Link href="/about" className={isAbout ? "active" : ""} onClick={() => setOpen(false)}>
-          Acerca de
+        <Link
+          href="/about"
+          className={isAbout ? "active" : ""}
+          onClick={() => setOpen(false)}
+        >
+          {dict.nav.about}
         </Link>
         {user ? (
-          <a onClick={handleSignOut}>Cerrar Sesión</a>
+          <a onClick={handleSignOut}>{dict.nav.signOut}</a>
         ) : (
-          <Link href="/login" className={isAuth ? "active" : ""} onClick={() => setOpen(false)}>
-            Iniciar Sesión
+          <Link
+            href="/login"
+            className={isAuth ? "active" : ""}
+            onClick={() => setOpen(false)}
+          >
+            {dict.nav.signIn}
           </Link>
         )}
         <div style={{ flex: 1 }}></div>
         <div
           className="pixel"
-          style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}
+          style={{
+            fontSize: 9,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.16em",
+          }}
         >
-          CRÉDITOS · 03
+          {dict.nav.credits}
         </div>
       </aside>
     </>

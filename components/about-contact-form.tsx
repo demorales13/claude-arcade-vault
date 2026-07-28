@@ -3,20 +3,28 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { sendContactMessage, type ContactState } from "@/app/actions/contact";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 const initialState: ContactState = { status: "idle" };
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const { dict } = useLanguage();
   return (
-    <button className="btn xl press" type="submit" style={{ width: "100%" }} disabled={pending}>
-      {pending ? "▶  ENVIANDO…" : "▶  ENVIAR MENSAJE"}
+    <button
+      className="btn xl press"
+      type="submit"
+      style={{ width: "100%" }}
+      disabled={pending}
+    >
+      {pending ? dict.contactForm.submitPending : dict.contactForm.submitIdle}
     </button>
   );
 }
 
 export function AboutContactForm() {
   const [state, formAction] = useActionState(sendContactMessage, initialState);
+  const { dict } = useLanguage();
   const [shake, setShake] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -53,18 +61,19 @@ export function AboutContactForm() {
         </div>
         <div className="term-body">
           <div className="line">
-            <span className="prompt">vault@arcade:~$</span> ./send_message --to=team
+            <span className="prompt">vault@arcade:~$</span> ./send_message
+            --to=team
           </div>
-          <div className="line dim">[OK] Conectando con servidor…</div>
-          <div className="line dim">[OK] Validando contenido…</div>
-          <div className="line dim">[OK] Transmitiendo paquete…</div>
+          <div className="line dim">{dict.contactForm.successConnecting}</div>
+          <div className="line dim">{dict.contactForm.successValidating}</div>
+          <div className="line dim">{dict.contactForm.successTransmitting}</div>
           <div className="line success">
-            &gt; MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS, {state.message?.toUpperCase()}.
-            <span className="caret">_</span>
+            &gt; {dict.contactForm.successMessagePrefix}{" "}
+            {state.message?.toUpperCase()}.<span className="caret">_</span>
           </div>
           <div style={{ marginTop: 18 }}>
             <button className="btn ghost" type="button" onClick={handleReset}>
-              ENVIAR OTRO MENSAJE
+              {dict.contactForm.successButton}
             </button>
           </div>
         </div>
@@ -80,19 +89,34 @@ export function AboutContactForm() {
       onSubmit={handleSubmit}
     >
       <div className="field">
-        <label>NOMBRE</label>
-        <input name="name" placeholder="px_kai" />
+        <label>{dict.contactForm.fieldName}</label>
+        <input name="name" placeholder={dict.contactForm.namePlaceholder} />
       </div>
       <div className="field">
-        <label>CORREO ELECTRÓNICO</label>
-        <input type="email" name="email" placeholder="jugador@vault.gg" />
+        <label>{dict.contactForm.fieldEmail}</label>
+        <input
+          type="email"
+          name="email"
+          placeholder={dict.contactForm.emailPlaceholder}
+        />
       </div>
       <div className="field">
-        <label>MENSAJE</label>
-        <textarea rows={5} name="msg" placeholder="Cuéntanos qué tienes en mente…"></textarea>
+        <label>{dict.contactForm.fieldMessage}</label>
+        <textarea
+          rows={5}
+          name="msg"
+          placeholder={dict.contactForm.msgPlaceholder}
+        ></textarea>
       </div>
       {state.status === "error" && (
-        <p style={{ color: "var(--ink-dim)", fontSize: 12, marginTop: -8, marginBottom: 12 }}>
+        <p
+          style={{
+            color: "var(--ink-dim)",
+            fontSize: 12,
+            marginTop: -8,
+            marginBottom: 12,
+          }}
+        >
           {state.message}
         </p>
       )}

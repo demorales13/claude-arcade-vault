@@ -3,10 +3,12 @@
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { GameWithStats } from "@/lib/data/games";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function GameCard({ game }: { game: GameWithStats }) {
   const tiltRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { dict, localeTag } = useLanguage();
 
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const el = tiltRef.current;
@@ -42,8 +44,8 @@ export function GameCard({ game }: { game: GameWithStats }) {
         <div className="desc">{game.short}</div>
         <div className="row">
           <div className="score-badge">
-            <span>MEJOR PUNTUACIÓN</span>
-            <b>{game.best.toLocaleString("es-ES")}</b>
+            <span>{dict.gameCard.bestScore}</span>
+            <b>{game.best.toLocaleString(localeTag)}</b>
           </div>
           <button
             className={
@@ -59,7 +61,7 @@ export function GameCard({ game }: { game: GameWithStats }) {
               goToDetail();
             }}
           >
-            JUGAR
+            {dict.gameCard.play}
           </button>
         </div>
       </div>

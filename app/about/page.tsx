@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AboutContactForm } from "@/components/about-contact-form";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 function useReveal() {
   useEffect(() => {
@@ -15,42 +16,42 @@ function useReveal() {
           }
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.12 },
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
 }
 
-const HIGHLIGHTS: { icon: "HEART" | "BROWSER" | "PLANT"; text: string; color: string }[] = [
-  { icon: "HEART", text: "HECHO CON ❤️ PARA JUGADORES", color: "magenta" },
-  { icon: "BROWSER", text: "JUEGOS EN HTML — CORREN EN CUALQUIER NAVEGADOR", color: "cyan" },
-  { icon: "PLANT", text: "PROYECTO EN CONSTANTE CRECIMIENTO", color: "green" },
+const HIGHLIGHT_STYLE: {
+  icon: "HEART" | "BROWSER" | "PLANT";
+  color: string;
+}[] = [
+  { icon: "HEART", color: "magenta" },
+  { icon: "BROWSER", color: "cyan" },
+  { icon: "PLANT", color: "green" },
 ];
 
 export default function AboutPage() {
   useReveal();
+  const { dict } = useLanguage();
 
   return (
     <div className="about fade-in">
       <section className="about-hero">
-        <div className="kicker pixel neon-yellow">▸ ACERCA DE</div>
-        <h1 className="about-title">ACERCA DE ARCADE VAULT</h1>
-        <p className="about-mission">
-          ARCADE VAULT nació del amor por los videojuegos clásicos. Nuestra misión es preservar y
-          celebrar los arcades que definieron una generación, haciéndolos accesibles para todos,
-          en cualquier lugar y sin costo.
-        </p>
+        <div className="kicker pixel neon-yellow">{dict.about.kicker}</div>
+        <h1 className="about-title">{dict.about.title}</h1>
+        <p className="about-mission">{dict.about.mission}</p>
 
         <div className="highlight-row">
-          {HIGHLIGHTS.map((h, i) => (
+          {dict.about.highlights.map((text, i) => (
             <div
-              key={h.icon}
-              className={"highlight " + h.color}
+              key={HIGHLIGHT_STYLE[i].icon}
+              className={"highlight " + HIGHLIGHT_STYLE[i].color}
               style={{ transitionDelay: i * 80 + "ms" }}
             >
-              <HighlightIcon kind={h.icon} />
-              <div className="hl-text pixel">{h.text}</div>
+              <HighlightIcon kind={HIGHLIGHT_STYLE[i].icon} />
+              <div className="hl-text pixel">{text}</div>
             </div>
           ))}
         </div>
@@ -69,21 +70,23 @@ export default function AboutPage() {
       <section className="about-contact reveal">
         <div className="contact-grid">
           <div className="contact-intro">
-            <div className="kicker pixel neon-cyan">▸ CONTACTO</div>
-            <h2 className="contact-title">CONTÁCTANOS</h2>
-            <p className="contact-sub">
-              ¿Tienes alguna sugerencia, quieres proponer un juego, o simplemente quieres saludar?
-              Escríbenos.
-            </p>
+            <div className="kicker pixel neon-cyan">
+              {dict.about.contactKicker}
+            </div>
+            <h2 className="contact-title">{dict.about.contactTitle}</h2>
+            <p className="contact-sub">{dict.about.contactSub}</p>
             <div className="contact-tips">
               <div className="tip">
-                <span className="tip-led"></span>RESPUESTA EN 24-48H
+                <span className="tip-led"></span>
+                {dict.about.tips[0]}
               </div>
               <div className="tip">
-                <span className="tip-led y"></span>SUGERENCIAS BIENVENIDAS
+                <span className="tip-led y"></span>
+                {dict.about.tips[1]}
               </div>
               <div className="tip">
-                <span className="tip-led m"></span>SIN SPAM, JAMÁS
+                <span className="tip-led m"></span>
+                {dict.about.tips[2]}
               </div>
             </div>
           </div>
@@ -119,7 +122,15 @@ function HighlightIcon({ kind }: { kind: "HEART" | "BROWSER" | "PLANT" }) {
     return (
       <svg className="hl-icon" viewBox="0 0 16 16">
         <g fill={C}>
-          <rect x="1" y="2" width="14" height="12" fill="none" stroke={C} strokeWidth="1.4" />
+          <rect
+            x="1"
+            y="2"
+            width="14"
+            height="12"
+            fill="none"
+            stroke={C}
+            strokeWidth="1.4"
+          />
           <rect x="1" y="2" width="14" height="3" />
           <rect x="3" y="3" width="1" height="1" fill="#0a0a0f" />
           <rect x="5" y="3" width="1" height="1" fill="#0a0a0f" />

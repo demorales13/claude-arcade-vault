@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 function saveUser(name: string) {
   try {
@@ -11,6 +12,7 @@ function saveUser(name: string) {
 
 export function AuthForm() {
   const router = useRouter();
+  const { dict } = useLanguage();
   const [tab, setTab] = useState<"in" | "up">("in");
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
@@ -35,49 +37,68 @@ export function AuthForm() {
           <h2 className="neon-cyan">ARCADE VAULT</h2>
           <div
             className="mono"
-            style={{ fontSize: 11, color: "var(--ink-faint)", letterSpacing: "0.16em", marginTop: 6 }}
+            style={{
+              fontSize: 11,
+              color: "var(--ink-faint)",
+              letterSpacing: "0.16em",
+              marginTop: 6,
+            }}
           >
-            ACCESO AL SISTEMA · v2.6
+            {dict.auth.subtitle}
           </div>
         </div>
 
         <div className="auth-tabs">
-          <button className={tab === "in" ? "on" : ""} onClick={() => setTab("in")}>
-            INICIAR SESIÓN
+          <button
+            className={tab === "in" ? "on" : ""}
+            onClick={() => setTab("in")}
+          >
+            {dict.auth.tabSignIn}
           </button>
-          <button className={tab === "up" ? "on" : ""} onClick={() => setTab("up")}>
-            CREAR CUENTA
+          <button
+            className={tab === "up" ? "on" : ""}
+            onClick={() => setTab("up")}
+          >
+            {dict.auth.tabSignUp}
           </button>
         </div>
 
         <form onSubmit={submit}>
           <div className="field">
-            <label>Usuario</label>
-            <input value={user} onChange={(e) => setUser(e.target.value)} placeholder="px_kai" />
+            <label>{dict.auth.fieldUser}</label>
+            <input
+              value={user}
+              onChange={(e) => setUser(e.target.value)}
+              placeholder={dict.auth.userPlaceholder}
+            />
           </div>
           {tab === "up" && (
             <div className="field slide-in">
-              <label>Correo electrónico</label>
+              <label>{dict.auth.fieldEmail}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="jugador@vault.gg"
+                placeholder={dict.auth.emailPlaceholder}
               />
             </div>
           )}
           <div className="field">
-            <label>Contraseña</label>
+            <label>{dict.auth.fieldPassword}</label>
             <input
               type="password"
               value={pass}
               onChange={(e) => setPass(e.target.value)}
-              placeholder="••••••••"
+              placeholder={dict.auth.passwordPlaceholder}
             />
           </div>
 
-          <button className="btn lg" type="submit" style={{ width: "100%", marginTop: 8 }}>
-            {tab === "in" ? "ENTRAR AL VAULT" : "CREAR Y JUGAR"}
+          <button
+            className="btn lg"
+            type="submit"
+            style={{ width: "100%", marginTop: 8 }}
+          >
+            {tab === "in" ? dict.auth.submitSignIn : dict.auth.submitSignUp}
           </button>
         </form>
 
@@ -86,23 +107,29 @@ export function AuthForm() {
           style={{ width: "100%", marginTop: 10 }}
           onClick={playAsGuest}
         >
-          JUGAR COMO INVITADO
+          {dict.auth.guestButton}
         </button>
 
-        <div className="auth-divider">O CONTINÚA CON</div>
+        <div className="auth-divider">{dict.auth.socialDivider}</div>
         <div className="social">
           <button className="btn ghost" type="button">
-            ◆ GOOGLE
+            {dict.auth.googleButton}
           </button>
           <button className="btn ghost" type="button">
-            ▣ GITHUB
+            {dict.auth.githubButton}
           </button>
         </div>
 
         <div
-          style={{ marginTop: 18, textAlign: "center", fontSize: 11, color: "var(--ink-faint)", letterSpacing: "0.1em" }}
+          style={{
+            marginTop: 18,
+            textAlign: "center",
+            fontSize: 11,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.1em",
+          }}
         >
-          AL ENTRAR ACEPTAS LOS TÉRMINOS DEL SALÓN ARCADE
+          {dict.auth.termsLine}
         </div>
       </div>
     </div>

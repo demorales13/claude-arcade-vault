@@ -1,0 +1,23 @@
+"use client";
+
+import { useLanguage } from "@/lib/i18n/language-context";
+
+export function SiteFooter() {
+  const { dict } = useLanguage();
+
+  return (
+    <footer
+      style={{
+        borderTop: "1px solid var(--line)",
+        padding: "20px 32px",
+        textAlign: "center",
+        color: "var(--ink-faint)",
+        fontFamily: "var(--mono)",
+        fontSize: 11,
+        letterSpacing: "0.16em",
+      }}
+    >
+      {dict.footer.copyright}
+    </footer>
+  );
+}

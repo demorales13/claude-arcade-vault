@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import { CATS } from "@/app/data/games";
 import { GameCard } from "@/components/game-card";
 import type { GameWithStats } from "@/lib/data/games";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function GamesBrowser({ games }: { games: GameWithStats[] }) {
+  const { dict } = useLanguage();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof CATS)[number]>("TODOS");
 
@@ -25,7 +27,7 @@ export function GamesBrowser({ games }: { games: GameWithStats[] }) {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar un juego por nombre…"
+            placeholder={dict.gamesCatalog.searchPlaceholder}
           />
         </div>
         <div className="av-chips">
@@ -35,7 +37,7 @@ export function GamesBrowser({ games }: { games: GameWithStats[] }) {
               className={"chip" + (cat === c ? " active" : "")}
               onClick={() => setCat(c)}
             >
-              {c}
+              {c === "TODOS" ? dict.common.allCategory : c}
             </button>
           ))}
         </div>
@@ -62,9 +64,9 @@ export function GamesBrowser({ games }: { games: GameWithStats[] }) {
                 marginBottom: 12,
               }}
             >
-              NO HAY RESULTADOS
+              {dict.gamesCatalog.noResultsTitle}
             </div>
-            <div>Intenta otra búsqueda o categoría.</div>
+            <div>{dict.gamesCatalog.noResultsBody}</div>
           </div>
         )}
       </div>
