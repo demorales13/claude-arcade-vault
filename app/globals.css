@@ -907,21 +907,95 @@ a {
   background: radial-gradient(circle at 50% 18%, #3a1a00, #0a0a18);
 }
 .cover-arkanoid::after {
+  /* muro de ladrillos: mismas filas de color y el mismo hueco en diamante
+     que el nivel 2 del motor, para que se vea como el juego real */
   content: "";
   position: absolute;
   inset: 12% 6% auto 6%;
   height: 34%;
   background:
-    repeating-linear-gradient(90deg, #ff3b3b 0 14px, transparent 14px 17px) 0
-      0/100% 30% no-repeat,
-    repeating-linear-gradient(
+    /* fila 0 — completa */
+    repeating-linear-gradient(90deg, #ff3b3b 0 9%, transparent 9% 10%) 0 0/100%
+      14% no-repeat,
+    /* fila 1 — XXXX..XXXX */
+    linear-gradient(
         90deg,
-        var(--yellow) 0 14px,
-        transparent 14px 17px
+        var(--yellow) 0 9%,
+        transparent 9% 10%,
+        var(--yellow) 10% 19%,
+        transparent 19% 20%,
+        var(--yellow) 20% 29%,
+        transparent 29% 30%,
+        var(--yellow) 30% 39%,
+        transparent 39% 60%,
+        var(--yellow) 60% 69%,
+        transparent 69% 70%,
+        var(--yellow) 70% 79%,
+        transparent 79% 80%,
+        var(--yellow) 80% 89%,
+        transparent 89% 90%,
+        var(--yellow) 90% 99%,
+        transparent 99% 100%
       )
-      0 35%/100% 30% no-repeat,
-    repeating-linear-gradient(90deg, var(--cyan) 0 14px, transparent 14px 17px)
-      0 70%/100% 30% no-repeat;
+      0 16%/100% 14% no-repeat,
+    /* fila 2 — XXX....XXX */
+    linear-gradient(
+        90deg,
+        var(--cyan) 0 9%,
+        transparent 9% 10%,
+        var(--cyan) 10% 19%,
+        transparent 19% 20%,
+        var(--cyan) 20% 29%,
+        transparent 29% 70%,
+        var(--cyan) 70% 79%,
+        transparent 79% 80%,
+        var(--cyan) 80% 89%,
+        transparent 89% 90%,
+        var(--cyan) 90% 99%,
+        transparent 99% 100%
+      )
+      0 32%/100% 14% no-repeat,
+    /* fila 3 — XXX....XXX */
+    linear-gradient(
+        90deg,
+        var(--magenta) 0 9%,
+        transparent 9% 10%,
+        var(--magenta) 10% 19%,
+        transparent 19% 20%,
+        var(--magenta) 20% 29%,
+        transparent 29% 70%,
+        var(--magenta) 70% 79%,
+        transparent 79% 80%,
+        var(--magenta) 80% 89%,
+        transparent 89% 90%,
+        var(--magenta) 90% 99%,
+        transparent 99% 100%
+      )
+      0 48%/100% 14% no-repeat,
+    /* fila 4 — XXXX..XXXX */
+    linear-gradient(
+        90deg,
+        #ff36ab 0 9%,
+        transparent 9% 10%,
+        #ff36ab 10% 19%,
+        transparent 19% 20%,
+        #ff36ab 20% 29%,
+        transparent 29% 30%,
+        #ff36ab 30% 39%,
+        transparent 39% 60%,
+        #ff36ab 60% 69%,
+        transparent 69% 70%,
+        #ff36ab 70% 79%,
+        transparent 79% 80%,
+        #ff36ab 80% 89%,
+        transparent 89% 90%,
+        #ff36ab 90% 99%,
+        transparent 99% 100%
+      )
+      0 64%/100% 14% no-repeat,
+    /* fila 5 — completa */
+    repeating-linear-gradient(90deg, var(--green) 0 9%, transparent 9% 10%) 0
+      80%/100% 14% no-repeat;
   filter: drop-shadow(0 0 6px rgba(255, 59, 59, 0.25));
 }
 .cover-arkanoid::before {
