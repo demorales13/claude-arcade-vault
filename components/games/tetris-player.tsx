@@ -12,6 +12,8 @@ import {
   type TetrisGame,
   type TetrisSkin,
 } from "@/components/games/tetris/engine";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 const SKIN_STORAGE_KEY = "av_tetris_skin";
 const SOUND_STORAGE_KEY = "av_tetris_sound";
@@ -49,6 +51,8 @@ const TOUCH_REPEAT_DELAY = 250;
 const TOUCH_REPEAT_INTERVAL = 100;
 
 export function TetrisPlayer({ game }: { game: GameWithStats }) {
+  const { language } = useLanguage();
+  const { title } = localizedGameText(game, language);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<TetrisGame | null>(null);
   const repeatTimeoutRef = useRef<number | null>(null);
@@ -283,7 +287,7 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
-          <span>{game.title} · CRT-83 · 60 HZ</span>
+          <span>{title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
       </div>

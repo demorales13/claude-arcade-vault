@@ -38,8 +38,9 @@ them.
 ## 2. The catalog row
 
 ```sql
-insert into games (id, title, short, long, cat, cover, color) values
-  ('<id>', '<TÍTULO>', '<una línea>', '<un párrafo>', '<CAT>', 'cover-<id>', '<color>');
+insert into games (id, title, short, long, cat, cover, color, title_en, short_en, long_en) values
+  ('<id>', '<TÍTULO>', '<una línea>', '<un párrafo>', '<CAT>', 'cover-<id>', '<color>',
+   '<TITLE>', '<one line>', '<one paragraph>');
 ```
 
 Both constrained by CHECK — a wrong value fails the insert:
@@ -49,6 +50,12 @@ Both constrained by CHECK — a wrong value fails the insert:
 
 `cover` is by convention `cover-<id>`, matching the CSS class. There is no `best`/`plays` column —
 they are computed by the view.
+
+`title_en`/`short_en`/`long_en` are **optional** (nullable, no `NOT NULL`/`check`) — the English
+translation of `title`/`short`/`long`, shown when the language selector is set to English
+(`lib/i18n/localize-game.ts`). If omitted, the UI falls back to the Spanish text instead of showing
+a blank field, so a game can ship without them — but fill them in when the translation is available,
+since a silent Spanish fallback is easy to miss later.
 
 Note: `components/game-card.tsx` maps `color` to a button class for `magenta`/`yellow` and falls
 through to the default cyan class otherwise — `green` currently renders like cyan. Worth mentioning

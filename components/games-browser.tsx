@@ -5,9 +5,10 @@ import { CATS } from "@/app/data/games";
 import { GameCard } from "@/components/game-card";
 import type { GameWithStats } from "@/lib/data/games";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 export function GamesBrowser({ games }: { games: GameWithStats[] }) {
-  const { dict } = useLanguage();
+  const { dict, language } = useLanguage();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof CATS)[number]>("TODOS");
 
@@ -15,9 +16,11 @@ export function GamesBrowser({ games }: { games: GameWithStats[] }) {
     return games.filter(
       (g) =>
         (cat === "TODOS" || g.cat === cat) &&
-        g.title.toLowerCase().includes(q.toLowerCase()),
+        localizedGameText(g, language)
+          .title.toLowerCase()
+          .includes(q.toLowerCase()),
     );
-  }, [games, q, cat]);
+  }, [games, q, cat, language]);
 
   return (
     <>

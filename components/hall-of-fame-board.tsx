@@ -6,6 +6,7 @@ import type { ScoreRow } from "@/app/data/games";
 import type { GameWithStats } from "@/lib/data/games";
 import { fetchTopScores } from "@/app/actions/hall-of-fame";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 type AvUser = { name: string } | null;
 
@@ -26,7 +27,7 @@ export function HallOfFameBoard({
   initialGameId: string;
   initialScores: ScoreRow[];
 }) {
-  const { dict, localeTag } = useLanguage();
+  const { dict, localeTag, language } = useLanguage();
   const [tab, setTab] = useState(initialGameId);
   const [rows, setRows] = useState<ScoreRow[]>(initialScores);
   const [user, setUser] = useState<AvUser>(null);
@@ -51,6 +52,7 @@ export function HallOfFameBoard({
   }, [tab]);
 
   const game = games.find((g) => g.id === tab) ?? games[0];
+  const gameTitle = game ? localizedGameText(game, language).title : "";
   const youRank = user ? Math.floor(8 + (tab.length % 4)) : null;
   const youScore = user ? (rows[5]?.score ?? 0) - 2400 : null;
 
@@ -70,7 +72,7 @@ export function HallOfFameBoard({
             className={"chip" + (tab === g.id ? " active" : "")}
             onClick={() => setTab(g.id)}
           >
-            {g.title}
+            {localizedGameText(g, language).title}
           </button>
         ))}
       </div>
@@ -156,13 +158,13 @@ export function HallOfFameBoard({
             className="tr"
             style={{ justifyContent: "center", color: "var(--ink-faint)" }}
           >
-            {dict.hallOfFame.emptyForGame} {game?.title}.
+            {dict.hallOfFame.emptyForGame} {gameTitle}.
           </div>
         )}
         {user && (
           <>
             <div className="tr you-label">
-              {dict.hallOfFame.yourBestIn} {game?.title}
+              {dict.hallOfFame.yourBestIn} {gameTitle}
             </div>
             <div
               className="tr you"

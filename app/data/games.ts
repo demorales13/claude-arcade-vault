@@ -3,8 +3,11 @@ export type GameCategory = "ARCADE" | "PUZZLE" | "SHOOTER" | "VERSUS";
 export type Game = {
   id: string;
   title: string;
+  title_en: string | null;
   short: string;
+  short_en: string | null;
   long: string;
+  long_en: string | null;
   cat: GameCategory;
   cover: string;
   color: "cyan" | "magenta" | "yellow" | "green";

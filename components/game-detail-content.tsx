@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import type { ScoreRow } from "@/app/data/games";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 export function GameDetailContent({
   game,
@@ -12,7 +13,8 @@ export function GameDetailContent({
   game: GameWithStats;
   scores: ScoreRow[];
 }) {
-  const { dict, localeTag } = useLanguage();
+  const { dict, localeTag, language } = useLanguage();
+  const { title, long } = localizedGameText(game, language);
 
   return (
     <div className="av-detail fade-in">
@@ -27,8 +29,8 @@ export function GameDetailContent({
             <span>{dict.gameDetail.tagKeyboardTouch}</span>
             <span>{dict.gameDetail.tagRetro}</span>
           </div>
-          <h2 className="neon-cyan">{game.title}</h2>
-          <p>{game.long}</p>
+          <h2 className="neon-cyan">{title}</h2>
+          <p>{long}</p>
           <div className="stat-strip">
             <div>
               <div className="l">{dict.gameDetail.statPlays}</div>
