@@ -53,24 +53,33 @@ export async function getTopScores(
   }));
 }
 
-export async function getRecentScores(
-  limit: number,
-): Promise<{ player: string; game: string; score: number; at: string }[]> {
+export async function getRecentScores(limit: number): Promise<
+  {
+    player: string;
+    gameId: string;
+    game: string;
+    game_en: string | null;
+    score: number;
+    at: string;
+  }[]
+> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("scores")
-    .select("player_name, score, created_at, games(title)")
+    .select("player_name, score, created_at, games(id, title, title_en)")
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) throw error;
   return (
     (data ?? []) as unknown as (ScoreRowRaw & {
-      games: { title: string } | null;
+      games: { id: string; title: string; title_en: string | null } | null;
     })[]
   ).map((row) => ({
     player: row.player_name,
+    gameId: row.games?.id ?? "",
     game: row.games?.title ?? "",
+    game_en: row.games?.title_en ?? null,
     score: row.score,
     at: timeAgo(row.created_at),
   }));

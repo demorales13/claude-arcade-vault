@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
 import { GameOverModal } from "@/components/game-over-modal";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 function readUserName(): string {
   try {
@@ -16,6 +18,8 @@ function readUserName(): string {
 }
 
 export function GamePlayer({ game }: { game: GameWithStats }) {
+  const { language } = useLanguage();
+  const { title } = localizedGameText(game, language);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [level, setLevel] = useState(1);
@@ -122,7 +126,7 @@ export function GamePlayer({ game }: { game: GameWithStats }) {
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
-          <span>{game.title} · CRT-83 · 60 HZ</span>
+          <span>{title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
       </div>

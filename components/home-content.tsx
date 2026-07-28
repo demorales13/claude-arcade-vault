@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { HomeReveal } from "@/components/home-reveal";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 function FloatingSilhouettes() {
   return (
@@ -111,13 +112,15 @@ function FloatingSilhouettes() {
 }
 
 function MiniCard({ game }: { game: GameWithStats }) {
+  const { language } = useLanguage();
+  const { title } = localizedGameText(game, language);
   return (
     <Link href={`/games/${game.id}`} className="mini-card">
       <div className="mini-cover">
         <div className={"cover-bg " + game.cover}></div>
       </div>
       <div className="mini-meta">
-        <div className="mini-title">{game.title}</div>
+        <div className="mini-title">{title}</div>
         <div className="mini-cat">{game.cat}</div>
       </div>
     </Link>
@@ -206,11 +209,18 @@ export function HomeContent({
   topPlayers,
 }: {
   games: GameWithStats[];
-  recentScores: { player: string; game: string; score: number; at: string }[];
+  recentScores: {
+    player: string;
+    gameId: string;
+    game: string;
+    game_en: string | null;
+    score: number;
+    at: string;
+  }[];
   topPlayers: { rank: number; player: string; score: number }[];
 }) {
-  const { dict, localeTag } = useLanguage();
-  const colorByTitle = new Map(games.map((g) => [g.title, g.color]));
+  const { dict, localeTag, language } = useLanguage();
+  const colorByGameId = new Map(games.map((g) => [g.id, g.color]));
 
   return (
     <div className="home fade-in">
@@ -334,12 +344,14 @@ export function HomeContent({
                 >
                   <span
                     className={
-                      "tk-p neon-" + (colorByTitle.get(r.game) ?? "cyan")
+                      "tk-p neon-" + (colorByGameId.get(r.gameId) ?? "cyan")
                     }
                   >
                     {r.player}
                   </span>
-                  <span className="tk-mid">▸ {r.game}</span>
+                  <span className="tk-mid">
+                    ▸ {language === "en" ? r.game_en || r.game : r.game}
+                  </span>
                   <span className="tk-s">
                     +{r.score.toLocaleString(localeTag)}
                   </span>

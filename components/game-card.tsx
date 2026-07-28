@@ -4,11 +4,13 @@ import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { GameWithStats } from "@/lib/data/games";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 export function GameCard({ game }: { game: GameWithStats }) {
   const tiltRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { dict, localeTag } = useLanguage();
+  const { dict, localeTag, language } = useLanguage();
+  const { title, short } = localizedGameText(game, language);
 
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const el = tiltRef.current;
@@ -40,8 +42,8 @@ export function GameCard({ game }: { game: GameWithStats }) {
         <div className="label">{game.cat}</div>
       </div>
       <div className="meta">
-        <div className="title">{game.title}</div>
-        <div className="desc">{game.short}</div>
+        <div className="title">{title}</div>
+        <div className="desc">{short}</div>
         <div className="row">
           <div className="score-badge">
             <span>{dict.gameCard.bestScore}</span>
