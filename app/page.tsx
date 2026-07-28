@@ -307,7 +307,7 @@ export default async function HomePage() {
       <section className="home-stats reveal">
         <div className="stats-inner">
           {[
-            { n: "12+", u: "JUEGOS", s: "Y CONTANDO" },
+            { n: "3+", u: "JUEGOS", s: "Y CONTANDO" },
             { n: "MILES", u: "DE PARTIDAS", s: "JUGADAS CADA DÍA" },
             { n: "GLOBAL", u: "RANKING", s: "COMPITE CON EL MUNDO" },
           ].map((st, i) => (

@@ -709,24 +709,6 @@ a {
   image-rendering: pixelated;
 }
 
-.cover-snake {
-  background: linear-gradient(135deg, #003a2a, #0a0a18);
-}
-.cover-snake::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 70% 50%, var(--magenta) 0 6px, transparent 7px),
-    linear-gradient(90deg, var(--green) 0 40px, transparent 40px) 20% 50% /
-      200px 12px no-repeat,
-    linear-gradient(90deg, var(--green) 0 12px, transparent 12px)
-      calc(20% + 40px) calc(50% - 12px) / 12px 12px no-repeat,
-    linear-gradient(90deg, var(--green) 0 12px, transparent 12px)
-      calc(20% + 28px) calc(50% - 12px) / 12px 12px no-repeat;
-  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
-}
-
 .cover-glot {
   background: radial-gradient(circle at 50% 50%, #1a002a, #0a0a18);
 }
@@ -833,32 +815,148 @@ a {
 }
 
 .cover-tetris {
-  background: radial-gradient(circle at 50% 15%, #3a0026, #0a0018);
+  background: radial-gradient(circle at 50% 15%, #3a0026, #0a0018 75%);
 }
 .cover-tetris::after {
+  /* pozo de juego: rejilla completa + pila de bloques asentados con bisel */
   content: "";
   position: absolute;
-  inset: auto 0 0 0;
-  height: 40%;
+  inset: 0;
   background:
-    linear-gradient(var(--magenta), var(--magenta)) 8% 0/16% 50%,
-    linear-gradient(#f5ff00, #f5ff00) 24% 50%/16% 50%,
-    linear-gradient(#00ff88, #00ff88) 40% 0/16% 50%,
-    linear-gradient(#00aaff, #00aaff) 56% 50%/16% 50%,
-    linear-gradient(var(--magenta), var(--magenta)) 72% 0/16% 50%,
-    linear-gradient(#ff9500, #ff9500) 88% 50%/16% 50%;
-  background-repeat: no-repeat;
-  filter: drop-shadow(0 -2px 6px rgba(255, 0, 110, 0.35));
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.06) 0 1px,
+      transparent 1px 14%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 16%
+    ),
+    /* fila inferior, casi completa: falta una columna para la línea */
+    linear-gradient(135deg, #ff6fa8 0%, var(--magenta) 45%, #b8004f 100%) 6%
+      82% / 12% 12% no-repeat,
+    linear-gradient(135deg, #ffff8c 0%, #f5ff00 45%, #b8bf00 100%) 20% 82% / 12%
+      12% no-repeat,
+    linear-gradient(135deg, #7effc2 0%, #00ff88 45%, #00b85f 100%) 34% 82% / 12%
+      12% no-repeat,
+    linear-gradient(135deg, #7fd4ff 0%, #00aaff 45%, #007bb8 100%) 62% 82% / 12%
+      12% no-repeat,
+    linear-gradient(135deg, #ffc46b 0%, #ff9500 45%, #b86800 100%) 76% 82% / 12%
+      12% no-repeat,
+    /* fila superior de la pila, más incompleta */
+    linear-gradient(135deg, #8ffcff 0%, var(--cyan) 45%, #00b8bf 100%) 20% 68% /
+      12% 12% no-repeat,
+    linear-gradient(135deg, #ff6fa8 0%, var(--magenta) 45%, #b8004f 100%) 34%
+      68% / 12% 12% no-repeat,
+    linear-gradient(135deg, #ffff8c 0%, #f5ff00 45%, #b8bf00 100%) 48% 68% / 12%
+      12% no-repeat,
+    linear-gradient(135deg, #7effc2 0%, #00ff88 45%, #00b85f 100%) 62% 68% / 12%
+      12% no-repeat,
+    /* sombra de piso, para asentar la pila visualmente */
+    linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent 22%);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
 }
 .cover-tetris::before {
+  /* pieza en forma de T, cayendo sobre la pila */
   content: "";
   position: absolute;
-  left: 44%;
-  top: 8%;
-  width: 10%;
-  height: 46%;
-  background: var(--cyan);
-  box-shadow: 0 0 12px var(--cyan);
+  inset: 0;
+  background:
+    linear-gradient(135deg, #d98fff 0%, #aa00ff 45%, #7a00b8 100%) 34% 26% / 12%
+      12% no-repeat,
+    linear-gradient(135deg, #d98fff 0%, #aa00ff 45%, #7a00b8 100%) 20% 40% / 12%
+      12% no-repeat,
+    linear-gradient(135deg, #d98fff 0%, #aa00ff 45%, #7a00b8 100%) 34% 40% / 12%
+      12% no-repeat,
+    linear-gradient(135deg, #d98fff 0%, #aa00ff 45%, #7a00b8 100%) 48% 40% / 12%
+      12% no-repeat;
+  filter: drop-shadow(0 4px 8px rgba(170, 0, 255, 0.55));
+}
+
+.cover-arkanoid {
+  background: radial-gradient(circle at 50% 18%, #3a1a00, #0a0a18);
+}
+.cover-arkanoid::after {
+  content: "";
+  position: absolute;
+  inset: 12% 6% auto 6%;
+  height: 34%;
+  background:
+    repeating-linear-gradient(90deg, #ff3b3b 0 14px, transparent 14px 17px) 0
+      0/100% 30% no-repeat,
+    repeating-linear-gradient(
+        90deg,
+        var(--yellow) 0 14px,
+        transparent 14px 17px
+      )
+      0 35%/100% 30% no-repeat,
+    repeating-linear-gradient(90deg, var(--cyan) 0 14px, transparent 14px 17px)
+      0 70%/100% 30% no-repeat;
+  filter: drop-shadow(0 0 6px rgba(255, 59, 59, 0.25));
+}
+.cover-arkanoid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    /* bola, en el hueco entre los ladrillos y la paleta */
+    radial-gradient(circle at 60% 58%, #fff 0 3.5%, transparent 4%),
+    /* estela sutil de movimiento hacia la paleta */
+    radial-gradient(
+        ellipse 3% 1.5% at 52% 66%,
+        rgba(255, 255, 255, 0.35) 0%,
+        transparent 90%
+      ),
+    /* paleta */ linear-gradient(var(--yellow), var(--yellow)) 38% 84% / 24% 5%
+      no-repeat;
+  filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.65));
+}
+
+.cover-snake {
+  background: radial-gradient(circle at 50% 50%, #001b0d 0%, #05100a 70%);
+}
+.cover-snake::after {
+  /* tablero de rejilla, como el campo de juego */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 255, 136, 0.05) 0 1px,
+      transparent 1px 14%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 255, 136, 0.05) 0 1px,
+      transparent 1px 14%
+    );
+}
+.cover-snake::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    /* manzana: fruta redonda con brillo, un cuadro por delante de la cabeza */
+    radial-gradient(
+      ellipse 1.6% 2% at 84% 24%,
+      rgba(255, 255, 255, 0.9) 75%,
+      transparent 80%
+    ),
+    radial-gradient(ellipse 5.5% 8% at 86% 26%, #ff3b30 85%, transparent 90%),
+    /* ojos de la cabeza, mirando a la derecha hacia la fruta */
+    linear-gradient(#04150c, #04150c) 78.5% 22.5% / 2% 2.5% no-repeat,
+    linear-gradient(#04150c, #04150c) 78.5% 30% / 2% 2.5% no-repeat,
+    /* cabeza: bloque cuadrado, igual de sólido que el cuerpo */
+    linear-gradient(var(--green), var(--green)) 72% 20% / 12% 16% no-repeat,
+    /* cuerpo: bloques en ángulo recto, la forma clásica de la serpiente */
+    linear-gradient(var(--green), var(--green)) 58% 20% / 12% 16% no-repeat,
+    linear-gradient(var(--green), var(--green)) 44% 20% / 12% 16% no-repeat,
+    linear-gradient(var(--green), var(--green)) 44% 38% / 12% 16% no-repeat,
+    linear-gradient(var(--green), var(--green)) 30% 38% / 12% 16% no-repeat,
+    linear-gradient(var(--green), var(--green)) 16% 38% / 12% 16% no-repeat;
+  filter: drop-shadow(0 0 5px rgba(0, 255, 136, 0.55));
 }
 
 .cover-rana {
@@ -1307,6 +1405,124 @@ a {
 
 @media (max-width: 840px) {
   .tetris-touch-controls {
+    display: flex;
+  }
+}
+
+.arkanoid-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.arkanoid-victory {
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 81;
+  font-family: var(--pixel);
+  font-size: 28px;
+  color: var(--yellow);
+  text-shadow: 0 0 16px rgba(245, 255, 0, 0.7);
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+.arkanoid-touch-controls {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+.arkanoid-touch-controls .td-pad {
+  display: flex;
+  gap: 12px;
+}
+.arkanoid-touch-controls .td-btn {
+  flex: 1;
+  min-height: 56px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--cyan);
+  font-family: var(--pixel);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  touch-action: none;
+  user-select: none;
+}
+.arkanoid-touch-controls .td-btn:active {
+  background: var(--cyan);
+  color: #000;
+}
+
+@media (max-width: 840px) {
+  .arkanoid-touch-controls {
+    display: flex;
+  }
+}
+
+.snake-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.snake-touch-controls {
+  display: none;
+  margin-top: 16px;
+  justify-content: center;
+}
+.snake-touch-controls .td-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(3, 56px);
+  gap: 8px;
+}
+.snake-touch-controls .td-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--green);
+  font-size: 20px;
+  touch-action: none;
+  user-select: none;
+}
+.snake-touch-controls .td-btn:active {
+  background: var(--green);
+  color: #000;
+}
+.snake-touch-controls .td-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+.snake-touch-controls .td-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+.snake-touch-controls .td-down {
+  grid-column: 2;
+  grid-row: 2;
+}
+.snake-touch-controls .td-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+@media (max-width: 840px) {
+  .snake-touch-controls {
     display: flex;
   }
 }
