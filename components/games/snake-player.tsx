@@ -10,6 +10,8 @@ import {
   type SnakeCallbacks,
   type SnakeGame,
 } from "@/components/games/snake/engine";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 function readUserName(): string {
   try {
@@ -21,6 +23,8 @@ function readUserName(): string {
 }
 
 export function SnakePlayer({ game }: { game: GameWithStats }) {
+  const { language } = useLanguage();
+  const { title } = localizedGameText(game, language);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<SnakeGame | null>(null);
 
@@ -168,7 +172,7 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
-          <span>{game.title} · CRT-83 · 60 HZ</span>
+          <span>{title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
       </div>

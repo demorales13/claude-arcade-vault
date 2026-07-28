@@ -11,6 +11,8 @@ import {
   type ArkanoidGame,
   type ArkanoidOutcome,
 } from "@/components/games/arkanoid/engine";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 const SOUND_STORAGE_KEY = "av_arkanoid_sound";
 
@@ -32,6 +34,8 @@ function readStoredSound(): boolean {
 }
 
 export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
+  const { language } = useLanguage();
+  const { title } = localizedGameText(game, language);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<ArkanoidGame | null>(null);
 
@@ -264,7 +268,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
-          <span>{game.title} · CRT-83 · 60 HZ</span>
+          <span>{title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
       </div>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { ScoreRow } from "@/app/data/games";
 import type { GameWithStats } from "@/lib/data/games";
 import { fetchTopScores } from "@/app/actions/hall-of-fame";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { localizedGameText } from "@/lib/i18n/localize-game";
 
 type AvUser = { name: string } | null;
 
@@ -25,6 +27,7 @@ export function HallOfFameBoard({
   initialGameId: string;
   initialScores: ScoreRow[];
 }) {
+  const { dict, localeTag, language } = useLanguage();
   const [tab, setTab] = useState(initialGameId);
   const [rows, setRows] = useState<ScoreRow[]>(initialScores);
   const [user, setUser] = useState<AvUser>(null);
@@ -49,15 +52,16 @@ export function HallOfFameBoard({
   }, [tab]);
 
   const game = games.find((g) => g.id === tab) ?? games[0];
+  const gameTitle = game ? localizedGameText(game, language).title : "";
   const youRank = user ? Math.floor(8 + (tab.length % 4)) : null;
   const youScore = user ? (rows[5]?.score ?? 0) - 2400 : null;
 
   return (
     <div className="av-hall fade-in">
       <div className="hall-head">
-        <h1>SALÓN DE LA FAMA</h1>
+        <h1>{dict.hallOfFame.title}</h1>
         <p className="pixel" style={{ fontSize: 10 }}>
-          LOS NOMBRES QUE NUNCA SE BORRAN DE LA PANTALLA
+          {dict.hallOfFame.subtitle}
         </p>
       </div>
 
@@ -68,7 +72,7 @@ export function HallOfFameBoard({
             className={"chip" + (tab === g.id ? " active" : "")}
             onClick={() => setTab(g.id)}
           >
-            {g.title}
+            {localizedGameText(g, language).title}
           </button>
         ))}
       </div>
@@ -80,7 +84,7 @@ export function HallOfFameBoard({
               <div className="rank-num">02</div>
               <div className="name">{rows[1].name}</div>
               <div className="score">
-                {rows[1].score.toLocaleString("es-ES")}
+                {rows[1].score.toLocaleString(localeTag)}
               </div>
               <div className="date">{rows[1].date}</div>
             </div>
@@ -94,14 +98,14 @@ export function HallOfFameBoard({
                 letterSpacing: "0.18em",
               }}
             >
-              CAMPEÓN
+              {dict.hallOfFame.champion}
             </div>
             <div className="rank-num" style={{ fontSize: 36, marginTop: 4 }}>
               01
             </div>
             <div className="name">{rows[0].name}</div>
             <div className="score" style={{ fontSize: 20 }}>
-              {rows[0].score.toLocaleString("es-ES")}
+              {rows[0].score.toLocaleString(localeTag)}
             </div>
             <div className="date">{rows[0].date}</div>
           </div>
@@ -110,7 +114,7 @@ export function HallOfFameBoard({
               <div className="rank-num">03</div>
               <div className="name">{rows[2].name}</div>
               <div className="score">
-                {rows[2].score.toLocaleString("es-ES")}
+                {rows[2].score.toLocaleString(localeTag)}
               </div>
               <div className="date">{rows[2].date}</div>
             </div>
@@ -122,10 +126,10 @@ export function HallOfFameBoard({
         {rows.length > 0 ? (
           <>
             <div className="th">
-              <div>RANGO</div>
-              <div>JUGADOR</div>
-              <div>PUNTUACIÓN</div>
-              <div>FECHA</div>
+              <div>{dict.hallOfFame.colRank}</div>
+              <div>{dict.hallOfFame.colPlayer}</div>
+              <div>{dict.hallOfFame.colScore}</div>
+              <div>{dict.hallOfFame.colDate}</div>
             </div>
             {rows.map((r, i) => (
               <div
@@ -144,7 +148,7 @@ export function HallOfFameBoard({
               >
                 <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
                 <div className="pl">{r.name}</div>
-                <div className="sc">{r.score.toLocaleString("es-ES")}</div>
+                <div className="sc">{r.score.toLocaleString(localeTag)}</div>
                 <div className="dt">{r.date}</div>
               </div>
             ))}
@@ -154,13 +158,13 @@ export function HallOfFameBoard({
             className="tr"
             style={{ justifyContent: "center", color: "var(--ink-faint)" }}
           >
-            Aún no hay puntuaciones para {game?.title}.
+            {dict.hallOfFame.emptyForGame} {gameTitle}.
           </div>
         )}
         {user && (
           <>
             <div className="tr you-label">
-              ▸ TU MEJOR MARCA EN {game?.title}
+              {dict.hallOfFame.yourBestIn} {gameTitle}
             </div>
             <div
               className="tr you"
@@ -179,7 +183,7 @@ export function HallOfFameBoard({
                   textShadow: "0 0 6px rgba(245,255,0,0.5)",
                 }}
               >
-                {(youScore || 9999).toLocaleString("es-ES")}
+                {(youScore || 9999).toLocaleString(localeTag)}
               </div>
               <div className="dt">11/05/2026</div>
             </div>
@@ -189,7 +193,7 @@ export function HallOfFameBoard({
 
       <div style={{ textAlign: "center", marginTop: 32 }}>
         <Link className="btn lg" href="/games">
-          VOLVER A LA BIBLIOTECA
+          {dict.hallOfFame.backToLibrary}
         </Link>
       </div>
     </div>

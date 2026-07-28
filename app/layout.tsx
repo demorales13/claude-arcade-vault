@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
-import { Press_Start_2P, JetBrains_Mono, Courier_Prime } from "next/font/google";
+import {
+  Press_Start_2P,
+  JetBrains_Mono,
+  Courier_Prime,
+} from "next/font/google";
 import { Nav } from "@/components/nav";
+import { SiteFooter } from "@/components/site-footer";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 import "./globals.css";
 
 const pixelFont = Press_Start_2P({
@@ -25,7 +31,8 @@ const courierPrime = Courier_Prime({
 
 export const metadata: Metadata = {
   title: "Arcade Vault",
-  description: "Plataforma para jugar online y competir por la mayor cantidad de puntos.",
+  description:
+    "Plataforma para jugar online y competir por la mayor cantidad de puntos.",
 };
 
 export default function RootLayout({
@@ -42,21 +49,11 @@ export default function RootLayout({
         <div className="av-bg" />
         <div className="av-noise" />
         <div id="root">
-          <Nav />
-          <main className="av-main">{children}</main>
-          <footer
-            style={{
-              borderTop: "1px solid var(--line)",
-              padding: "20px 32px",
-              textAlign: "center",
-              color: "var(--ink-faint)",
-              fontFamily: "var(--mono)",
-              fontSize: 11,
-              letterSpacing: "0.16em",
-            }}
-          >
-            © 2026 ARCADE VAULT · HECHO CON PIXELES Y NEÓN · v2.6.0
-          </footer>
+          <LanguageProvider>
+            <Nav />
+            <main className="av-main">{children}</main>
+            <SiteFooter />
+          </LanguageProvider>
         </div>
       </body>
     </html>

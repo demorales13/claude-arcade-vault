@@ -291,6 +291,35 @@ a {
 .av-nav .hamburger {
   display: none;
 }
+.lang-toggle {
+  display: flex;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.lang-toggle button {
+  padding: 8px 10px;
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.lang-toggle button.active {
+  color: var(--cyan);
+  background: rgba(0, 245, 255, 0.12);
+}
+.lang-toggle button:hover:not(.active) {
+  color: var(--ink);
+}
+.av-nav .lang-toggle {
+  margin-left: 16px;
+}
+.av-mobile-panel .lang-toggle {
+  margin-bottom: 8px;
+  align-self: flex-start;
+}
 
 @media (max-width: 840px) {
   .av-nav {
