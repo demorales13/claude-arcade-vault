@@ -18,6 +18,10 @@ This repo works by spec, not by ad hoc prompting. Three custom skills drive it, 
 - **`/add-game`** (`.claude/skills/add-game/SKILL.md`) — the same thing, specialized for adding one playable game (plus its leaderboard) to the catalog, either porting existing code from a folder (e.g. `references/started-games/`) or designing it from scratch. It already knows the wiring recipe (`.claude/skills/add-game/recipe.md`: the manual `insert into games` SQL, `.cover-<id>`, `components/games/<id>/engine.ts`, `components/games/<id>-player.tsx`, the branch in `app/games/[id]/play/page.tsx`), so it asks about the game instead of the plumbing. Also ends at `specs/NN-slug.md` in `Draft`, never writes code. Use it for a new game; use `/spec` for anything else.
 - **`/spec-impl`** (`.claude/skills/spec-impl/SKILL.md`) — implements a spec, but **only if its status line reads `Approved`** (or an equivalent word in another language). It creates/switches to a branch named `spec-NN-slug` (see `AutoCreateBranch` in `specs/.spec-config.yml`, default `true`), then implements the plan one step at a time, pausing for review after each step.
 
+One custom agent feeds into this workflow, defined in `.claude/agents/`:
+
+- **`game-planner`** (`.claude/agents/game-planner.md`) — answers the question that comes _before_ `/add-game`: given the current catalog, what game should be added next? It diagnoses gaps (category, mechanic, control scheme) against `implemented-games.md`, researches candidates, scores them against fit criteria, and proposes 1–3 ranked options. It keeps memory of every candidate it has evaluated — proposed/accepted/rejected/deferred — in `suggested-games.md`, so it never re-proposes something already built or already turned down. Like the skills above, it never writes code or specs; the human decides, then runs `/add-game <chosen game>`.
+
 Implications for any work in this repo:
 
 - A feature-sized change should normally go through `specs/NN-slug.md` first, not straight into code. If asked to build something nontrivial without a spec, point this workflow out.
