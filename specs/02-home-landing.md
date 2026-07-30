@@ -1,6 +1,6 @@
 # SPEC 02 — Home landing de Arcade Vault
 
-> **Status:** Completado
+> **Status:** Implemented
 > **Depends on:** 01-mvp-visual
 > **Date:** 2026-07-17
 > **Objective:** Añadir la landing page "Inicio" del template `home-about` como nueva ruta `/` de Arcade Vault, mudando la Biblioteca actual a `/games` y actualizando el Nav y los enlaces internos en consecuencia.

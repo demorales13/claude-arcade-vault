@@ -1,6 +1,6 @@
 # SPEC 07 — Tetris real como nuevo juego "TETRIS"
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** 05-asteroids-game, 06-leaderboard-catalogo-supabase
 > **Date:** 2026-07-27
 > **Objective:** Agregar "TETRIS" (`id: "tetris"`) como segundo juego jugable del catálogo de Arcade Vault, portando el motor real de `C:\Courses\ClaudeCode.FernandoHerrera.2026\03-claude-tetris\game.js` a `components/games/tetris/engine.ts` e integrándolo con el HUD, el marco `.crt` y el guardado de puntuaciones en Supabase ya existentes.

@@ -1,6 +1,6 @@
 # SPEC 05 — Asteroids real como nuevo juego "ASTEROIDES"
 
-> **Status:** Completed
+> **Status:** Implemented
 > **Depends on:** 01-mvp-visual
 > **Date:** 2026-07-24
 > **Objective:** Agregar "ASTEROIDES" (`id: "asteroids"`) como nuevo juego del catálogo de Arcade Vault, con el motor real portado de `references/started-games/02-asteroids/game.js` reemplazando la simulación visual solo en su Reproductor (`/games/asteroids/play`), integrado con el HUD y el flujo de guardado de puntuación existentes; el resto del catálogo (incluido "ROCAS") no se modifica.

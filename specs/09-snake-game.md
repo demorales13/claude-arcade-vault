@@ -1,6 +1,6 @@
 # SPEC 09 — Snake diseñado desde cero como nuevo juego "SERPIENTE"
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** 06-leaderboard-catalogo-supabase
 > **Date:** 2026-07-27
 > **Objective:** Agregar "SERPIENTE" (`id: "snake"`) como cuarto juego jugable del catálogo de Arcade Vault, con un motor de Snake clásico diseñado desde cero en `components/games/snake/engine.ts` (grid 20×20, sin wrapping, niveles por velocidad) que usa el atlas de frutas de `references/snake-assets/` como arte, integrado con el HUD, el marco `.crt` y el guardado de puntuaciones en Supabase ya existentes.
