@@ -23,6 +23,7 @@ import {
   type SkinId,
 } from "@/lib/skins";
 import { SkinSelector } from "@/components/skin-selector";
+import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 
 const SKIN_GAME_ID = "arkanoid";
 const SOUND_STORAGE_KEY = "av_arkanoid_sound";
@@ -96,6 +97,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     const initialSkin = readStoredSkin<SkinId>(SKIN_GAME_ID);
     setSkin(initialSkin);
 
+    setupHiDpiCanvas(canvas, 800, 600);
     const instance = createArkanoidGame(canvas, buildCallbacks(), {
       soundEnabled: initialSound,
       skin: initialSkin,

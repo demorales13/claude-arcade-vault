@@ -22,6 +22,7 @@ import {
   type SkinId,
 } from "@/lib/skins";
 import { SkinSelector } from "@/components/skin-selector";
+import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 
 const SKIN_GAME_ID = "asteroids";
 
@@ -72,6 +73,7 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
     const initialSkin = readStoredSkin<SkinId>(SKIN_GAME_ID);
     setSkin(initialSkin);
 
+    setupHiDpiCanvas(canvas, 800, 600);
     const instance = createAsteroidsGame(canvas, buildCallbacks(), {
       skin: initialSkin,
     });

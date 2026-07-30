@@ -16,6 +16,7 @@ import {
 } from "@/components/games/tetris/engine";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { localizedGameText } from "@/lib/i18n/localize-game";
+import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 
 const SKIN_STORAGE_KEY = "av_tetris_skin";
 const SOUND_STORAGE_KEY = "av_tetris_sound";
@@ -90,6 +91,7 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
     setSkin(initialSkin);
     setSoundOn(initialSound);
 
+    setupHiDpiCanvas(canvas, 800, 600);
     const instance = createTetrisGame(canvas, buildCallbacks(), {
       skin: initialSkin,
       soundEnabled: initialSound,

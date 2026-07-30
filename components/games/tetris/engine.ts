@@ -30,6 +30,8 @@ export type TetrisGame = {
   setSoundEnabled: (enabled: boolean) => void;
 };
 
+const CANVAS_W = 800;
+const CANVAS_H = 600;
 const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
@@ -798,7 +800,7 @@ export function createTetrisGame(
 
   function draw() {
     ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
     drawGrid();
     drawBoard();
     drawNextPanel();
