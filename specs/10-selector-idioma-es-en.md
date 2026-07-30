@@ -1,6 +1,6 @@
 # SPEC 10 — Selector de idioma Español / Inglés para la interfaz estática
 
-> **Status:** approved
+> **Status:** Implemented
 > **Depends on:** 02-home-landing, 03-about-contact, 06-leaderboard-catalogo-supabase
 > **Date:** 2026-07-27
 > **Objective:** Agregar un selector ES/EN en el Nav de Arcade Vault que traduce, de forma instantánea y persistida en localStorage (`av_lang`), todo el texto estático de la interfaz pública (nav, footer, home, catálogo, detalle de juego, login, acerca de/contacto, salón de la fama), sin tocar el contenido que viene de Supabase ni la experiencia de juego (`/games/[id]/play`).

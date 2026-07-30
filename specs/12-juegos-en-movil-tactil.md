@@ -1,6 +1,6 @@
 # SPEC 12 — Juegos jugables en dispositivos móviles táctiles
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** 05-asteroids-game, 07-tetris-game, 08-arkanoid-game, 09-snake-game
 > **Date:** 2026-07-30
 > **Objective:** Hacer que los cuatro juegos sean realmente jugables en un teléfono táctil, sustituyendo los cuatro mandos por juego por un mando compartido (cruceta + hasta dos botones), añadiendo un modo de juego inmersivo que oculta el chrome del sitio y adapta el layout a vertical y horizontal, y reparando el control por puntero de ARKANOID.

@@ -341,6 +341,7 @@ export function createArkanoidGame(
   }
 
   function onKeyDown(e: KeyboardEvent) {
+    if (gameOver) return;
     if (CAPTURED_CODES.has(e.code)) e.preventDefault();
 
     if (e.code === "KeyS") {
