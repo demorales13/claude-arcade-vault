@@ -13,7 +13,16 @@ import {
 } from "@/components/games/arkanoid/engine";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { localizedGameText } from "@/lib/i18n/localize-game";
+import {
+  DEFAULT_SKIN,
+  SKIN_LABELS,
+  readStoredSkin,
+  writeStoredSkin,
+  type SkinId,
+} from "@/lib/skins";
+import { SkinSelector } from "@/components/skin-selector";
 
+const SKIN_GAME_ID = "arkanoid";
 const SOUND_STORAGE_KEY = "av_arkanoid_sound";
 
 function readUserName(): string {
@@ -49,6 +58,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
   const [name, setName] = useState("INVITADO");
   const [saved, setSaved] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
 
   useEffect(() => {
     setName(readUserName());
@@ -81,9 +91,12 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
 
     const initialSound = readStoredSound();
     setSoundOn(initialSound);
+    const initialSkin = readStoredSkin<SkinId>(SKIN_GAME_ID);
+    setSkin(initialSkin);
 
     const instance = createArkanoidGame(canvas, buildCallbacks(), {
       soundEnabled: initialSound,
+      skin: initialSkin,
     });
     gameRef.current = instance;
 
@@ -92,6 +105,12 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
       gameRef.current = null;
     };
   }, []);
+
+  const handleSkinChange = (newSkin: SkinId) => {
+    setSkin(newSkin);
+    gameRef.current?.setSkin(newSkin);
+    writeStoredSkin(SKIN_GAME_ID, newSkin);
+  };
 
   const togglePause = () => {
     if (paused) {
@@ -143,6 +162,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     if (canvas) {
       gameRef.current = createArkanoidGame(canvas, buildCallbacks(), {
         soundEnabled: soundOn,
+        skin,
       });
     }
   };
@@ -194,6 +214,11 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
           </div>
         </div>
         <div className="hud-actions">
+          <SkinSelector
+            value={skin}
+            onChange={handleSkinChange}
+            options={SKIN_LABELS}
+          />
           <button className="btn ghost" onClick={toggleSound}>
             {soundOn ? "SONIDO ON" : "SONIDO OFF"}
           </button>
