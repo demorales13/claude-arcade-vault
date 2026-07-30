@@ -6,6 +6,7 @@ import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
 import { GameOverModal } from "@/components/game-over-modal";
 import { TouchPad } from "@/components/games/touch-pad";
+import { HudMenu } from "@/components/games/hud-menu";
 import {
   createArkanoidGame,
   type ArkanoidCallbacks,
@@ -179,11 +180,34 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     }
   };
 
+  const canDragPaddle = !paused && !over && levelCleared === null;
+
+  const updatePointerX = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const logicalX = ((e.clientX - rect.left) / rect.width) * 800;
+    gameRef.current?.setPointerX(logicalX);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!canDragPaddle) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updatePointerX(e);
+  };
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!canDragPaddle) return;
+    updatePointerX(e);
+  };
+  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
   return (
     <div className="av-player fade-in">
       <div className="player-hud">
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <div className="hud-stat">
+          <div className="hud-stat hud-stat-player">
             <div className="l">Jugador</div>
             <div className="v" style={{ color: "var(--ink)" }}>
               {name}
@@ -204,7 +228,13 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
         </div>
-        <div className="hud-actions">
+        <HudMenu>
+          <div className="hud-stat hud-menu-player-dup">
+            <div className="l">Jugador</div>
+            <div className="v" style={{ color: "var(--ink)" }}>
+              {name}
+            </div>
+          </div>
           <SkinSelector
             value={skin}
             onChange={handleSkinChange}
@@ -222,7 +252,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
           <Link className="btn ghost" href={`/games/${game.id}`}>
             SALIR
           </Link>
-        </div>
+        </HudMenu>
       </div>
 
       <div className="crt-stage">
@@ -233,6 +263,10 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
               width={800}
               height={600}
               className="arkanoid-canvas"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             />
             {paused && (
               <div

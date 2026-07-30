@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
 import { GameOverModal } from "@/components/game-over-modal";
+import { HudMenu } from "@/components/games/hud-menu";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { localizedGameText } from "@/lib/i18n/localize-game";
 
@@ -59,7 +60,7 @@ export function GamePlayer({ game }: { game: GameWithStats }) {
     <div className="av-player fade-in">
       <div className="player-hud">
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <div className="hud-stat">
+          <div className="hud-stat hud-stat-player">
             <div className="l">Jugador</div>
             <div className="v" style={{ color: "var(--ink)" }}>
               {name}
@@ -78,7 +79,13 @@ export function GamePlayer({ game }: { game: GameWithStats }) {
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
         </div>
-        <div className="hud-actions">
+        <HudMenu>
+          <div className="hud-stat hud-menu-player-dup">
+            <div className="l">Jugador</div>
+            <div className="v" style={{ color: "var(--ink)" }}>
+              {name}
+            </div>
+          </div>
           <button className="btn yellow" onClick={() => setPaused((p) => !p)}>
             {paused ? "REANUDAR" : "PAUSA"}
           </button>
@@ -88,7 +95,7 @@ export function GamePlayer({ game }: { game: GameWithStats }) {
           <Link className="btn ghost" href={`/games/${game.id}`}>
             SALIR
           </Link>
-        </div>
+        </HudMenu>
       </div>
 
       <div className="crt">

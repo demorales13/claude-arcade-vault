@@ -6,6 +6,7 @@ import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
 import { GameOverModal } from "@/components/game-over-modal";
 import { TouchPad } from "@/components/games/touch-pad";
+import { HudMenu } from "@/components/games/hud-menu";
 import {
   createSnakeGame,
   type SnakeCallbacks,
@@ -117,7 +118,7 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
     <div className="av-player fade-in">
       <div className="player-hud">
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <div className="hud-stat">
+          <div className="hud-stat hud-stat-player">
             <div className="l">Jugador</div>
             <div className="v" style={{ color: "var(--ink)" }}>
               {name}
@@ -138,7 +139,13 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
         </div>
-        <div className="hud-actions">
+        <HudMenu>
+          <div className="hud-stat hud-menu-player-dup">
+            <div className="l">Jugador</div>
+            <div className="v" style={{ color: "var(--ink)" }}>
+              {name}
+            </div>
+          </div>
           <SkinSelector
             value={skin}
             onChange={handleSkinChange}
@@ -153,7 +160,7 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
           <Link className="btn ghost" href={`/games/${game.id}`}>
             SALIR
           </Link>
-        </div>
+        </HudMenu>
       </div>
 
       <div className="crt-stage">
