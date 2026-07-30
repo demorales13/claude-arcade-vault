@@ -25,6 +25,7 @@ export type ArkanoidGame = {
   continueLevel: () => void;
   setSoundEnabled: (enabled: boolean) => void;
   setSkin: (skin: SkinId) => void;
+  setPointerX: (logicalX: number | null) => void;
 };
 
 const CANVAS_W = 800;
@@ -324,9 +325,19 @@ export function createArkanoidGame(
     "KeyD",
     "KeyS",
   ]);
+  const PADDLE_KEYS = new Set(["ArrowLeft", "ArrowRight", "KeyA", "KeyD"]);
+
+  // ---- puntero (arrastre de paleta) ----
+  // Tiene prioridad sobre las flechas hasta que se pulse una, que lo limpia.
+  let pointerTargetX: number | null = null;
+
+  function setPointerX(logicalX: number | null) {
+    pointerTargetX = logicalX;
+  }
 
   function setKey(code: string, isPressed: boolean) {
     keys[code] = isPressed;
+    if (isPressed && PADDLE_KEYS.has(code)) pointerTargetX = null;
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -512,8 +523,12 @@ export function createArkanoidGame(
   }
 
   function updatePaddle() {
-    if (keys["ArrowLeft"] || keys["KeyA"]) paddle.x -= PADDLE.speed;
-    if (keys["ArrowRight"] || keys["KeyD"]) paddle.x += PADDLE.speed;
+    if (pointerTargetX !== null) {
+      paddle.x = pointerTargetX - PADDLE.w / 2;
+    } else {
+      if (keys["ArrowLeft"] || keys["KeyA"]) paddle.x -= PADDLE.speed;
+      if (keys["ArrowRight"] || keys["KeyD"]) paddle.x += PADDLE.speed;
+    }
 
     if (paddle.x < 0) paddle.x = 0;
     if (paddle.x + PADDLE.w > CANVAS_W) paddle.x = CANVAS_W - PADDLE.w;
@@ -719,5 +734,6 @@ export function createArkanoidGame(
     setSkin(newSkin: SkinId) {
       skin = newSkin;
     },
+    setPointerX,
   };
 }

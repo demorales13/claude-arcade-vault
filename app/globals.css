@@ -1300,6 +1300,64 @@ a {
   outline-offset: 2px;
 }
 
+/* components/games/hud-menu.tsx: inline en escritorio (misma fila que hoy),
+   colapsado tras ≡ en inmersivo. La copia de "Jugador" que viaja dentro de
+   children solo debe verse dentro del panel ≡, nunca en la fila inline. */
+.hud-menu {
+  position: relative;
+}
+.hud-menu-toggle {
+  display: none;
+}
+.hud-menu-panel {
+  display: none;
+}
+.hud-menu-inline .hud-menu-player-dup {
+  display: none;
+}
+
+@media (pointer: coarse) and (max-width: 520px),
+  (pointer: coarse) and (max-height: 560px) {
+  .hud-menu-inline {
+    display: none;
+  }
+  .hud-stat-player {
+    display: none;
+  }
+  .hud-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--cyan);
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .hud-menu-panel.is-open {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 40;
+    min-width: 200px;
+    padding: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.crt-stage {
+  position: relative;
+}
 .crt {
   position: relative;
   border-radius: 28px;
@@ -1391,6 +1449,41 @@ a {
   box-shadow: 0 0 6px var(--green);
 }
 
+/* modo inmersivo: pantalla táctil estrecha (vertical) o baja (horizontal).
+   Oculta nav/footer y encoge el bisel del CRT para que el canvas y el mando
+   quepan sin scroll. El ancho de .crt-screen se deriva del alto disponible
+   (en vez de max-height) para que el aspect-ratio 4/3 se preserve al
+   encogerse en ambos ejes a la vez. */
+@media (pointer: coarse) and (max-width: 520px),
+  (pointer: coarse) and (max-height: 560px) {
+  body:has(.av-player) .av-nav,
+  body:has(.av-player) footer {
+    display: none;
+  }
+  .av-player {
+    margin: 0;
+    max-width: none;
+    padding: max(8px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+  }
+  .player-hud {
+    margin-bottom: 10px;
+    padding: 10px 12px;
+  }
+  .crt {
+    padding: 10px;
+    border-radius: 16px;
+  }
+  .crt-screen {
+    /* max(240px, …) evita que una altura disponible negativa (posible antes
+       de sacar el mando del flujo en horizontal, paso 6) colapse el canvas a
+       0×0: se prefiere un canvas pequeño pero visible. */
+    width: min(100%, calc(max(240px, (100dvh - 440px)) * 4 / 3));
+    margin-inline: auto;
+  }
+}
+
 .asteroids-canvas {
   position: absolute;
   inset: 0;
@@ -1418,97 +1511,168 @@ a {
   }
 }
 
-.asteroids-touch-controls {
+/* shared touch pad (components/games/touch-pad.tsx) */
+/* mando único: cruz + 2 botones circulares, idéntico en los cuatro juegos.
+   Las celdas sin código (.is-inactive) se dibujan atenuadas e inertes en vez
+   de ocultarse. Por defecto (vertical) va debajo del canvas, en el flujo
+   normal, para no taparlo; solo se superpone sobre el canvas en horizontal
+   bajo, donde no sobra alto (ver la consulta al final de este bloque). */
+.touch-pad {
   display: none;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
 }
-.asteroids-touch-controls .td-pad,
-.asteroids-touch-controls .td-actions {
-  display: flex;
-  gap: 12px;
-}
-.asteroids-touch-controls .td-btn {
-  flex: 1;
-  min-height: 56px;
-  padding: 0 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--cyan);
-  font-family: var(--pixel);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  touch-action: none;
-  user-select: none;
-}
-.asteroids-touch-controls .td-btn:active {
-  background: var(--cyan);
-  color: #000;
-}
-.asteroids-touch-controls .td-fire {
-  border-color: var(--magenta);
-  color: var(--magenta);
-}
-.asteroids-touch-controls .td-fire:active {
-  background: var(--magenta);
-  color: #000;
-}
-
-@media (max-width: 840px) {
-  .asteroids-touch-controls {
+@media (pointer: coarse) {
+  .touch-pad {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    margin-top: 16px;
+  }
+  /* bloqueo de scroll accidental (paso 7 del spec): arrastrar el dedo sobre
+     el juego no debe mover la página ni disparar el pull-to-refresh. Fuera
+     de /play (sin .av-player) el scroll normal no se toca. */
+  .crt-screen {
+    touch-action: none;
+  }
+  .av-player {
+    overscroll-behavior: none;
   }
 }
-
-.tetris-touch-controls {
-  display: none;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
+.touch-pad-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 46px);
+  grid-template-rows: repeat(3, 46px);
 }
-.tetris-touch-controls .td-pad,
-.tetris-touch-controls .td-actions {
-  display: flex;
-  gap: 12px;
-}
-.tetris-touch-controls .td-btn {
-  flex: 1;
-  min-height: 56px;
-  padding: 0 12px;
+.touch-pad-arm,
+.touch-pad-hub {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--cyan);
-  font-family: var(--pixel);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  background: rgba(0, 245, 255, 0.55);
+  color: #001014;
+  font-size: 16px;
+  border: none;
   touch-action: none;
   user-select: none;
 }
-.tetris-touch-controls .td-btn:active {
-  background: var(--cyan);
-  color: #000;
+.touch-pad-arm {
+  pointer-events: auto;
 }
-.tetris-touch-controls .td-fire {
-  border-color: var(--magenta);
-  color: var(--magenta);
+.touch-pad-hub {
+  pointer-events: none;
 }
-.tetris-touch-controls .td-fire:active {
-  background: var(--magenta);
-  color: #000;
+.touch-pad-arm-up {
+  grid-column: 2;
+  grid-row: 1;
+  border-radius: 10px 10px 0 0;
+}
+.touch-pad-arm-left {
+  grid-column: 1;
+  grid-row: 2;
+  border-radius: 10px 0 0 10px;
+}
+.touch-pad-hub {
+  grid-column: 2;
+  grid-row: 2;
+}
+.touch-pad-arm-right {
+  grid-column: 3;
+  grid-row: 2;
+  border-radius: 0 10px 10px 0;
+}
+.touch-pad-arm-down {
+  grid-column: 2;
+  grid-row: 3;
+  border-radius: 0 0 10px 10px;
+}
+.touch-pad-arm:active {
+  background: rgba(0, 245, 255, 0.9);
+}
+.touch-pad-arm.is-inactive,
+.touch-pad-arm:disabled {
+  opacity: 0.32;
+  pointer-events: none;
+}
+.touch-pad-buttons {
+  position: relative;
+  width: 108px;
+  height: 84px;
+}
+.touch-pad-circle {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 245, 255, 0.55);
+  color: #001014;
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  touch-action: none;
+  user-select: none;
+  pointer-events: auto;
+}
+.touch-pad-circle-a {
+  top: 0;
+  left: 0;
+  width: 62px;
+  height: 62px;
+}
+.touch-pad-circle-b {
+  bottom: 0;
+  right: 0;
+  width: 46px;
+  height: 46px;
+}
+.touch-pad-circle:active {
+  background: rgba(0, 245, 255, 0.9);
+}
+.touch-pad-circle.is-inactive,
+.touch-pad-circle:disabled {
+  opacity: 0.32;
+  pointer-events: none;
 }
 
-@media (max-width: 840px) {
-  .tetris-touch-controls {
-    display: flex;
+/* horizontal bajo (paso 6 del spec): no sobra alto para el mando en flujo
+   normal, así que aquí sí se superpone sobre el canvas. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 560px) {
+  .touch-pad {
+    position: absolute;
+    inset: 0;
+    margin-top: 0;
+    pointer-events: none;
+    z-index: 6;
+  }
+  /* con el mando fuera del flujo y el HUD ya colapsado (paso 5), el bloque
+     reservado por la fórmula general del paso 4 (440px, pensada para el
+     mando todavía en flujo) sobra: aquí el canvas debe ocupar toda la
+     pantalla, así que se recalcula con el remanente real. */
+  .crt-screen {
+    width: min(100%, calc(max(240px, (100dvh - 150px)) * 4 / 3));
+  }
+  .touch-pad-dpad {
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left));
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .touch-pad-buttons {
+    position: absolute;
+    right: max(20px, env(safe-area-inset-right));
+    bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  /* superpuestos sobre el canvas: opacidad reducida en reposo para no tapar
+     la acción del juego; vuelve a opacidad completa mientras se pulsan.
+     Menor especificidad que .is-inactive/:disabled, así que las celdas sin
+     código siguen atenuándose por debajo de esto, no por encima. */
+  .touch-pad-arm,
+  .touch-pad-circle {
+    opacity: 0.55;
+  }
+  .touch-pad-arm:active,
+  .touch-pad-circle:active {
+    opacity: 1;
   }
 }
 
@@ -1534,100 +1698,12 @@ a {
   pointer-events: none;
 }
 
-.arkanoid-touch-controls {
-  display: none;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
-}
-.arkanoid-touch-controls .td-pad {
-  display: flex;
-  gap: 12px;
-}
-.arkanoid-touch-controls .td-btn {
-  flex: 1;
-  min-height: 56px;
-  padding: 0 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--cyan);
-  font-family: var(--pixel);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  touch-action: none;
-  user-select: none;
-}
-.arkanoid-touch-controls .td-btn:active {
-  background: var(--cyan);
-  color: #000;
-}
-
-@media (max-width: 840px) {
-  .arkanoid-touch-controls {
-    display: flex;
-  }
-}
-
 .snake-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
-}
-
-.snake-touch-controls {
-  display: none;
-  margin-top: 16px;
-  justify-content: center;
-}
-.snake-touch-controls .td-dpad {
-  display: grid;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(3, 56px);
-  gap: 8px;
-}
-.snake-touch-controls .td-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--green);
-  font-size: 20px;
-  touch-action: none;
-  user-select: none;
-}
-.snake-touch-controls .td-btn:active {
-  background: var(--green);
-  color: #000;
-}
-.snake-touch-controls .td-up {
-  grid-column: 2;
-  grid-row: 1;
-}
-.snake-touch-controls .td-left {
-  grid-column: 1;
-  grid-row: 2;
-}
-.snake-touch-controls .td-down {
-  grid-column: 2;
-  grid-row: 2;
-}
-.snake-touch-controls .td-right {
-  grid-column: 3;
-  grid-row: 2;
-}
-
-@media (max-width: 840px) {
-  .snake-touch-controls {
-    display: flex;
-  }
 }
 
 /* fake in-screen game */

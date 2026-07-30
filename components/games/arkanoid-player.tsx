@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
 import { GameOverModal } from "@/components/game-over-modal";
+import { TouchPad } from "@/components/games/touch-pad";
+import { HudMenu } from "@/components/games/hud-menu";
 import {
   createArkanoidGame,
   type ArkanoidCallbacks,
@@ -21,6 +23,7 @@ import {
   type SkinId,
 } from "@/lib/skins";
 import { SkinSelector } from "@/components/skin-selector";
+import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 
 const SKIN_GAME_ID = "arkanoid";
 const SOUND_STORAGE_KEY = "av_arkanoid_sound";
@@ -94,6 +97,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     const initialSkin = readStoredSkin<SkinId>(SKIN_GAME_ID);
     setSkin(initialSkin);
 
+    setupHiDpiCanvas(canvas, 800, 600);
     const instance = createArkanoidGame(canvas, buildCallbacks(), {
       soundEnabled: initialSound,
       skin: initialSkin,
@@ -178,21 +182,34 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     }
   };
 
-  const bindKey = (code: string) => ({
-    onPointerDown: (e: React.PointerEvent) => {
-      e.preventDefault();
-      gameRef.current?.setKey(code, true);
-    },
-    onPointerUp: () => gameRef.current?.setKey(code, false),
-    onPointerLeave: () => gameRef.current?.setKey(code, false),
-    onPointerCancel: () => gameRef.current?.setKey(code, false),
-  });
+  const canDragPaddle = !paused && !over && levelCleared === null;
+
+  const updatePointerX = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const logicalX = ((e.clientX - rect.left) / rect.width) * 800;
+    gameRef.current?.setPointerX(logicalX);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!canDragPaddle) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updatePointerX(e);
+  };
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!canDragPaddle) return;
+    updatePointerX(e);
+  };
+  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
 
   return (
     <div className="av-player fade-in">
       <div className="player-hud">
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <div className="hud-stat">
+          <div className="hud-stat hud-stat-player">
             <div className="l">Jugador</div>
             <div className="v" style={{ color: "var(--ink)" }}>
               {name}
@@ -213,7 +230,13 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
         </div>
-        <div className="hud-actions">
+        <HudMenu>
+          <div className="hud-stat hud-menu-player-dup">
+            <div className="l">Jugador</div>
+            <div className="v" style={{ color: "var(--ink)" }}>
+              {name}
+            </div>
+          </div>
           <SkinSelector
             value={skin}
             onChange={handleSkinChange}
@@ -231,90 +254,82 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
           <Link className="btn ghost" href={`/games/${game.id}`}>
             SALIR
           </Link>
-        </div>
+        </HudMenu>
       </div>
 
-      <div className="crt">
-        <div className="crt-screen">
-          <canvas
-            ref={canvasRef}
-            width={800}
-            height={600}
-            className="arkanoid-canvas"
-          />
-          {paused && (
-            <div
-              className="crt-content"
-              style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
-            >
-              <div>
-                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
-                  EN PAUSA
-                </div>
-                <div
-                  className="mono"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--ink-dim)",
-                    marginTop: 10,
-                    letterSpacing: "0.16em",
-                  }}
-                >
-                  PULSA REANUDAR PARA CONTINUAR
-                </div>
-              </div>
-            </div>
-          )}
-          {levelCleared !== null && !over && (
-            <div
-              className="crt-content"
-              style={{ background: "rgba(0,0,0,0.72)", zIndex: 5 }}
-              onClick={advanceLevel}
-              onPointerDown={advanceLevel}
-            >
-              <div>
-                <div className="pixel neon-yellow" style={{ fontSize: 20 }}>
-                  NIVEL {levelCleared} SUPERADO
-                </div>
-                <div
-                  className="mono"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--ink-dim)",
-                    marginTop: 10,
-                    letterSpacing: "0.16em",
-                  }}
-                >
-                  PULSA UNA TECLA PARA CONTINUAR
+      <div className="crt-stage">
+        <div className="crt">
+          <div className="crt-screen">
+            <canvas
+              ref={canvasRef}
+              width={800}
+              height={600}
+              className="arkanoid-canvas"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+            />
+            {paused && (
+              <div
+                className="crt-content"
+                style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
+              >
+                <div>
+                  <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
+                    EN PAUSA
+                  </div>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      color: "var(--ink-dim)",
+                      marginTop: 10,
+                      letterSpacing: "0.16em",
+                    }}
+                  >
+                    PULSA REANUDAR PARA CONTINUAR
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            {levelCleared !== null && !over && (
+              <div
+                className="crt-content"
+                style={{ background: "rgba(0,0,0,0.72)", zIndex: 5 }}
+                onClick={advanceLevel}
+                onPointerDown={advanceLevel}
+              >
+                <div>
+                  <div className="pixel neon-yellow" style={{ fontSize: 20 }}>
+                    NIVEL {levelCleared} SUPERADO
+                  </div>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      color: "var(--ink-dim)",
+                      marginTop: 10,
+                      letterSpacing: "0.16em",
+                    }}
+                  >
+                    PULSA UNA TECLA PARA CONTINUAR
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="crt-bottom">
+            <span className="led">SEÑAL OK</span>
+            <span>{title} · CRT-83 · 60 HZ</span>
+            <span>CARGA · 1MB</span>
+          </div>
         </div>
-        <div className="crt-bottom">
-          <span className="led">SEÑAL OK</span>
-          <span>{title} · CRT-83 · 60 HZ</span>
-          <span>CARGA · 1MB</span>
-        </div>
-      </div>
-
-      <div className="arkanoid-touch-controls">
-        <div className="td-pad">
-          <button
-            className="td-btn"
-            aria-label="Mover paleta a la izquierda"
-            {...bindKey("ArrowLeft")}
-          >
-            ◀
-          </button>
-          <button
-            className="td-btn"
-            aria-label="Mover paleta a la derecha"
-            {...bindKey("ArrowRight")}
-          >
-            ▶
-          </button>
-        </div>
+        <TouchPad
+          dpad={{ left: "ArrowLeft", right: "ArrowRight" }}
+          disabled={paused || over}
+          onKey={(code, pressed) => gameRef.current?.setKey(code, pressed)}
+        />
       </div>
 
       {over && outcome === "victory" && (

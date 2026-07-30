@@ -2,7 +2,7 @@
 name: spec
 description: Designs and develops specs following the spec-driven method. Asks clarifying questions before proposing structure, and builds the spec section by section. Use it when starting a large feature, before writing code.
 disable-model-invocation: true
-argument-hint: 'short feature description or requirement'
+argument-hint: "short feature description or requirement"
 ---
 
 # /spec — Guided spec designer
@@ -96,7 +96,9 @@ When all sections are confirmed:
 
 1. Determine the next sequential number by looking at `specs/`. If the last one is `02-powerups.md`, this one will be `03-`.
 2. Generate a short slug from the objective (e.g. `levels-and-highscores`).
-3. Ask the user whether the proposed file name works for them before writing it.
+3. Ask: "Write the spec to `specs/NN-slug.md`? [y/n]" — **this is the last question you ask in this
+   skill.** Do not fold it into a question about the filename; it must be a yes/no about writing the
+   file.
 4. Create the file at `specs/NN-slug.md` with all approved sections.
 5. Mark the state as `Draft` by default. **Do not mark it as `Approved` automatically** — the user does that once they have re-read it.
 6. **Seed the config file if it does not exist.** Check for `specs/.spec-config.yml`. If it is **missing**, create it with the default content below. If it **already exists, leave it untouched** — never overwrite the user's settings.
@@ -110,17 +112,34 @@ When all sections are confirmed:
    AutoCreateBranch: true
    ```
 
-7. Confirm to the user:
-   - Path of the created file.
-   - Reminder: the spec is in `Draft` state. Change it to `Approved` once you have re-read it.
-   - If you just created `specs/.spec-config.yml`, mention it exists and that `AutoCreateBranch` defaults to `true` (set it to `false` to control branch creation yourself).
-   - Next step: once reviewed and approved, run `/spec-impl NN-slug` to implement it.
-   - **Stop here.** Do not propose implementing the spec, writing code, or taking any further action beyond this confirmation.
+7. Close with this literal template, filled in, and nothing else — no question, no offer, no "let me
+   know if you want anything else". This is a statement of what happened, not an invitation:
+
+   ```
+   Spec created: specs/NN-slug.md
+   Status: Draft — change it to Approved once you have re-read it.
+   To implement it, you run: /spec-impl NN-slug
+   ```
+
+   Add a fourth line only if you just created `specs/.spec-config.yml` in step 6: mention it exists
+   and that `AutoCreateBranch` defaults to `true` (set it to `false` to control branch creation
+   yourself). Do not add anything else to the template.
+
+8. **Stop the turn immediately after that message.** Do not propose implementing the spec, writing
+   code, or taking any further action.
 
 ## Hard rules
 
 - **Never write code during this command.** Only the spec's `.md` file at the end.
 - **Never propose implementing the spec after saving it.** Your job ends when the file is written. The user runs `/spec-impl` when they are ready.
+- **Never end this skill with a question, an offer, or anything phrased as an invitation to act** —
+  neither in your language nor in the user's. Banned closings (illustrative, not exhaustive; the same
+  pattern in any language is banned): "Do you want me to implement it?", "Shall I run `/spec-impl`?",
+  "Should I start with step 1?", "Anything else?", "¿Quieres que lo implemente?", "¿Ejecuto
+  `/spec-impl`?", "¿Empiezo con el paso 1?", "¿Quieres que haga algo más?". Naming `/spec-impl` inside
+  the literal template in Phase 4 step 7 is the only place that command may appear — always as a
+  statement of fact ("you run: ..."), never as a question. Execution always starts in a new turn,
+  initiated by the human, never by you.
 - **Never assume decisions the user did not confirm.** If you are missing information, ask.
 - **Never generate the full spec in a single response.** Section by section, with confirmation.
 - **If the user wants to speed up and skip Phase 2**, remind them: "Questions now save hours later. Are you sure you want to skip them?". If they insist, respect their decision but record it in the spec's decisions section ("Quick definition without detailed clarification").

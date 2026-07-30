@@ -1,3 +1,4 @@
+import type { Viewport } from "next";
 import { notFound } from "next/navigation";
 import { getGame } from "@/lib/data/games";
 import { GamePlayer } from "@/components/game-player";
@@ -5,6 +6,14 @@ import { AsteroidsPlayer } from "@/components/games/asteroids-player";
 import { TetrisPlayer } from "@/components/games/tetris-player";
 import { ArkanoidPlayer } from "@/components/games/arkanoid-player";
 import { SnakePlayer } from "@/components/games/snake-player";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export default async function GamePlayerPage({
   params,
