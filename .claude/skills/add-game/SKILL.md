@@ -157,20 +157,36 @@ When every section is confirmed:
 
 1. Take the next sequential number from `specs/`.
 2. Propose the filename (`NN-<id>-game.md` or similar, matching what `specs/` already looks like) and
-   confirm it before writing.
+   ask: "Write the spec to `specs/NN-<id>-game.md`? [y/n]" — **this is the last question you ask in
+   this skill.**
 3. Write the file with state `Draft`.
-4. Confirm to the user:
-   - the path written,
-   - that the state is `Draft` and **the human** changes it to `Approved` after re-reading,
-   - that the next command is `/spec-impl NN-slug`,
-   - that the SQL insert in the plan is a **manual step** they run in the Supabase SQL Editor.
-5. **Stop there.** Do not offer to implement, do not write code, do not run the SQL.
+4. Close with this literal template, filled in, and nothing else — no question, no offer, no "let me
+   know if you want anything else". This is a statement of what happened, not an invitation:
+
+   ```
+   Spec created: specs/NN-<id>-game.md
+   Status: Draft — change it to Approved once you have re-read it.
+   To implement it, you run: /spec-impl NN-<id>-game
+   Note: the `insert into games` in the plan is a manual step — you run it yourself in the
+   Supabase SQL Editor.
+   ```
+
+5. **Stop the turn immediately after that message.** Do not offer to implement, do not write code, do
+   not run the SQL.
 
 ## Hard rules
 
 - **Never write code.** Only the spec's `.md` file at the end.
 - **Never set the state to `Approved`.** That gate belongs to the human, per `CLAUDE.md`.
 - **Never propose implementing the spec after saving it.** Your job ends at the confirmation.
+- **Never end this skill with a question, an offer, or anything phrased as an invitation to act** —
+  neither in your language nor in the user's. Banned closings (illustrative, not exhaustive; the same
+  pattern in any language is banned): "Do you want me to implement it?", "Shall I run `/spec-impl`?",
+  "Should I start with step 1?", "Anything else?", "¿Quieres que lo implemente?", "¿Ejecuto
+  `/spec-impl`?", "¿Empiezo con el paso 1?", "¿Quieres que haga algo más?". Naming `/spec-impl` inside
+  the literal template in Phase 4 step 4 is the only place that command may appear — always as a
+  statement of fact ("you run: ..."), never as a question. Execution always starts in a new turn,
+  initiated by the human, never by you.
 - **Never invent `id`, `cat`, `color`, or asset paths.** `cat` and `color` are CHECK-constrained in
   the database — a wrong value fails the insert at implementation time, not at spec time.
 - **One game per spec.** If the user wants to port two games, that is two specs. Say so.
