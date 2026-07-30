@@ -1478,8 +1478,11 @@ a {
   .crt-screen {
     /* max(240px, …) evita que una altura disponible negativa (posible antes
        de sacar el mando del flujo en horizontal, paso 6) colapse el canvas a
-       0×0: se prefiere un canvas pequeño pero visible. */
-    width: min(100%, calc(max(240px, (100dvh - 440px)) * 4 / 3));
+       0×0: se prefiere un canvas pequeño pero visible. 484px = presupuesto
+       original de 440px + 44px que añadió la carcasa del spec 13 (padding
+       vertical 30px + borde 2px + el dpad, que ahora mide 156px de alto
+       frente a los 144px del grid anterior, 12px más). */
+    width: min(100%, calc(max(240px, (100dvh - 484px)) * 4 / 3));
     margin-inline: auto;
   }
 }
@@ -1523,9 +1526,6 @@ a {
 @media (pointer: coarse) {
   .touch-pad {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 8px;
     margin-top: 16px;
   }
   /* bloqueo de scroll accidental (paso 7 del spec): arrastrar el dedo sobre
@@ -1538,38 +1538,125 @@ a {
     overscroll-behavior: none;
   }
 }
+.touch-pad-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 22px 14px;
+  background: linear-gradient(180deg, #1c1c28 0%, #0c0c14 100%);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow:
+    0 30px 80px -30px rgba(0, 245, 255, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
+}
+.touch-pad-shell::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(0, 245, 255, 0.14);
+  border-radius: 18px;
+  pointer-events: none;
+}
+.touch-pad-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px
+  );
+  background-size: 8px 8px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.6;
+}
 .touch-pad-dpad {
   display: grid;
-  grid-template-columns: repeat(3, 46px);
-  grid-template-rows: repeat(3, 46px);
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(3, 50px);
+  gap: 3px;
 }
 .touch-pad-arm,
 .touch-pad-hub {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 245, 255, 0.55);
-  color: #001014;
-  font-size: 16px;
   border: none;
   touch-action: none;
   user-select: none;
 }
 .touch-pad-arm {
   pointer-events: auto;
+  background: linear-gradient(180deg, #1a1a25, #0a0a12);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  color: var(--ink-dim);
+  box-shadow:
+    0 4px 0 #050507,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 80ms,
+    box-shadow 140ms,
+    color 140ms,
+    border-color 140ms,
+    background 140ms;
+}
+.touch-pad-arm-icon {
+  width: 22px;
+  height: 22px;
+  transition: filter 140ms;
+}
+.touch-pad-arm:active {
+  transform: translateY(3px);
+  color: var(--cyan);
+  background: linear-gradient(180deg, #08161e, #030a0e);
+  border-color: var(--cyan);
+  box-shadow:
+    0 1px 0 #050507,
+    inset 0 0 16px rgba(0, 245, 255, 0.45),
+    0 0 16px rgba(0, 245, 255, 0.5);
+}
+.touch-pad-arm:active .touch-pad-arm-icon {
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 12px var(--cyan));
 }
 .touch-pad-hub {
   pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, #181822 0%, #08080d 80%);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.touch-pad-hub-gem {
+  width: 12px;
+  height: 12px;
+  background: var(--cyan);
+  box-shadow:
+    0 0 10px var(--cyan),
+    inset 0 0 4px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: touch-pad-hub-pulse 2s ease-in-out infinite;
+}
+@keyframes touch-pad-hub-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
 }
 .touch-pad-arm-up {
   grid-column: 2;
   grid-row: 1;
-  border-radius: 10px 10px 0 0;
 }
 .touch-pad-arm-left {
   grid-column: 1;
   grid-row: 2;
-  border-radius: 10px 0 0 10px;
 }
 .touch-pad-hub {
   grid-column: 2;
@@ -1578,15 +1665,10 @@ a {
 .touch-pad-arm-right {
   grid-column: 3;
   grid-row: 2;
-  border-radius: 0 10px 10px 0;
 }
 .touch-pad-arm-down {
   grid-column: 2;
   grid-row: 3;
-  border-radius: 0 0 10px 10px;
-}
-.touch-pad-arm:active {
-  background: rgba(0, 245, 255, 0.9);
 }
 .touch-pad-arm.is-inactive,
 .touch-pad-arm:disabled {
@@ -1595,44 +1677,133 @@ a {
 }
 .touch-pad-buttons {
   position: relative;
-  width: 108px;
-  height: 84px;
+  width: 148px;
+  height: 148px;
 }
 .touch-pad-circle {
   position: absolute;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  width: 74px;
+  height: 74px;
+  padding: 0;
   border-radius: 50%;
-  background: rgba(0, 245, 255, 0.55);
-  color: #001014;
-  font-family: var(--pixel);
-  font-size: 9px;
-  letter-spacing: 0.06em;
+  border: 2px solid currentColor;
+  background:
+    radial-gradient(
+      circle at 32% 26%,
+      rgba(255, 255, 255, 0.25),
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 50% 55%,
+      var(--touch-pad-ab-mid),
+      var(--touch-pad-ab-deep) 75%
+    );
+  box-shadow:
+    0 6px 0 #050507,
+    0 0 22px var(--touch-pad-ab-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4);
   touch-action: none;
   user-select: none;
   pointer-events: auto;
+  transition:
+    transform 80ms,
+    box-shadow 140ms;
 }
 .touch-pad-circle-a {
   top: 0;
   left: 0;
-  width: 62px;
-  height: 62px;
+  color: var(--magenta);
+  --touch-pad-ab-mid: rgba(255, 0, 110, 0.7);
+  --touch-pad-ab-deep: rgba(110, 0, 40, 0.95);
+  --touch-pad-ab-glow: rgba(255, 0, 110, 0.4);
 }
 .touch-pad-circle-b {
   bottom: 0;
   right: 0;
-  width: 46px;
-  height: 46px;
+  color: var(--cyan);
+  --touch-pad-ab-mid: rgba(0, 200, 230, 0.7);
+  --touch-pad-ab-deep: rgba(0, 50, 70, 0.95);
+  --touch-pad-ab-glow: rgba(0, 245, 255, 0.4);
+}
+.touch-pad-circle-label {
+  position: relative;
+  z-index: 2;
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+.touch-pad-circle-a .touch-pad-circle-label {
+  text-shadow:
+    0 0 8px var(--magenta),
+    0 0 18px var(--magenta),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.touch-pad-circle-b .touch-pad-circle-label {
+  text-shadow:
+    0 0 8px var(--cyan),
+    0 0 18px var(--cyan),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.touch-pad-circle-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+  opacity: 0;
+  transition:
+    opacity 140ms,
+    transform 200ms;
 }
 .touch-pad-circle:active {
-  background: rgba(0, 245, 255, 0.9);
+  transform: translateY(4px) scale(0.97);
+  box-shadow:
+    0 1px 0 #050507,
+    0 0 36px var(--touch-pad-ab-glow),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
+}
+.touch-pad-circle:active .touch-pad-circle-ring {
+  opacity: 1;
+  transform: scale(1.08);
 }
 .touch-pad-circle.is-inactive,
 .touch-pad-circle:disabled {
   opacity: 0.32;
   pointer-events: none;
+}
+
+/* downscale en pantallas estrechas (paso 7 del spec 13): reutiliza el mismo
+   breakpoint que ya usa el modo inmersivo (max-width: 520px) en vez de crear
+   uno nuevo, para que la carcasa no desborde en móviles angostos como el
+   iPhone SE (375px). Se aplica en cualquier orientación con ese ancho. */
+@media (pointer: coarse) and (max-width: 520px) {
+  .touch-pad-shell {
+    padding: 12px 16px 10px;
+  }
+  .touch-pad-dpad {
+    grid-template-columns: repeat(3, 46px);
+    grid-template-rows: repeat(3, 46px);
+  }
+  .touch-pad-arm-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .touch-pad-hub-gem {
+    width: 10px;
+    height: 10px;
+  }
+  .touch-pad-buttons {
+    width: 128px;
+    height: 128px;
+  }
+  .touch-pad-circle {
+    width: 64px;
+    height: 64px;
+  }
 }
 
 /* horizontal bajo (paso 6 del spec): no sobra alto para el mando en flujo
@@ -1651,6 +1822,17 @@ a {
      pantalla, así que se recalcula con el remanente real. */
   .crt-screen {
     width: min(100%, calc(max(240px, (100dvh - 150px)) * 4 / 3));
+  }
+  /* sin carcasa en horizontal bajo (decisión explícita del spec 13): el
+     shell desaparece de la caja de renderizado para que la cruceta y los
+     botones vuelvan a posicionarse sueltos respecto a .touch-pad, igual
+     que antes de introducir la carcasa. */
+  .touch-pad-shell {
+    display: contents;
+  }
+  .touch-pad-shell::before,
+  .touch-pad-shell::after {
+    content: none;
   }
   .touch-pad-dpad {
     position: absolute;
@@ -1829,17 +2011,25 @@ a {
 }
 .modal .input-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 22px 0 12px;
 }
 .modal .input-row input {
   flex: 1;
-  height: 44px;
-  padding: 0 12px;
+  min-width: 0;
+  height: auto;
+  line-height: normal;
+  padding: 13px 14px;
   background: var(--bg);
   border: 1px solid var(--line);
   outline: 0;
   font-family: var(--mono);
+  font-size: 14px;
+}
+.modal .input-row .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .modal .input-row input:focus {
   border-color: var(--cyan);
@@ -1851,6 +2041,32 @@ a {
   justify-content: center;
   margin-top: 18px;
   flex-wrap: wrap;
+}
+@media (max-width: 400px) {
+  .modal {
+    padding: 28px 20px;
+  }
+  .modal h2 {
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .modal .final {
+    margin: 18px 0 8px;
+  }
+  .modal .input-row {
+    flex-direction: column;
+    gap: 14px;
+    margin: 22px 0 18px;
+  }
+  .modal .input-row .btn {
+    width: 100%;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+  .modal .actions {
+    gap: 14px;
+    margin-top: 20px;
+  }
 }
 .toast-saved {
   font-family: var(--pixel);

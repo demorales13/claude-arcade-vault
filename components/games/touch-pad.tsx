@@ -35,11 +35,11 @@ const DPAD_LABELS: Record<keyof TouchPadDpad, string> = {
   right: "Mover derecha",
 };
 
-const DPAD_GLYPHS: Record<keyof TouchPadDpad, string> = {
-  up: "▲",
-  down: "▼",
-  left: "◀",
-  right: "▶",
+const DPAD_ARROW_PATHS: Record<keyof TouchPadDpad, string> = {
+  up: "M12 4 L20 16 L4 16 Z",
+  right: "M8 4 L20 12 L8 20 Z",
+  down: "M4 8 L20 8 L12 20 Z",
+  left: "M16 4 L16 20 L4 12 Z",
 };
 
 /**
@@ -139,7 +139,13 @@ export function TouchPad({
         disabled={disabled || inactive}
         {...bind(code, repeat)}
       >
-        {DPAD_GLYPHS[key]}
+        <svg
+          className="touch-pad-arm-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path d={DPAD_ARROW_PATHS[key]} fill="currentColor" />
+        </svg>
       </button>
     );
   };
@@ -158,23 +164,28 @@ export function TouchPad({
         disabled={disabled || inactive}
         {...bind(btn?.code, btn?.repeat ?? false)}
       >
-        {btn?.label ?? ""}
+        <span className="touch-pad-circle-ring" aria-hidden="true" />
+        <span className="touch-pad-circle-label">{btn?.label ?? ""}</span>
       </button>
     );
   };
 
   return (
     <div className="touch-pad" aria-hidden={disabled}>
-      <div className="touch-pad-dpad">
-        {dpadCell("up")}
-        {dpadCell("left")}
-        <div className="touch-pad-hub" aria-hidden="true" />
-        {dpadCell("right")}
-        {dpadCell("down")}
-      </div>
-      <div className="touch-pad-buttons">
-        {actionButton(buttonA, "a")}
-        {actionButton(buttonB, "b")}
+      <div className="touch-pad-shell">
+        <div className="touch-pad-dpad">
+          {dpadCell("up")}
+          {dpadCell("left")}
+          <div className="touch-pad-hub" aria-hidden="true">
+            <span className="touch-pad-hub-gem" />
+          </div>
+          {dpadCell("right")}
+          {dpadCell("down")}
+        </div>
+        <div className="touch-pad-buttons">
+          {actionButton(buttonA, "a")}
+          {actionButton(buttonB, "b")}
+        </div>
       </div>
     </div>
   );
