@@ -1,8 +1,14 @@
+import type { SkinId } from "@/lib/skins";
+
 export type SnakeCallbacks = {
   onScoreChange?: (score: number) => void;
   onLivesChange?: (lives: number) => void;
   onLevelChange?: (level: number) => void;
   onGameOver?: (finalScore: number) => void;
+};
+
+export type SnakeOptions = {
+  skin?: SkinId;
 };
 
 export type SnakeGame = {
@@ -11,6 +17,7 @@ export type SnakeGame = {
   destroy: () => void;
   setKey: (code: string, pressed: boolean) => void;
   forceGameOver: () => void;
+  setSkin: (skin: SkinId) => void;
 };
 
 const CELL = 24;
@@ -29,7 +36,6 @@ const TICK_MIN_MS = 60;
 const START_LENGTH = 3;
 
 const FRUIT_SOURCE = "/games/snake/fruits.png";
-const FRUIT_FALLBACK_COLOR = "#ff3b3b";
 
 type FruitSprite = { x: number; y: number; w: number; h: number };
 
@@ -85,11 +91,193 @@ function getContext2D(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
   return context;
 }
 
+type SnakePalette = {
+  body: string;
+  head: string;
+  fruitFallback: string;
+};
+
+// Skin visual identities. `clasico` reproduces the game's original palette
+// (flat green body, glowing head) exactly as it looked before skins existed,
+// so the default view never changes for existing players. `neon` swaps in a
+// cyan/magenta duo drawn with a black-cored glow border (mold: drawBlockNeon
+// in components/games/tetris/engine.ts). `retro` uses a short amber range
+// with a beveled highlight strip and no shadowBlur, evoking CRT phosphor.
+const SKIN_COLORS: Record<SkinId, SnakePalette> = {
+  clasico: {
+    body: "#00cc6e",
+    head: "#00ff88",
+    fruitFallback: "#ff3b3b",
+  },
+  neon: {
+    body: "#00e5ff",
+    head: "#ff00e6",
+    fruitFallback: "#faff00",
+  },
+  retro: {
+    body: "#ffb000",
+    head: "#ffcf6b",
+    fruitFallback: "#ff5a1f",
+  },
+};
+
+const EYE_COLOR = "#04150c";
+
+function roundedRectPath(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.lineTo(x + w - r, y);
+  context.arcTo(x + w, y, x + w, y + r, r);
+  context.lineTo(x + w, y + h - r);
+  context.arcTo(x + w, y + h, x + w - r, y + h, r);
+  context.lineTo(x + r, y + h);
+  context.arcTo(x, y + h, x, y + h - r, r);
+  context.lineTo(x, y + r);
+  context.arcTo(x, y, x + r, y, r);
+  context.closePath();
+}
+
+function drawBodyClasico(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  context.fillStyle = color;
+  context.fillRect(x + 1, y + 1, size - 2, size - 2);
+}
+
+function drawBodyNeon(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  context.fillStyle = "#000000";
+  context.fillRect(x + 1, y + 1, size - 2, size - 2);
+  context.save();
+  context.shadowColor = color;
+  context.shadowBlur = 12;
+  context.strokeStyle = color;
+  context.lineWidth = 2;
+  context.strokeRect(x + 3, y + 3, size - 6, size - 6);
+  context.restore();
+  context.save();
+  context.globalAlpha = 0.35;
+  context.fillStyle = color;
+  context.fillRect(x + 5, y + 5, size - 10, size - 10);
+  context.restore();
+}
+
+function drawBodyRetro(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  context.fillStyle = color;
+  context.fillRect(x + 1, y + 1, size - 2, size - 2);
+  context.fillStyle = "rgba(255, 255, 255, 0.18)";
+  context.fillRect(x + 1, y + 1, size - 2, 4);
+  context.fillStyle = "rgba(0, 0, 0, 0.25)";
+  context.fillRect(x + 1, y + size - 5, size - 2, 4);
+}
+
+function drawHeadClasico(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  context.save();
+  context.shadowColor = color;
+  context.shadowBlur = 8;
+  context.fillStyle = color;
+  roundedRectPath(context, x + 1, y + 1, size - 2, size - 2, 6);
+  context.fill();
+  context.restore();
+}
+
+function drawHeadNeon(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  roundedRectPath(context, x + 1, y + 1, size - 2, size - 2, 6);
+  context.fillStyle = "#000000";
+  context.fill();
+  context.save();
+  context.shadowColor = color;
+  context.shadowBlur = 16;
+  roundedRectPath(context, x + 3, y + 3, size - 6, size - 6, 5);
+  context.strokeStyle = color;
+  context.lineWidth = 2;
+  context.stroke();
+  context.restore();
+  roundedRectPath(context, x + 5, y + 5, size - 10, size - 10, 4);
+  context.fillStyle = color;
+  context.fill();
+}
+
+function drawHeadRetro(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  roundedRectPath(context, x + 1, y + 1, size - 2, size - 2, 4);
+  context.fillStyle = color;
+  context.fill();
+  roundedRectPath(context, x + 1, y + 1, size - 2, 4, 4);
+  context.fillStyle = "rgba(255, 255, 255, 0.22)";
+  context.fill();
+}
+
+const SKIN_DRAWERS: Record<
+  SkinId,
+  {
+    body: (
+      context: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      size: number,
+      color: string,
+    ) => void;
+    head: (
+      context: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      size: number,
+      color: string,
+    ) => void;
+  }
+> = {
+  clasico: { body: drawBodyClasico, head: drawHeadClasico },
+  neon: { body: drawBodyNeon, head: drawHeadNeon },
+  retro: { body: drawBodyRetro, head: drawHeadRetro },
+};
+
 export function createSnakeGame(
   canvas: HTMLCanvasElement,
   callbacks: SnakeCallbacks,
+  options: SnakeOptions = {},
 ): SnakeGame {
   const ctx = getContext2D(canvas);
+  let skin: SkinId = options.skin ?? "clasico";
 
   // ---- atlas de frutas: precargado antes de arrancar el loop ----
   let fruitImg: HTMLImageElement | null = null;
@@ -288,31 +476,11 @@ export function createSnakeGame(
         dh,
       );
     } else {
-      ctx.fillStyle = FRUIT_FALLBACK_COLOR;
+      ctx.fillStyle = SKIN_COLORS[skin].fruitFallback;
       ctx.beginPath();
       ctx.arc(cx, cy, CELL * 0.35, 0, Math.PI * 2);
       ctx.fill();
     }
-  }
-
-  function roundedRectPath(
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    r: number,
-  ) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.arcTo(x + w, y, x + w, y + r, r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-    ctx.lineTo(x + r, y + h);
-    ctx.arcTo(x, y + h, x, y + h - r, r);
-    ctx.lineTo(x, y + r);
-    ctx.arcTo(x, y, x + r, y, r);
-    ctx.closePath();
   }
 
   function drawHeadEyes() {
@@ -341,7 +509,7 @@ export function createSnakeGame(
     }
 
     const eyeRadius = CELL * 0.09;
-    ctx.fillStyle = "#04150c";
+    ctx.fillStyle = EYE_COLOR;
     ctx.beginPath();
     ctx.arc(cx + ax - sx, cy + ay - sy, eyeRadius, 0, Math.PI * 2);
     ctx.arc(cx + ax + sx, cy + ay + sy, eyeRadius, 0, Math.PI * 2);
@@ -349,25 +517,20 @@ export function createSnakeGame(
   }
 
   function drawSnake() {
+    const palette = SKIN_COLORS[skin];
+    const drawers = SKIN_DRAWERS[skin];
+
     for (let i = snake.length - 1; i >= 1; i--) {
       const seg = snake[i];
       const x = BOARD_X + seg.col * CELL;
       const y = BOARD_Y + seg.row * CELL;
-      ctx.fillStyle = "#00cc6e";
-      ctx.fillRect(x + 1, y + 1, CELL - 2, CELL - 2);
+      drawers.body(ctx, x, y, CELL, palette.body);
     }
 
     const head = snake[0];
     const hx = BOARD_X + head.col * CELL;
     const hy = BOARD_Y + head.row * CELL;
-
-    ctx.save();
-    ctx.shadowColor = "#00ff88";
-    ctx.shadowBlur = 8;
-    ctx.fillStyle = "#00ff88";
-    roundedRectPath(hx + 1, hy + 1, CELL - 2, CELL - 2, 6);
-    ctx.fill();
-    ctx.restore();
+    drawers.head(ctx, hx, hy, CELL, palette.head);
 
     drawHeadEyes();
   }
@@ -440,5 +603,8 @@ export function createSnakeGame(
     },
     setKey,
     forceGameOver,
+    setSkin(newSkin: SkinId) {
+      skin = newSkin;
+    },
   };
 }

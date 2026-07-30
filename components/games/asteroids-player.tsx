@@ -12,6 +12,16 @@ import {
 } from "@/components/games/asteroids/engine";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { localizedGameText } from "@/lib/i18n/localize-game";
+import {
+  DEFAULT_SKIN,
+  SKIN_LABELS,
+  readStoredSkin,
+  writeStoredSkin,
+  type SkinId,
+} from "@/lib/skins";
+import { SkinSelector } from "@/components/skin-selector";
+
+const SKIN_GAME_ID = "asteroids";
 
 function readUserName(): string {
   try {
@@ -36,6 +46,7 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
   const [over, setOver] = useState(false);
   const [name, setName] = useState("INVITADO");
   const [saved, setSaved] = useState(false);
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
 
   useEffect(() => {
     setName(readUserName());
@@ -56,7 +67,12 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const instance = createAsteroidsGame(canvas, buildCallbacks());
+    const initialSkin = readStoredSkin<SkinId>(SKIN_GAME_ID);
+    setSkin(initialSkin);
+
+    const instance = createAsteroidsGame(canvas, buildCallbacks(), {
+      skin: initialSkin,
+    });
     gameRef.current = instance;
 
     return () => {
@@ -64,6 +80,12 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
       gameRef.current = null;
     };
   }, []);
+
+  const handleSkinChange = (newSkin: SkinId) => {
+    setSkin(newSkin);
+    gameRef.current?.setSkin(newSkin);
+    writeStoredSkin(SKIN_GAME_ID, newSkin);
+  };
 
   const togglePause = () => {
     if (paused) {
@@ -88,7 +110,9 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
     setSaved(false);
 
     if (canvas) {
-      gameRef.current = createAsteroidsGame(canvas, buildCallbacks());
+      gameRef.current = createAsteroidsGame(canvas, buildCallbacks(), {
+        skin,
+      });
     }
   };
 
@@ -134,6 +158,11 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
           )}
         </div>
         <div className="hud-actions">
+          <SkinSelector
+            value={skin}
+            onChange={handleSkinChange}
+            options={SKIN_LABELS}
+          />
           <button className="btn yellow" onClick={togglePause}>
             {paused ? "REANUDAR" : "PAUSA"}
           </button>
