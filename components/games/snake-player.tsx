@@ -12,6 +12,16 @@ import {
 } from "@/components/games/snake/engine";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { localizedGameText } from "@/lib/i18n/localize-game";
+import {
+  DEFAULT_SKIN,
+  SKIN_LABELS,
+  readStoredSkin,
+  writeStoredSkin,
+  type SkinId,
+} from "@/lib/skins";
+import { SkinSelector } from "@/components/skin-selector";
+
+const SKIN_GAME_ID = "snake";
 
 function readUserName(): string {
   try {
@@ -35,6 +45,7 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
   const [over, setOver] = useState(false);
   const [name, setName] = useState("INVITADO");
   const [saved, setSaved] = useState(false);
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
 
   useEffect(() => {
     setName(readUserName());
@@ -54,7 +65,12 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const instance = createSnakeGame(canvas, buildCallbacks());
+    const initialSkin = readStoredSkin<SkinId>(SKIN_GAME_ID);
+    setSkin(initialSkin);
+
+    const instance = createSnakeGame(canvas, buildCallbacks(), {
+      skin: initialSkin,
+    });
     gameRef.current = instance;
 
     return () => {
@@ -62,6 +78,12 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
       gameRef.current = null;
     };
   }, []);
+
+  const handleSkinChange = (newSkin: SkinId) => {
+    setSkin(newSkin);
+    gameRef.current?.setSkin(newSkin);
+    writeStoredSkin(SKIN_GAME_ID, newSkin);
+  };
 
   const togglePause = () => {
     if (paused) {
@@ -86,7 +108,7 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
     setSaved(false);
 
     if (canvas) {
-      gameRef.current = createSnakeGame(canvas, buildCallbacks());
+      gameRef.current = createSnakeGame(canvas, buildCallbacks(), { skin });
     }
   };
 
@@ -126,6 +148,11 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
           </div>
         </div>
         <div className="hud-actions">
+          <SkinSelector
+            value={skin}
+            onChange={handleSkinChange}
+            options={SKIN_LABELS}
+          />
           <button className="btn yellow" onClick={togglePause}>
             {paused ? "REANUDAR" : "PAUSA"}
           </button>

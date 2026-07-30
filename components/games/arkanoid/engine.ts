@@ -1,3 +1,5 @@
+import type { SkinId } from "@/lib/skins";
+
 export type ArkanoidOutcome = "defeat" | "victory";
 
 export type ArkanoidCallbacks = {
@@ -11,6 +13,7 @@ export type ArkanoidCallbacks = {
 
 export type ArkanoidOptions = {
   soundEnabled?: boolean;
+  skin?: SkinId;
 };
 
 export type ArkanoidGame = {
@@ -21,6 +24,7 @@ export type ArkanoidGame = {
   forceGameOver: () => void;
   continueLevel: () => void;
   setSoundEnabled: (enabled: boolean) => void;
+  setSkin: (skin: SkinId) => void;
 };
 
 const CANVAS_W = 800;
@@ -57,6 +61,35 @@ const BREAK_SOUND_SRC = `${ASSET_BASE}/sounds/break-sound.mp3`;
 const SOUND_VOLUME = 0.5;
 
 type BlockColor = (typeof ROW_COLORS)[number] | "gray";
+
+// Route chosen for skins: the spritesheet's pixel art (paddle, ball, blocks,
+// explosion animation) stays exactly as authored for every skin — `clasico`
+// draws it untouched. `neon`/`retro` are built by tinting one cached copy of
+// the intermediate atlas canvas per skin, once, with non-spatial canvas
+// filters (saturate/brightness/contrast/hue-rotate — no blur, since sprite
+// frames sit flush against each other in the atlas with no padding and a
+// blur filter would bleed color across adjacent rows). The extra glow
+// (`neon`) and bevel (`retro`) on top are cheap per-draw canvas state
+// (shadowBlur / stroke+fill), not a re-tint, so nothing is recomputed per
+// frame beyond ordinary drawImage calls.
+const NEON_FILTER = "saturate(1.8) contrast(1.25) brightness(1.12)";
+const RETRO_FILTER =
+  "sepia(0.6) saturate(2.2) hue-rotate(-8deg) brightness(1.05) contrast(1.15)";
+
+const NEON_ACCENT = "#00f5ff";
+const NEON_SHADOW_BLUR = 12;
+const NEON_GLOW: Record<BlockColor, string> = {
+  red: "#ff3b5c",
+  yellow: "#faff00",
+  cyan: "#00fff9",
+  magenta: "#ff00e6",
+  hotpink: "#ff2ec4",
+  green: "#00ff85",
+  gray: "#8fa6c9",
+};
+
+const RETRO_BEVEL_DARK = "rgba(0, 0, 0, 0.45)";
+const RETRO_BEVEL_LIGHT = "rgba(255, 255, 255, 0.16)";
 
 type SpriteFrame = { sx: number; sy: number; sw: number; sh: number };
 
@@ -190,10 +223,39 @@ export function createArkanoidGame(
   const ctx = getContext2D(canvas);
 
   let soundEnabled = options.soundEnabled ?? true;
+  let skin: SkinId = options.skin ?? "clasico";
 
   // ---- spritesheet: dibujado a un canvas intermedio antes de usarlo ----
-  let ssImg: HTMLCanvasElement | null = null;
+  // `ssBase` es el atlas tal cual (skin `clasico`). `skinVariants` cachea una
+  // copia teñida por skin, construida una sola vez al cargar la imagen — ver
+  // `buildSkinVariant`. Nunca se recalcula por frame.
+  let ssBase: HTMLCanvasElement | null = null;
   let ssLoaded = false;
+  const skinVariants: Partial<Record<SkinId, HTMLCanvasElement>> = {};
+
+  function buildSkinVariant(
+    base: HTMLCanvasElement,
+    filter: string,
+  ): HTMLCanvasElement {
+    const oc = document.createElement("canvas");
+    oc.width = base.width;
+    oc.height = base.height;
+    const octx = oc.getContext("2d");
+    if (!octx) return base;
+    octx.filter = filter;
+    octx.drawImage(base, 0, 0);
+    return oc;
+  }
+
+  function buildSkinVariants(base: HTMLCanvasElement) {
+    skinVariants.clasico = base;
+    skinVariants.neon = buildSkinVariant(base, NEON_FILTER);
+    skinVariants.retro = buildSkinVariant(base, RETRO_FILTER);
+  }
+
+  function activeSpritesheet(): HTMLCanvasElement | null {
+    return skinVariants[skin] ?? ssBase;
+  }
 
   function loadSpritesheet() {
     const rawImg = new Image();
@@ -204,7 +266,8 @@ export function createArkanoidGame(
       const octx = oc.getContext("2d");
       if (!octx) return;
       octx.drawImage(rawImg, 0, 0);
-      ssImg = oc;
+      ssBase = oc;
+      buildSkinVariants(oc);
       ssLoaded = true;
       if (!destroyed) {
         rafId = requestAnimationFrame(loop);
@@ -223,8 +286,19 @@ export function createArkanoidGame(
     w: number,
     h: number,
   ) {
-    if (!ssLoaded || !ssImg) return;
-    ctx.drawImage(ssImg, frame.sx, frame.sy, frame.sw, frame.sh, x, y, w, h);
+    const sheet = activeSpritesheet();
+    if (!ssLoaded || !sheet) return;
+    ctx.drawImage(sheet, frame.sx, frame.sy, frame.sw, frame.sh, x, y, w, h);
+  }
+
+  function drawRetroBevel(x: number, y: number, w: number, h: number) {
+    ctx.save();
+    ctx.strokeStyle = RETRO_BEVEL_DARK;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    ctx.fillStyle = RETRO_BEVEL_LIGHT;
+    ctx.fillRect(x + 1, y + 1, w - 2, Math.max(2, Math.round(h * 0.18)));
+    ctx.restore();
   }
 
   // ---- sonido ----
@@ -498,30 +572,51 @@ export function createArkanoidGame(
   }
 
   // ---- dibujado ----
+  function withNeonGlow(color: string, draw: () => void) {
+    if (skin !== "neon") {
+      draw();
+      return;
+    }
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = NEON_SHADOW_BLUR;
+    draw();
+    ctx.restore();
+  }
+
   function drawPaddle() {
-    drawFrame(SPRITES.paddle, paddle.x, PADDLE.y, PADDLE.w, PADDLE.h);
+    withNeonGlow(NEON_ACCENT, () =>
+      drawFrame(SPRITES.paddle, paddle.x, PADDLE.y, PADDLE.w, PADDLE.h),
+    );
+    if (skin === "retro")
+      drawRetroBevel(paddle.x, PADDLE.y, PADDLE.w, PADDLE.h);
   }
 
   function drawBall() {
-    drawFrame(
-      SPRITES.ball,
-      ball.x - BALL.radius,
-      ball.y - BALL.radius,
-      BALL.radius * 2,
-      BALL.radius * 2,
+    withNeonGlow(NEON_ACCENT, () =>
+      drawFrame(
+        SPRITES.ball,
+        ball.x - BALL.radius,
+        ball.y - BALL.radius,
+        BALL.radius * 2,
+        BALL.radius * 2,
+      ),
     );
   }
 
   function drawBlocks() {
     for (const block of blocks) {
       if (!block.alive) continue;
-      drawFrame(
-        SPRITES.blocks[block.color],
-        block.x,
-        block.y,
-        BLOCK.w,
-        BLOCK.h,
+      withNeonGlow(NEON_GLOW[block.color], () =>
+        drawFrame(
+          SPRITES.blocks[block.color],
+          block.x,
+          block.y,
+          BLOCK.w,
+          BLOCK.h,
+        ),
       );
+      if (skin === "retro") drawRetroBevel(block.x, block.y, BLOCK.w, BLOCK.h);
     }
   }
 
@@ -533,7 +628,9 @@ export function createArkanoidGame(
         Math.max(0, Math.floor(elapsed / (EXPLOSION_DURATION / 4))),
       );
       const frame = EXPLOSION_FRAMES[explosion.color][frameIndex];
-      drawFrame(frame, explosion.x, explosion.y, explosion.w, explosion.h);
+      withNeonGlow(NEON_GLOW[explosion.color], () =>
+        drawFrame(frame, explosion.x, explosion.y, explosion.w, explosion.h),
+      );
     }
   }
 
@@ -618,6 +715,9 @@ export function createArkanoidGame(
     continueLevel,
     setSoundEnabled(enabled: boolean) {
       soundEnabled = enabled;
+    },
+    setSkin(newSkin: SkinId) {
+      skin = newSkin;
     },
   };
 }
