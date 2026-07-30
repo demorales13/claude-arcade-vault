@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
 import { GameOverModal } from "@/components/game-over-modal";
+import { TouchPad } from "@/components/games/touch-pad";
 import {
   createTetrisGame,
   SKIN_LABELS,
@@ -47,16 +48,11 @@ function readStoredSound(): boolean {
   }
 }
 
-const TOUCH_REPEAT_DELAY = 250;
-const TOUCH_REPEAT_INTERVAL = 100;
-
 export function TetrisPlayer({ game }: { game: GameWithStats }) {
   const { language } = useLanguage();
   const { title } = localizedGameText(game, language);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<TetrisGame | null>(null);
-  const repeatTimeoutRef = useRef<number | null>(null);
-  const repeatIntervalRef = useRef<number | null>(null);
 
   const [score, setScore] = useState(0);
   const [lines, setLines] = useState(0);
@@ -102,45 +98,8 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
     return () => {
       instance.destroy();
       gameRef.current = null;
-      clearTouchRepeat();
     };
   }, []);
-
-  function clearTouchRepeat() {
-    if (repeatTimeoutRef.current !== null) {
-      window.clearTimeout(repeatTimeoutRef.current);
-      repeatTimeoutRef.current = null;
-    }
-    if (repeatIntervalRef.current !== null) {
-      window.clearInterval(repeatIntervalRef.current);
-      repeatIntervalRef.current = null;
-    }
-  }
-
-  const bindKey = (code: string) => ({
-    onPointerDown: (e: React.PointerEvent) => {
-      e.preventDefault();
-      gameRef.current?.setKey(code, true);
-      clearTouchRepeat();
-      repeatTimeoutRef.current = window.setTimeout(() => {
-        repeatIntervalRef.current = window.setInterval(() => {
-          gameRef.current?.setKey(code, true);
-        }, TOUCH_REPEAT_INTERVAL);
-      }, TOUCH_REPEAT_DELAY);
-    },
-    onPointerUp: () => {
-      clearTouchRepeat();
-      gameRef.current?.setKey(code, false);
-    },
-    onPointerLeave: () => {
-      clearTouchRepeat();
-      gameRef.current?.setKey(code, false);
-    },
-    onPointerCancel: () => {
-      clearTouchRepeat();
-      gameRef.current?.setKey(code, false);
-    },
-  });
 
   const togglePause = () => {
     if (paused) {
@@ -253,81 +212,61 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
         </div>
       </div>
 
-      <div className="crt">
-        <div className="crt-screen">
-          <canvas
-            ref={canvasRef}
-            width={800}
-            height={600}
-            className="tetris-canvas"
-          />
-          {paused && (
-            <div
-              className="crt-content"
-              style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
-            >
-              <div>
-                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
-                  EN PAUSA
-                </div>
-                <div
-                  className="mono"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--ink-dim)",
-                    marginTop: 10,
-                    letterSpacing: "0.16em",
-                  }}
-                >
-                  PULSA REANUDAR PARA CONTINUAR
+      <div className="crt-stage">
+        <div className="crt">
+          <div className="crt-screen">
+            <canvas
+              ref={canvasRef}
+              width={800}
+              height={600}
+              className="tetris-canvas"
+            />
+            {paused && (
+              <div
+                className="crt-content"
+                style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
+              >
+                <div>
+                  <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
+                    EN PAUSA
+                  </div>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      color: "var(--ink-dim)",
+                      marginTop: 10,
+                      letterSpacing: "0.16em",
+                    }}
+                  >
+                    PULSA REANUDAR PARA CONTINUAR
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="crt-bottom">
+            <span className="led">SEÑAL OK</span>
+            <span>{title} · CRT-83 · 60 HZ</span>
+            <span>CARGA · 1MB</span>
+          </div>
         </div>
-        <div className="crt-bottom">
-          <span className="led">SEÑAL OK</span>
-          <span>{title} · CRT-83 · 60 HZ</span>
-          <span>CARGA · 1MB</span>
-        </div>
-      </div>
-
-      <div className="tetris-touch-controls">
-        <div className="td-pad">
-          <button
-            className="td-btn"
-            aria-label="Mover izquierda"
-            {...bindKey("ArrowLeft")}
-          >
-            ◀
-          </button>
-          <button
-            className="td-btn"
-            aria-label="Bajar"
-            {...bindKey("ArrowDown")}
-          >
-            ▼
-          </button>
-          <button
-            className="td-btn"
-            aria-label="Mover derecha"
-            {...bindKey("ArrowRight")}
-          >
-            ▶
-          </button>
-        </div>
-        <div className="td-actions">
-          <button className="td-btn" aria-label="Rotar" {...bindKey("ArrowUp")}>
-            ROTAR
-          </button>
-          <button
-            className="td-btn td-fire"
-            aria-label="Soltar pieza"
-            {...bindKey("Space")}
-          >
-            SOLTAR
-          </button>
-        </div>
+        <TouchPad
+          dpad={{
+            up: "ArrowUp",
+            down: "ArrowDown",
+            left: "ArrowLeft",
+            right: "ArrowRight",
+          }}
+          dpadRepeat
+          buttonA={{
+            code: "Space",
+            label: "SOLTAR",
+            ariaLabel: "Soltar pieza",
+          }}
+          disabled={paused || over}
+          onKey={(code, pressed) => gameRef.current?.setKey(code, pressed)}
+        />
       </div>
 
       {over && (

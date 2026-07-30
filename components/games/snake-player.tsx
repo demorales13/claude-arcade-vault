@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
 import { GameOverModal } from "@/components/game-over-modal";
+import { TouchPad } from "@/components/games/touch-pad";
 import {
   createSnakeGame,
   type SnakeCallbacks,
@@ -112,16 +113,6 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
     }
   };
 
-  const bindKey = (code: string) => ({
-    onPointerDown: (e: React.PointerEvent) => {
-      e.preventDefault();
-      gameRef.current?.setKey(code, true);
-    },
-    onPointerUp: () => gameRef.current?.setKey(code, false),
-    onPointerLeave: () => gameRef.current?.setKey(code, false),
-    onPointerCancel: () => gameRef.current?.setKey(code, false),
-  });
-
   return (
     <div className="av-player fade-in">
       <div className="player-hud">
@@ -165,76 +156,55 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
         </div>
       </div>
 
-      <div className="crt">
-        <div className="crt-screen">
-          <canvas
-            ref={canvasRef}
-            width={800}
-            height={600}
-            className="snake-canvas"
-          />
-          {paused && (
-            <div
-              className="crt-content"
-              style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
-            >
-              <div>
-                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
-                  EN PAUSA
-                </div>
-                <div
-                  className="mono"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--ink-dim)",
-                    marginTop: 10,
-                    letterSpacing: "0.16em",
-                  }}
-                >
-                  PULSA REANUDAR PARA CONTINUAR
+      <div className="crt-stage">
+        <div className="crt">
+          <div className="crt-screen">
+            <canvas
+              ref={canvasRef}
+              width={800}
+              height={600}
+              className="snake-canvas"
+            />
+            {paused && (
+              <div
+                className="crt-content"
+                style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
+              >
+                <div>
+                  <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
+                    EN PAUSA
+                  </div>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      color: "var(--ink-dim)",
+                      marginTop: 10,
+                      letterSpacing: "0.16em",
+                    }}
+                  >
+                    PULSA REANUDAR PARA CONTINUAR
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="crt-bottom">
+            <span className="led">SEÑAL OK</span>
+            <span>{title} · CRT-83 · 60 HZ</span>
+            <span>CARGA · 1MB</span>
+          </div>
         </div>
-        <div className="crt-bottom">
-          <span className="led">SEÑAL OK</span>
-          <span>{title} · CRT-83 · 60 HZ</span>
-          <span>CARGA · 1MB</span>
-        </div>
-      </div>
-
-      <div className="snake-touch-controls">
-        <div className="td-dpad">
-          <button
-            className="td-btn td-up"
-            aria-label="Mover hacia arriba"
-            {...bindKey("ArrowUp")}
-          >
-            ▲
-          </button>
-          <button
-            className="td-btn td-left"
-            aria-label="Mover hacia la izquierda"
-            {...bindKey("ArrowLeft")}
-          >
-            ◀
-          </button>
-          <button
-            className="td-btn td-down"
-            aria-label="Mover hacia abajo"
-            {...bindKey("ArrowDown")}
-          >
-            ▼
-          </button>
-          <button
-            className="td-btn td-right"
-            aria-label="Mover hacia la derecha"
-            {...bindKey("ArrowRight")}
-          >
-            ▶
-          </button>
-        </div>
+        <TouchPad
+          dpad={{
+            up: "ArrowUp",
+            down: "ArrowDown",
+            left: "ArrowLeft",
+            right: "ArrowRight",
+          }}
+          disabled={paused || over}
+          onKey={(code, pressed) => gameRef.current?.setKey(code, pressed)}
+        />
       </div>
 
       {over && (

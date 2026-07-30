@@ -94,12 +94,28 @@ Este spec no toca Supabase. No hay tablas, columnas ni claves de `localStorage` 
 
 **Mando compartido — `components/games/touch-pad.tsx`:**
 
+> **Corrección post-implementación (2026-07-30), en dos rondas:**
+>
+> 1. Tras ver los pasos 1–3 en su dispositivo real, el usuario pidió explícitamente **un único mando
+>    con geometría idéntica en los cuatro juegos** — cruz de 4 direcciones + 2 botones circulares,
+>    siempre dibujados los seis — en vez de que cada juego dibuje solo las celdas que usa. Esto revoca
+>    las Decisions que originalmente decían lo contrario (ver más abajo) y sustituye la tabla de este
+>    spec. **Esta parte se mantiene.**
+> 2. La primera implementación de esa corrección superponía el mando sobre el canvas en **ambas**
+>    orientaciones. Al probarlo en su dispositivo real, el usuario reportó que en vertical eso tapa la
+>    zona de juego (capturó ARKANOID con la cruz cubriendo la paleta y la bola). Se revierte esa parte:
+>    el mando **vuelve a ir debajo del canvas en vertical** (como decía el spec original en los pasos
+>    4/6), y solo se superpone sobre el canvas en horizontal bajo, donde no sobra alto. La geometría
+>    unificada de la ronda 1 no cambia — solo dónde se coloca.
+>
+> El resto del spec (viewport, HUD colapsado, bloqueo de scroll, ARKANOID por puntero, canvas HiDPI,
+> `GameOverModal`, `recipe.md`) no cambia.
+
 ```ts
 export type TouchPadButton = {
   code: string; // "Space", "ArrowUp", … el mismo código que inyecta el teclado
   label: string; // "FUEGO"
   ariaLabel: string; // "Disparar"
-  tone?: "cyan" | "magenta"; // por defecto "cyan"
   repeat?: boolean; // auto-repeat mientras se mantiene; por defecto false
 };
 
@@ -111,25 +127,32 @@ export type TouchPadDpad = {
 };
 
 export type TouchPadProps = {
-  dpad: TouchPadDpad; // solo se dibujan las celdas con código
-  dpadRepeat?: boolean; // repetición en las cuatro direcciones; por defecto false
-  buttons: TouchPadButton[]; // 0, 1 o 2
-  accent?: "cyan" | "magenta" | "yellow" | "green"; // color del juego; por defecto "cyan"
-  disabled?: boolean; // pausa o game over
+  dpad: TouchPadDpad; // celda sin código: se dibuja atenuada e inerte, no se oculta
+  dpadRepeat?: boolean; // repetición en ◀ ▼ ▶; por defecto false. ▲ nunca repite (ver nota)
+  buttonA?: TouchPadButton; // círculo grande
+  buttonB?: TouchPadButton; // círculo pequeño
+  disabled?: boolean; // pausa o game over: atenúa y suelta todo lo retenido
   onKey: (code: string, pressed: boolean) => void;
 };
 
-export function TouchPad(props: TouchPadProps): JSX.Element | null;
+export function TouchPad(props: TouchPadProps): JSX.Element;
 ```
 
-Configuración por juego (única fuente de verdad de qué controla cada juego):
+Nota sobre `▲`: es la acción de rotar/propulsar en los juegos que la usan, nunca un movimiento
+discreto, así que nunca auto-repite aunque `dpadRepeat` esté activo para el resto de la cruz. Esto es
+lo que exige el criterio de aceptación de TETRIS ("mantener ROTAR gira la pieza una sola vez").
 
-| Juego       | Cruceta | `dpadRepeat` | Botones                                                                |
-| ----------- | ------- | ------------ | ---------------------------------------------------------------------- |
-| `asteroids` | ← →     | `false`      | `ArrowUp` "PROP", `Space` "FUEGO" (`magenta`) — ambos sin repetición   |
-| `tetris`    | ← → ▼   | `true`       | `ArrowUp` "ROTAR", `Space` "SOLTAR" (`magenta`) — ambos sin repetición |
-| `arkanoid`  | ← →     | `false`      | ninguno                                                                |
-| `snake`     | ▲ ▼ ◀ ▶ | `false`      | ninguno                                                                |
+Wiring por juego (única fuente de verdad de qué código emite cada celda fija; una celda sin código
+se dibuja atenuada e inerte, con la misma geometría que las demás):
+
+| Juego       | ▲                     | ▼           | ◀ / ▶        | Botón A (grande) | Botón B (pequeño) |
+| ----------- | --------------------- | ----------- | ------------ | ---------------- | ----------------- |
+| `asteroids` | `ArrowUp` (propulsar) | —           | rotar nave   | `Space` "FUEGO"  | —                 |
+| `tetris`    | `ArrowUp` (rotar)     | `ArrowDown` | mover pieza  | `Space` "SOLTAR" | —                 |
+| `arkanoid`  | —                     | —           | mover paleta | —                | —                 |
+| `snake`     | `ArrowUp`             | `ArrowDown` | girar        | —                | —                 |
+
+`dpadRepeat` es `true` solo en `tetris` (aplica a ◀ ▼ ▶, nunca a ▲). En los demás juegos es `false`.
 
 **Menú del HUD — `components/games/hud-menu.tsx`:**
 
@@ -218,23 +241,34 @@ Comprobación de los umbrales elegidos:
    _Test manual:_ en `/games/<id>/play` el doble tap ya no hace zoom; en `/games` el pinch-zoom sigue
    funcionando igual que antes.
 
-2. **Mando compartido.** Crear `components/games/touch-pad.tsx` con la API del Data model y el bloque
-   CSS único `.touch-pad` en `app/globals.css`, visible bajo `@media (pointer: coarse)`. Sin conectar a
-   ningún juego todavía.
+2. **Mando compartido.** Crear `components/games/touch-pad.tsx` con la API del Data model — cruz de 4
+   direcciones + 2 botones circulares, siempre dibujados los seis, celda sin código atenuada e inerte —
+   y el bloque CSS único `.touch-pad` en `app/globals.css`, visible bajo `@media (pointer: coarse)`. Sin
+   conectar a ningún juego todavía.
    _Test:_ `npm run build` compila sin errores de tipos.
 
 3. **Migrar los cuatro reproductores al mando.** Sustituir los bloques `.asteroids-touch-controls`,
-   `.tetris-touch-controls`, `.arkanoid-touch-controls` y `.snake-touch-controls` por `<TouchPad>` con
-   la configuración de la tabla; borrar los cuatro bloques CSS (`app/globals.css:1421-1631`) y la clase
-   muerta `.td-thrust`. Pasar `disabled` cuando el juego está en pausa o terminado.
-   _Test manual:_ en un viewport táctil los cuatro juegos se controlan igual que antes; mantener SOLTAR
-   en TETRIS ya no repite el hard-drop; pulsar PROPULSAR durante la pausa en ASTEROIDES ya no deja la
-   nave acelerando al reanudar; con ratón en escritorio no se renderiza ningún mando.
+   `.tetris-touch-controls`, `.arkanoid-touch-controls` y `.snake-touch-controls` por `<TouchPad>`
+   **fuera del bisel `.crt`, no dentro de él**: envolver `.crt` y `<TouchPad>` en un nuevo contenedor
+   `.crt-stage` (solo `position: relative`, sin fondo ni padding propios — puro contexto de
+   posicionamiento), de forma que el mando quede como hermano del bisel completo (canvas + `.crt-bottom`
+   con el texto "SEÑAL OK…"), no como un hijo suyo. Meterlo dentro de `.crt` lo hace parecer soldado al
+   marco decorativo del CRT; como hermano, se lee como una sección de control aparte, debajo del
+   aparato. Wiring de `<TouchPad>` según la tabla; borrar los cuatro bloques CSS
+   (`app/globals.css:1421-1631`) y la clase muerta `.td-thrust`. Pasar `disabled` cuando el juego está
+   en pausa o terminado.
+   _Test manual:_ en un viewport táctil los cuatro juegos se controlan igual que antes y el mando se ve
+   **idéntico en los cuatro** (misma cruz, mismos dos círculos, solo cambia qué celda está activa), sin
+   tapar el canvas y visualmente fuera del bisel oscuro del CRT; mantener SOLTAR en TETRIS ya no repite
+   el hard-drop; pulsar PROPULSAR durante la pausa en ASTEROIDES ya no deja la nave acelerando al
+   reanudar; con ratón en escritorio no se renderiza ningún mando.
 
 4. **Modo inmersivo.** Añadir la consulta inmersiva: ocultar `.av-nav` y el footer vía
    `body:has(.av-player)`, reducir el bisel de `.crt` de 24px, anular los márgenes de `.av-player` y
-   poner `max-height` a `.crt-screen` contra el alto disponible, respetando `env(safe-area-inset-*)`.
-   _Test manual:_ en un teléfono en vertical el canvas ocupa la mitad superior y el mando la inferior,
+   poner `max-height` a `.crt-screen` contra el alto disponible, respetando `env(safe-area-inset-*)`. El
+   `max-height` debe descontar el espacio que ocupa el mando (paso 3, en flujo normal debajo del
+   canvas) para que ambos quepan sin scroll.
+   _Test manual:_ en un teléfono en vertical el canvas y el mando debajo caben en pantalla a la vez,
    sin necesidad de hacer scroll; en una tablet el layout sigue siendo el de escritorio más el mando.
 
 5. **HUD colapsado y menú `≡`.** Crear `components/games/hud-menu.tsx` y envolver con él el contenido
@@ -245,11 +279,15 @@ Comprobación de los umbrales elegidos:
    `Puntuación · Vidas · Nivel` y el resto se despliega desde `≡`; el botón de pantalla completa no
    aparece en iOS Safari.
 
-6. **Layout horizontal.** Añadir la consulta de superposición: sacar el mando del flujo, anclar la
-   cruceta al borde izquierdo y los botones al derecho sobre el canvas, con
-   `env(safe-area-inset-left)` / `env(safe-area-inset-right)` y opacidad reducida en reposo.
-   _Test manual:_ girando el teléfono, el canvas ocupa toda la pantalla y los controles flotan encima
-   sin quedar bajo el notch ni bajo la barra de gestos.
+6. **Layout horizontal.** Añadir la consulta de superposición, solo para horizontal bajo
+   (`@media (pointer: coarse) and (orientation: landscape) and (max-height: 560px)`): sacar el mando
+   del flujo normal, anclar la cruceta al borde izquierdo y los botones al derecho sobre el canvas, con
+   `env(safe-area-inset-left)` / `env(safe-area-inset-right)` / `env(safe-area-inset-bottom)` y opacidad
+   reducida en reposo. En vertical y en tablet horizontal (donde sí sobra alto) el mando sigue debajo
+   del canvas, como en el paso 3 — esta superposición es exclusiva del caso estrecho de horizontal.
+   _Test manual:_ girando el teléfono a horizontal, el canvas ocupa toda la pantalla y los controles
+   flotan encima sin quedar bajo el notch ni bajo la barra de gestos; volviendo a vertical, el mando
+   vuelve a su sitio debajo del canvas sin tapar nada.
 
 7. **Bloqueo de scroll.** Aplicar `touch-action: none` sobre `.crt-screen` y el mando, y
    `overscroll-behavior: none` en el contenedor del reproductor, dentro de la consulta
@@ -284,8 +322,8 @@ Comprobación de los umbrales elegidos:
 - [ ] `npm run dev` levanta sin errores de consola en `/games/asteroids/play`, `/games/tetris/play`,
       `/games/arkanoid/play` y `/games/snake/play`.
 - [ ] En un teléfono en horizontal (844–932px de ancho) el mando táctil **aparece**. Hoy no aparece.
-- [ ] En un teléfono en vertical, el canvas y el mando caben en pantalla a la vez, sin scroll, con el
-      nav y el footer ocultos.
+- [ ] En un teléfono en vertical, el canvas y el mando (debajo, no superpuesto) caben en pantalla a la
+      vez sin scroll, con el nav y el footer ocultos, y el mando no tapa ninguna parte del juego.
 - [ ] En un teléfono en horizontal, la cruceta flota sobre el borde izquierdo del canvas y los botones
       sobre el derecho, sin quedar bajo el notch ni bajo la barra de gestos.
 - [ ] En una tablet táctil (820×1180 y 1180×820) aparece el mando pero **no** el modo inmersivo: el nav
@@ -305,8 +343,10 @@ Comprobación de los umbrales elegidos:
 - [ ] En ARKANOID la paleta sigue el dedo a lo largo de todo el ancho del canvas, y pulsar una flecha
       devuelve el control al mando/teclado.
 - [ ] En ARKANOID con ratón en escritorio la paleta también sigue al cursor.
-- [ ] SERPIENTE muestra las cuatro direcciones y ningún botón de acción; ARKANOID muestra ← → y ningún
-      botón de acción. No se dibuja ningún botón deshabilitado ni vacío.
+- [ ] El mando se ve **idéntico** (misma cruz de 4 direcciones, mismos 2 botones circulares, misma
+      posición) en los cuatro juegos. SERPIENTE y ASTEROIDES/TETRIS muestran las 4 direcciones activas;
+      ARKANOID muestra solo ◀ ▶ activas y ▲ ▼ atenuadas; los botones sin función en un juego (ambos en
+      ARKANOID y SERPIENTE, el B en ASTEROIDES y TETRIS) se ven atenuados pero **nunca se ocultan**.
 - [ ] El HUD en modo inmersivo muestra `Puntuación · Vidas · Nivel` en una sola fila, y Jugador, SKIN,
       PAUSA, FIN y SALIR se despliegan desde el botón `≡`.
 - [ ] El botón de pantalla completa entra en fullscreen donde la API está soportada, y no se renderiza
@@ -333,11 +373,17 @@ Comprobación de los umbrales elegidos:
 - **Yes:** un único mando compartido en vez de cuatro bloques por juego. Hoy hay cuatro copias de ~45
   líneas de CSS y tres estructuras de markup distintas para el mismo problema; el próximo juego haría
   la quinta.
-- **Yes:** cada juego declara entre 0 y 2 botones de acción y el mando dibuja solo los que existen.
-  Elegido explícitamente por el usuario. Un botón deshabilitado es ruido que el jugador tiene que
-  aprender a ignorar.
-- **No:** dibujar siempre dos botones y agrisar los no usados. Layout más uniforme, pero a costa de
-  mostrar controles muertos en ARKANOID y SERPIENTE.
+- **Invertida el 2026-07-30 por el usuario, tras ver los pasos 1–3 implementados:** ~~cada juego
+  declara entre 0 y 2 botones de acción y el mando dibuja solo los que existen~~. El usuario vio que
+  esto producía un mando de forma distinta por juego (cruceta de 2, 3 o 4 celdas; 0 o 2 botones; verde
+  en SERPIENTE, cyan en el resto) y no lo aceptó: quiere **una sola geometría fija** — cruz de 4
+  direcciones + 2 botones circulares — igual en los cuatro juegos, tomando como referencia una imagen
+  aportada por él (`idea-canvas-controls.png` + una captura de la forma exacta del mando). Pasa a ser
+  **Yes:** el mando dibuja siempre las 4 direcciones y los 2 botones; una celda sin código asociado se
+  atenúa (opacidad reducida) y queda inerte, en vez de ocultarse o no existir.
+- **Invertida junto con la anterior:** ~~**No:** dibujar siempre dos botones y agrisar los no usados~~.
+  Es exactamente lo que pidió el usuario al ver el resultado de la decisión anterior: prefiere ruido
+  visual atenuado y consistente a una forma que cambia de un juego a otro.
 - **No:** rellenar el hueco con PAUSA en los juegos que no usan los dos botones. PAUSA ya vive en el
   menú `≡` y duplicarla en el mando invita a pulsarla sin querer en mitad de la partida.
 - **Yes:** `@media (pointer: coarse)` como criterio de visibilidad del mando. **Esto revoca
@@ -353,9 +399,13 @@ Comprobación de los umbrales elegidos:
 - **Yes:** ocultar nav y footer con CSS (`body:has(.av-player)`) en vez de con un layout anidado o
   estado en React. `/play` no tiene layout propio hoy y añadir uno solo para esto es más maquinaria de
   la necesaria; además, el layout raíz seguiría montando el nav de todas formas.
-- **Yes:** controles superpuestos sobre el canvas en horizontal. Elegido explícitamente por el usuario
-  sobre la alternativa de tres columnas. Maximiza el área de juego, que es el recurso escaso en un
-  teléfono en horizontal.
+- **Yes, confirmado el 2026-07-30 tras dos rondas:** controles superpuestos sobre el canvas **solo en
+  horizontal bajo**, como decía el spec original. Se intentó ampliar también a vertical el mismo día
+  (ver la nota de corrección al principio de este documento), pero el usuario lo probó en su
+  dispositivo real y reportó que en vertical la cruz tapaba la paleta y la bola de ARKANOID — no hay
+  presión de espacio en vertical que justifique el riesgo de ocultar el juego. Se revierte a la
+  posición original: debajo del canvas en vertical, superpuesto solo en horizontal bajo, donde el alto
+  disponible sí lo justifica.
 - **No:** tres columnas (cruceta | canvas | botones) en horizontal. Nada taparía el juego, pero el
   canvas quedaría notablemente más pequeño.
 - **Yes:** HUD colapsado a `Puntuación · Vidas · Nivel` con el resto tras `≡`. Elegido explícitamente
@@ -401,16 +451,16 @@ Comprobación de los umbrales elegidos:
 
 ## Risks
 
-| Riesgo                                                                                                                                                                        | Mitigación                                                                                                                                                                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@media (pointer: coarse)` revoca el criterio de ancho fijado en `specs/05-asteroids-game.md:135`. Alguien que lea el spec 05 aislado creerá que el comportamiento es un bug. | Queda documentado como revocación consciente en Decisions, y `recipe.md` se actualiza en el paso 10 para que la referencia viva también cambie.                                                                   |
-| Escalar el canvas por `devicePixelRatio` rompe cualquier motor que lea `canvas.width` como ancho lógico, y el síntoma sería geometría desplazada, no un error de compilación. | El paso 9 empieza verificando los cuatro motores antes de tocar nada; los cuatro usan constantes propias `W`/`H` según la auditoría. Criterio de aceptación explícito sobre física y colisiones sin cambios.      |
-| `body:has(.av-player)` depende de `:has()`. En un navegador sin soporte, el nav no se oculta.                                                                                 | Degradación visible pero no bloqueante: el juego se sigue pudiendo jugar, solo con menos espacio. No se añade fallback en JavaScript por no meter estado donde el CSS basta.                                      |
-| Los controles superpuestos en horizontal pueden tapar elementos del juego (un asteroide, la bola de ARKANOID) justo donde está el dedo.                                       | Opacidad reducida en reposo y anclaje a los bordes extremos, donde ningún motor concentra acción. Se revisa juego por juego en el paso 6 y se ajusta la posición si algún caso resulta injugable.                 |
-| `touch-action: none` mal aplicado puede dejar `/play` sin ningún scroll incluso cuando el contenido no cabe, atrapando al usuario.                                            | Se aplica solo a `.crt-screen` y al mando, nunca al contenedor de página. El modo inmersivo garantiza además que el contenido cabe sin scroll.                                                                    |
-| Cinco de los diez pasos tocan los cuatro reproductores a la vez, así que una regresión en el patrón compartido rompe los cuatro juegos de golpe.                              | Los pasos 3, 5, 8 y 9 llevan cada uno su test manual sobre los cuatro juegos, y el criterio de aceptación exige que el escritorio quede idéntico a hoy.                                                           |
-| El repositorio no tiene Playwright instalado (`package.json` no lo lista) ni ningún test automatizado, así que toda la verificación es manual.                                | Se verifica con Playwright vía MCP en viewports emulados (412×915, 915×412, 820×1180) y en el dispositivo real que el usuario ya tiene apuntando a `192.168.50.34:3000`. Instalarlo como dependencia queda fuera. |
-| Next.js 16.2.10 no es el Next.js del conocimiento de entrenamiento, y `viewport` es exactamente una de las APIs que cambiaron.                                                | El paso 1 empieza leyendo `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-viewport.md`, como exige `CLAUDE.md`.                                                                        |
+| Riesgo                                                                                                                                                                                                                                                                      | Mitigación                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@media (pointer: coarse)` revoca el criterio de ancho fijado en `specs/05-asteroids-game.md:135`. Alguien que lea el spec 05 aislado creerá que el comportamiento es un bug.                                                                                               | Queda documentado como revocación consciente en Decisions, y `recipe.md` se actualiza en el paso 10 para que la referencia viva también cambie.                                                                                                                                                               |
+| Escalar el canvas por `devicePixelRatio` rompe cualquier motor que lea `canvas.width` como ancho lógico, y el síntoma sería geometría desplazada, no un error de compilación.                                                                                               | El paso 9 empieza verificando los cuatro motores antes de tocar nada; los cuatro usan constantes propias `W`/`H` según la auditoría. Criterio de aceptación explícito sobre física y colisiones sin cambios.                                                                                                  |
+| `body:has(.av-player)` depende de `:has()`. En un navegador sin soporte, el nav no se oculta.                                                                                                                                                                               | Degradación visible pero no bloqueante: el juego se sigue pudiendo jugar, solo con menos espacio. No se añade fallback en JavaScript por no meter estado donde el CSS basta.                                                                                                                                  |
+| Los controles superpuestos en horizontal pueden tapar elementos del juego (un asteroide, la bola de ARKANOID) justo donde está el dedo. En vertical, un intento previo de superponerlos también tapó la paleta de ARKANOID — confirmado en el dispositivo real del usuario. | En vertical el mando va debajo del canvas (paso 3), no superpuesto, así que no puede tapar nada. En horizontal (paso 6): opacidad reducida en reposo y anclaje a los bordes extremos, donde ningún motor concentra acción; se revisa juego por juego y se ajusta la posición si algún caso resulta injugable. |
+| `touch-action: none` mal aplicado puede dejar `/play` sin ningún scroll incluso cuando el contenido no cabe, atrapando al usuario.                                                                                                                                          | Se aplica solo a `.crt-screen` y al mando, nunca al contenedor de página. El modo inmersivo garantiza además que el contenido cabe sin scroll.                                                                                                                                                                |
+| Cinco de los diez pasos tocan los cuatro reproductores a la vez, así que una regresión en el patrón compartido rompe los cuatro juegos de golpe.                                                                                                                            | Los pasos 3, 5, 8 y 9 llevan cada uno su test manual sobre los cuatro juegos, y el criterio de aceptación exige que el escritorio quede idéntico a hoy.                                                                                                                                                       |
+| El repositorio no tiene Playwright instalado (`package.json` no lo lista) ni ningún test automatizado, así que toda la verificación es manual.                                                                                                                              | Se verifica con Playwright vía MCP en viewports emulados (412×915, 915×412, 820×1180) y en el dispositivo real que el usuario ya tiene apuntando a `192.168.50.34:3000`. Instalarlo como dependencia queda fuera.                                                                                             |
+| Next.js 16.2.10 no es el Next.js del conocimiento de entrenamiento, y `viewport` es exactamente una de las APIs que cambiaron.                                                                                                                                              | El paso 1 empieza leyendo `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-viewport.md`, como exige `CLAUDE.md`.                                                                                                                                                                    |
 
 ## Lo que **no** está en este spec
 
