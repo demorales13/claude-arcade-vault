@@ -38,6 +38,16 @@ Juegos con motor real, jugables en `/games/<id>/play`, con catálogo y puntuacio
   al comer fruta (arte tomado del atlas `references/snake-assets/`), niveles por velocidad, choque
   contra el propio cuerpo o el borde termina la partida.
 
+## CRUCE (`cruce`)
+
+- **Categoría / color:** ARCADE · cyan
+- **Spec:** `specs/game-jam/03-cruce-clasico.md`
+- **Motor:** `components/games/cruce/engine.ts` · **Player:** `components/games/cruce-player.tsx`
+- Cruce de carriles clásico diseñado desde cero: tablero fijo de 11×13 celdas (metas, río con
+  troncos, mediana, calzada con vehículos, salida), salto discreto por celda con bloqueo de
+  repetición (`HOP_LOCK_MS`), 3 vidas, 5 metas por nivel. Incluye selector de skin (`clasico`,
+  `neon`, `retro`) persistido en `localStorage`.
+
 ---
 
 Todos comparten el mismo flujo genérico: HUD, marco `.crt`, guardado de puntuación vía

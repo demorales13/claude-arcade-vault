@@ -1095,6 +1095,44 @@ a {
   filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.4));
 }
 
+.cover-cruce {
+  /* franjas horizontales: calzada oscura (arriba) y río cian (abajo), como el tablero del motor */
+  background: repeating-linear-gradient(
+    0deg,
+    #17171c 0 9%,
+    #101014 9% 10%,
+    #17171c 10% 19%,
+    #101014 19% 20%,
+    #17171c 20% 29%,
+    #101014 29% 30%,
+    #17171c 30% 39%,
+    #101014 39% 40%,
+    #17171c 40% 50%,
+    #052026 50% 59%,
+    #031419 59% 60%,
+    #052026 60% 69%,
+    #031419 69% 70%,
+    #052026 70% 79%,
+    #031419 79% 80%,
+    #052026 80% 89%,
+    #031419 89% 90%,
+    #052026 90% 100%
+  );
+}
+.cover-cruce::after {
+  /* siluetas planas: vehículo en la calzada, tronco en el río, meta en la franja superior */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(var(--magenta), var(--magenta)) 18% 24% / 16% 6% no-repeat,
+    linear-gradient(var(--yellow), var(--yellow)) 62% 40% / 12% 6% no-repeat,
+    linear-gradient(#b8823f, #b8823f) 50% 62% / 22% 5% no-repeat,
+    linear-gradient(#b8823f, #b8823f) 12% 82% / 18% 5% no-repeat,
+    radial-gradient(circle at 82% 8%, var(--cyan) 0 4px, transparent 5px);
+  filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.35));
+}
+
 /* ===== detail screen ===== */
 .av-detail {
   display: grid;
@@ -1881,6 +1919,14 @@ a {
 }
 
 .snake-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.cruce-canvas {
   position: absolute;
   inset: 0;
   width: 100%;

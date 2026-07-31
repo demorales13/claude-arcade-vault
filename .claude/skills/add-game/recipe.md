@@ -118,6 +118,10 @@ export function <Name>Player({ game }: { game: GameWithStats }) { … }
 ```
 
 - Single prop: `game: GameWithStats`. Imports `type { GameWithStats } from "@/lib/data/games"`.
+- HUD title translation (spec 11, binding for every player since then): `const { language } = useLanguage();` and
+  `const { title } = localizedGameText(game, language);`, then use that local `title` — never
+  `game.title` — in `.crt-bottom`. This is the **only** part of `/play` that translates; everything
+  else (HUD labels, buttons, overlays, `GameOverModal`) stays fixed in Spanish, per spec 10/11.
 - Local `readUserName()` reads `localStorage["av_user"]` → `u?.name || "INVITADO"`, applied in a
   mount-time `useEffect`.
 - Refs: `canvasRef`, `gameRef: useRef<<Name>Game | null>(null)`.
@@ -153,7 +157,7 @@ Markup skeleton (classes already exist in `globals.css`; modeled on
     .crt
       .crt-screen > <canvas width={W} height={H} className="<id>-canvas" />
                     + .crt-content "EN PAUSA" overlay when paused
-      .crt-bottom: SEÑAL OK · {game.title} · CRT-83 · 60 HZ · CARGA · 1MB
+      .crt-bottom: SEÑAL OK · {title} · CRT-83 · 60 HZ · CARGA · 1MB
     <TouchPad dpad={...} buttonA={...} buttonB={...} dpadRepeat={...}
               disabled={paused || over}
               onKey={(code, pressed) => gameRef.current?.setKey(code, pressed)} />
