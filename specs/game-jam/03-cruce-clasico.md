@@ -1,6 +1,6 @@
 # GAME JAM 03 — CRUCE
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** 05-asteroids-game, 06-leaderboard-catalogo-supabase
 > **Date:** 2026-07-29
 > **Objective:** Diseñar "CRUCE" (`id: "cruce"`) como versión clásica de pantalla fija del cruce de carriles propuesto en `suggested-games.md`, con motor de saltos discretos, tráfico, río y tres vidas antes de game over.
@@ -37,11 +37,14 @@ CRUCE es la lectura fiel de la propuesta original registrada en `suggested-games
 **SQL (manual, en el SQL Editor de Supabase):**
 
 ```sql
-insert into games (id, title, short, long, cat, cover, color) values
+insert into games (id, title, short, long, cat, cover, color, title_en, short_en, long_en) values
   ('cruce', 'CRUCE',
    'Cruza carriles de tráfico y un río sin perder un solo salto: un golpe y se acabó.',
    'Guía a tu explorador a través de una franja de carriles con vehículos en movimiento y una franja de río con troncos flotantes, saltando de una celda a otra hasta alcanzar una de las cinco metas de la orilla opuesta. Cualquier colisión con un vehículo, o quedarte sin tronco bajo los pies en el río, termina la vida al instante. Llenar las cinco metas sube de nivel y reordena los carriles, más rápidos que antes.',
-   'ARCADE', 'cover-cruce', 'cyan');
+   'ARCADE', 'cover-cruce', 'cyan',
+   'CROSSING',
+   'Cross traffic lanes and a river without missing a single hop: one hit and it''s over.',
+   'Guide your explorer across a strip of lanes with moving vehicles and a river strip with floating logs, hopping from cell to cell to reach one of the five goals on the far shore. Any collision with a vehicle, or being left without a log underfoot in the river, ends the life instantly. Filling all five goals levels up and reshuffles the lanes, faster than before.');
 ```
 
 `best` y `plays` no se insertan: los calcula la vista `games_with_stats` desde `scores`.
@@ -204,3 +207,11 @@ Convenciones:
 - Tests automatizados y soporte de gamepad físico.
 
 Cada uno de estos, si se implementa, va en su propio spec.
+
+## Implementation notes
+
+- **Desviación del Data model:** este spec se redactó antes de que `title_en`/`short_en`/`long_en`
+  existieran como columnas de `games` (spec 11, posterior). Al implementarlo, se decidió junto al
+  usuario incluir la traducción al inglés desde el `insert` inicial en vez de dejarla en fallback a
+  español — mismo patrón que spec 11 usó para los 4 juegos existentes. El bloque SQL de arriba ya
+  refleja esa decisión (`title_en: 'CROSSING'`, más `short_en`/`long_en`).

@@ -86,6 +86,10 @@ already answered in Phase 1 — confirm it instead of asking it again.
 5. `color` — **only** `cyan`, `magenta`, `yellow` or `green`. Same CHECK constraint.
 6. Cover art concept for `.cover-<id>`: what the pseudo-element art should evoke. It is pure CSS
    gradients, no images.
+7. English translation — `title_en`/`short_en`/`long_en` (`recipe.md` §2). Optional: the columns
+   are nullable and the UI falls back to the Spanish text if left out. Ask whether to write them
+   now or leave them for later; if now, draft them and show for confirmation like every other
+   field, don't just fill them in silently.
 
 **Block B — Engine**:
 
@@ -136,7 +140,8 @@ Order follows `.claude/skills/spec/template.md`:
 1. **Header** — status `Draft`, `Depends on` (at minimum the spec that put the catalog in Supabase),
    today's date, and a one-sentence objective.
 2. **Scope** — In / Out. The "Out" must name what Phase 2 flagged as scope creep.
-3. **Data model** — the `insert into games` row, the engine's exported types
+3. **Data model** — the `insert into games` row (including `title_en`/`short_en`/`long_en` per
+   Block A if the user chose to provide them now), the engine's exported types
    (`<Name>Callbacks`, `<Name>Game`, `create<Name>Game`), and any new asset paths.
 4. **Implementation plan** — start from the 7-step skeleton in `recipe.md` and adapt it. Drop the
    assets step if the game has none. Each step keeps the app runnable and carries its own `Test:`.

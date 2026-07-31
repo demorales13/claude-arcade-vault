@@ -81,7 +81,11 @@ For each version, resolve without asking and note as an assumption in `Decisions
 - **Catalog row**: `id` (lowercase slug, does not collide with `implemented-games.md` nor with the
   other version), `title` (Spanish, uppercase), `short`, `long`, `cat` ∈
   `ARCADE|PUZZLE|SHOOTER|VERSUS`, `color` ∈ `cyan|magenta|yellow|green`, pure-CSS cover art concept
-  (gradients, no images).
+  (gradients, no images). Also write the English translation — `title_en`, `short_en`, `long_en`
+  (`recipe.md` §2) — for both versions, right alongside the Spanish text; since this agent never
+  asks and this is the only pass before the spec is born, leaving them blank would mean shipping a
+  silent Spanish fallback nobody decided on. Flag the translation itself as an assumption in
+  `Decisions`, same as every other value this phase settles.
 - **Engine**: logical canvas size (prefer 4:3 for `.crt-screen`'s `aspect-ratio: 4/3`; if the
   game's natural geometry doesn't fit, resolve it explicitly as spec 07 did with Tetris's 1:2
   board — never leave it implicit), extra HUD callbacks beyond score/lives/level, pause semantics,
@@ -117,8 +121,9 @@ stays that way):
    separates them, and states explicitly that only one of the two will be implemented.
 3. `## Scope` — `**In:**` covering the 6 points of `recipe.md`'s §1 map, and
    `**Out of scope (para otro spec):**`.
-4. `## Data model` — the `insert into games (...)` block, the exported types
-   `<Name>Callbacks` / `<Name>Game` / `create<Name>Game`, constants and geometry, asset paths.
+4. `## Data model` — the `insert into games (...)` block (including `title_en`/`short_en`/
+   `long_en` per `recipe.md` §2 and Phase 3 above), the exported types `<Name>Callbacks` /
+   `<Name>Game` / `create<Name>Game`, constants and geometry, asset paths.
 5. `## Implementation plan` — `recipe.md`'s §7 seven-step skeleton adapted to this game, each step
    with its own `_Test:_` line.
 6. `## Acceptance criteria` — `recipe.md`'s §8 13 base criteria plus the ones specific to the
