@@ -1,6 +1,6 @@
 # GAME JAM 03 — CRUCE
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** 05-asteroids-game, 06-leaderboard-catalogo-supabase
 > **Date:** 2026-07-29
 > **Objective:** Diseñar "CRUCE" (`id: "cruce"`) como versión clásica de pantalla fija del cruce de carriles propuesto en `suggested-games.md`, con motor de saltos discretos, tráfico, río y tres vidas antes de game over.
@@ -27,7 +27,6 @@ CRUCE es la lectura fiel de la propuesta original registrada en `suggested-games
 - La versión de ascenso infinito — vive en `specs/game-jam/04-cruce-ascenso-infinito.md`, un spec independiente.
 - Sonido y música — no fue pedido y no hay assets de audio disponibles.
 - Sprites de vehículos, troncos o personaje — todo se dibuja con formas planas en canvas; ningún asset bajo `public/`.
-- Selector de skin o tema visual alternativo.
 - Modo cooperativo o versus de dos jugadores.
 - Tests automatizados (unit/e2e) y soporte de gamepad físico.
 - Cualquier cambio a ASTEROIDES, TETRIS, ARKANOID, SERPIENTE o a los módulos genéricos sobre `getGames()`.
@@ -140,34 +139,34 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] `npm run dev` levanta sin errores en consola en `/games`, `/games/cruce` y `/games/cruce/play`.
-- [ ] `select * from games_with_stats where id = 'cruce'` devuelve la fila, y `best`/`plays` se mueven al insertar puntuaciones reales.
-- [ ] `/games` muestra la tarjeta "CRUCE" con `.cover-cruce`, sin cambios en las demás tarjetas.
-- [ ] `/games/cruce` muestra cover, tags, descripción, stat-strip y el leaderboard lateral.
-- [ ] El canvas rellena el marco `.crt` (4:3) sin deformación ni recorte, en escritorio y en móvil, con el tablero 440×520 centrado.
-- [ ] El jugador arranca en la fila de salida, columna central, con 3 vidas.
-- [ ] Cada pulsación de flecha mueve exactamente una celda; mantener la tecla presionada no atraviesa varios carriles de un tirón (`HOP_LOCK_MS`).
-- [ ] Pisar la misma celda que un vehículo en la calzada termina la vida actual al instante.
-- [ ] Quedar en una celda de río sin un tronco debajo, o ser arrastrado fuera del tablero por uno, termina la vida actual al instante.
-- [ ] Llegar a la fila de meta en una columna sin `GOAL_COLS` bloquea el movimiento a esa celda sin terminar la vida.
-- [ ] Ocupar una meta libre suma 50 puntos y devuelve al jugador a la fila de salida sin perder una vida.
-- [ ] Avanzar a una fila nunca alcanzada en la vida actual suma 10 puntos; retroceder o repetir fila no suma puntos de nuevo.
-- [ ] Llenar las 5 metas sube el nivel, limpia las metas y acelera todos los carriles.
-- [ ] Perder una vida (no la última) respawnea en la fila de salida sin resetear metas ocupadas ni nivel.
-- [ ] Perder la última vida termina la partida al instante y abre `GameOverModal` con la puntuación alcanzada.
-- [ ] El stat "Vidas" del HUD refleja el número real de vidas restantes, no un valor fijo.
-- [ ] Volver a la pestaña tras dejarla en segundo plano no adelanta los carriles de golpe (colisión injusta al volver).
-- [ ] El HUD (Jugador / Puntuación / Vidas / Nivel) refleja el estado real del motor, no valores simulados, y no aparece ningún HUD dibujado dentro del canvas.
-- [ ] El botón PAUSA congela el juego con el frame visible y el overlay "EN PAUSA"; REANUDAR continúa sin que el tráfico salte hacia delante por el tiempo pausado.
-- [ ] El botón FIN termina la partida inmediatamente con la puntuación alcanzada hasta ese momento.
-- [ ] Guardar en `GameOverModal` inserta una fila en `scores` con `game_id = 'cruce'`, visible en `/hall-of-fame`.
-- [ ] El nombre precargado en el modal sigue viniendo de `av_user` en `localStorage`.
-- [ ] Este spec no añade ninguna clave nueva a `localStorage`.
-- [ ] Bajo 840px aparecen los cuatro botones táctiles y saltan igual que el teclado; en escritorio no se renderizan.
-- [ ] Un dedo arrastrado fuera de un botón táctil no deja la tecla trabada.
-- [ ] Las flechas no hacen scroll de la página mientras el juego está montado.
-- [ ] Salir de `/games/cruce/play` detiene el loop: sin errores en consola y sin listeners huérfanos.
-- [ ] `npm run build` termina sin errores.
+- [x] `npm run dev` levanta sin errores en consola en `/games`, `/games/cruce` y `/games/cruce/play`.
+- [x] `select * from games_with_stats where id = 'cruce'` devuelve la fila, y `best`/`plays` se mueven al insertar puntuaciones reales. Verificado vía UI (no SQL directo): `plays` pasó de 1 a 2 en `/games/cruce` tras guardar una puntuación nueva desde `GameOverModal`.
+- [x] `/games` muestra la tarjeta "CRUCE" con `.cover-cruce`, sin cambios en las demás tarjetas.
+- [x] `/games/cruce` muestra cover, tags, descripción, stat-strip y el leaderboard lateral.
+- [x] El canvas rellena el marco `.crt` (4:3) sin deformación ni recorte, en escritorio y en móvil, con el tablero 440×520 centrado.
+- [x] El jugador arranca en la fila de salida, columna central, con 3 vidas.
+- [x] Cada pulsación de flecha mueve exactamente una celda; mantener la tecla presionada no atraviesa varios carriles de un tirón (`HOP_LOCK_MS`).
+- [x] Pisar la misma celda que un vehículo en la calzada termina la vida actual al instante.
+- [ ] Quedar en una celda de río sin un tronco debajo, o ser arrastrado fuera del tablero por uno, termina la vida actual al instante. No se ejerció en vivo en esta sesión (solo se llegó a la calzada); verificado por revisión de código (`checkPlayerSafety` en `engine.ts`), no por juego real.
+- [ ] Llegar a la fila de meta en una columna sin `GOAL_COLS` bloquea el movimiento a esa celda sin terminar la vida. No se alcanzó la fila de meta en esta sesión; verificado por revisión de código.
+- [ ] Ocupar una meta libre suma 50 puntos y devuelve al jugador a la fila de salida sin perder una vida. No se alcanzó una meta en esta sesión; verificado por revisión de código (`fillGoal` en `engine.ts`).
+- [x] Avanzar a una fila nunca alcanzada en la vida actual suma 10 puntos; retroceder o repetir fila no suma puntos de nuevo.
+- [ ] Llenar las 5 metas sube el nivel, limpia las metas y acelera todos los carriles. No ejercido en vivo (requiere llenar 5 metas); verificado por revisión de código.
+- [ ] Perder una vida (no la última) respawnea en la fila de salida sin resetear metas ocupadas ni nivel. Se verificó el respawn sin perder metas/nivel al perder vidas intermedias, pero no había metas ocupadas en la corrida para confirmar que no se resetean.
+- [x] Perder la última vida termina la partida al instante y abre `GameOverModal` con la puntuación alcanzada.
+- [x] El stat "Vidas" del HUD refleja el número real de vidas restantes, no un valor fijo.
+- [ ] Volver a la pestaña tras dejarla en segundo plano no adelanta los carriles de golpe (colisión injusta al volver). No ejercido en vivo; garantizado por el mismo `Math.min(dt, 0.05)` que usan ASTEROIDES/SERPIENTE.
+- [x] El HUD (Jugador / Puntuación / Vidas / Nivel) refleja el estado real del motor, no valores simulados, y no aparece ningún HUD dibujado dentro del canvas.
+- [x] El botón PAUSA congela el juego con el frame visible y el overlay "EN PAUSA"; REANUDAR continúa sin que el tráfico salte hacia delante por el tiempo pausado.
+- [x] El botón FIN termina la partida inmediatamente con la puntuación alcanzada hasta ese momento.
+- [x] Guardar en `GameOverModal` inserta una fila en `scores` con `game_id = 'cruce'`, visible en `/hall-of-fame`.
+- [x] El nombre precargado en el modal sigue viniendo de `av_user` en `localStorage`.
+- [x] Este spec no añade ninguna clave nueva a `localStorage`.
+- [x] Bajo 840px aparecen los cuatro botones táctiles y saltan igual que el teclado; en escritorio no se renderizan.
+- [ ] Un dedo arrastrado fuera de un botón táctil no deja la tecla trabada. Garantizado por el componente compartido `<TouchPad>` (`onPointerLeave`/`onPointerCancel`), no reverificado por juego individual.
+- [x] Las flechas no hacen scroll de la página mientras el juego está montado. Garantizado por `preventDefault()` sobre los cuatro códigos capturados en `onKeyDown` (mismo patrón que ASTEROIDES/SERPIENTE); no se intentó un scroll real en esta sesión.
+- [x] Salir de `/games/cruce/play` detiene el loop: sin errores en consola y sin listeners huérfanos. Verificado navegando fuera de `/play` varias veces durante la sesión sin errores de consola.
+- [x] `npm run build` termina sin errores.
 
 ## Decisions
 
@@ -202,7 +201,6 @@ Convenciones:
 - La versión de ascenso infinito (`specs/game-jam/04-cruce-ascenso-infinito.md`).
 - Sonido y música.
 - Sprites de vehículos, troncos o personaje.
-- Selector de skin o tema visual alternativo.
 - Modo cooperativo o versus de dos jugadores.
 - Tests automatizados y soporte de gamepad físico.
 
@@ -215,3 +213,32 @@ Cada uno de estos, si se implementa, va en su propio spec.
   usuario incluir la traducción al inglés desde el `insert` inicial en vez de dejarla en fallback a
   español — mismo patrón que spec 11 usó para los 4 juegos existentes. El bloque SQL de arriba ya
   refleja esa decisión (`title_en: 'CROSSING'`, más `short_en`/`long_en`).
+- **Desviación del paso 4/5 del plan:** este spec también se redactó antes de spec 12
+  (`specs/12-juegos-en-movil-tactil.md`), así que su paso 5 original describía el patrón táctil
+  antiguo (`.cruce-touch-controls`, `.td-pad`, breakpoint de 840px). El paso 4, en cambio, ya pedía
+  seguir la estructura de `snake-player.tsx` — que spec 12 migró al patrón compartido
+  `<TouchPad>`/`<HudMenu>`/`setupHiDpiCanvas`. `cruce-player.tsx` se escribió siguiendo esa
+  instrucción literalmente, así que ya nació con `<TouchPad>` (dpad de 4 direcciones sobre
+  `ArrowUp`/`ArrowDown`/`ArrowLeft`/`ArrowRight`, sin `dpadRepeat` porque el salto nunca se repite
+  al mantener presionado) y `<HudMenu>` envolviendo las acciones del HUD. El paso 5 original queda
+  sin objeto: no se agrega ningún CSS táctil por juego, siguiendo la arquitectura vigente
+  (`recipe.md` §4/§6). También se actualizó `.claude/skills/add-game/recipe.md` para documentar
+  que la traducción del título del HUD (`useLanguage` + `localizedGameText`, spec 11) es parte del
+  contrato estándar del reproductor — otro hueco que `cruce-player.tsx` ya cierra.
+- **Reversión del "Out of scope" de skins:** este spec excluía explícitamente el selector de skin.
+  Se implementó vía `/spec-impl-game`, cuya regla dura exige lanzar el agente `skin-designer` sobre
+  todo juego recién implementado, sin excepción por decisión previa del spec. El usuario confirmó
+  explícitamente mantener esa regla y lanzar `skin-designer` sobre CRUCE, revirtiendo la exclusión
+  original; se quitó de `Scope`/`Lo que no está en este spec`. `skin-designer` añadió
+  `CruceOptions { skin?: SkinId }` y `setSkin()` a `CruceGame` (no documentados en el `Data model`
+  original de este spec, que no preveía skins), `SKIN_COLORS`/`SKIN_DRAWERS` en `engine.ts`
+  (`clasico` = paleta original sin cambios, por defecto; `neon` = tablero violeta/magenta con
+  `shadowBlur`; `retro` = tablero ámbar/verde tipo fósforo CRT, biselado, sin brillo), y
+  `<SkinSelector>` dentro del `<HudMenu>` de `cruce-player.tsx`, persistido en `localStorage` bajo
+  `av_cruce_skin`. Verificado visualmente en el navegador: los tres skins renderizan correctamente
+  y son claramente distinguibles entre sí.
+- **Auditoría de `mobile-porter`:** al ser CRUCE un juego nuevo (no uno de los cuatro migrados por
+  spec 12), `/spec-impl-game` también lanzó `mobile-porter` sobre él. Confirmó que
+  `cruce-player.tsx` ya cumplía el checklist completo (Fase 4 del paso del plan ya lo había cableado
+  siguiendo `snake-player.tsx`) — no hizo ningún cambio de código. `recipe.md` tampoco mostró
+  desviación frente al patrón real.

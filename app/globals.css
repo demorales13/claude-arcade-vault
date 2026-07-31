@@ -1926,6 +1926,14 @@ a {
   display: block;
 }
 
+.cruce-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* fake in-screen game */
 .game-arena {
   position: absolute;
