@@ -10,7 +10,6 @@ Estados: `Propuesto` → `Aceptado` (existe spec) → `Implementado` · o `Recha
 | ---------------- | ---------- | --------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | INVASIÓN         | 2026-07-29 | Propuesto | SHOOTER / magenta                            | Disparo fijo contra una formación de enemigos que desciende y acelera por oleadas; mecánica claramente distinta a Asteroides dentro de la misma categoría. Mejor candidato de esta ronda.               |
 | RALLY            | 2026-07-29 | Propuesto | VERSUS / yellow                              | Pong contra una IA, marcador acumulativo de puntos anotados. Única forma razonable de ocupar la categoría VERSUS, vacía hoy — pero su mecánica de rebote en paleta se solapa parcialmente con Arkanoid. |
-| CRUCE            | 2026-07-29 | Implementado | ARCADE / cyan                                | Cruce de carriles con saltos y muerte instantánea, estilo Frogger genérico. Mecánica nueva, pero controles de grid 4-direccional ya usados por Serpiente; ARCADE ya tiene dos entradas.                 |
 | DUELO DE TANQUES | 2026-07-29 | Aplazado  | SHOOTER o VERSUS (sin decidir) / sin definir | Combate de tanques estilo Battle City genérico. Motor mucho más grande (IA, paredes destructibles, balas que rebotan) y categoría ambigua — se aplaza por tamaño, no se descarta por encaje.            |
 
 ## INVASIÓN (`invasion` propuesto)
@@ -51,26 +50,6 @@ Estados: `Propuesto` → `Aceptado` (existe spec) → `Implementado` · o `Recha
   - Riesgo legal: Bajo-Medio — "Pong" es casi genérico en el lenguaje común pese a ser marca histórica de Atari; igual conviene no usarlo como título.
   - Tamaño: Alto — motor pequeño, spec compacto.
 - **Riesgos / notas:** el solapamiento mecánico con Arkanoid (rebote en paleta) es la objeción principal — vale la pena decidir conscientemente si el catálogo quiere dos juegos de rebote de paleta o si conviene reservar VERSUS para otra idea más adelante. Sigue siendo, hoy, la única propuesta concreta para esa categoría.
-- **Veredicto humano:** _(pendiente)_
-
-## CRUCE (`crossing` propuesto)
-
-- **Fecha / Estado:** 2026-07-29 · Propuesto
-- **Fila de catálogo propuesta:**
-  - `cat`: `ARCADE` · `color`: `cyan`
-  - `title`: CRUCE · `short`: "Guía a tu explorador a través de carriles de tráfico y un río sin que lo arrollen."
-  - `long` (borrador): "Cruza una serie de carriles con obstáculos que se mueven a distintas velocidades y una franja de río con plataformas flotantes, sin perder ningún salto. Cada fila cruzada suma puntos; cruzar la pantalla completa otorga un bonus y sube el nivel de velocidad."
-  - Portada (concepto): franjas horizontales alternando asfalto oscuro y agua cian, siluetas de vehículos/troncos en movimiento, personaje pixelado cian en el centro.
-- **Por qué encaja:** aporta una mecánica de "salto por carriles" con muerte instantánea al contacto, distinta del crecimiento progresivo de Serpiente y del rebote de Arkanoid.
-- **Criterios:**
-  - Encaje temático: Alto.
-  - Modelo de puntuación: Alto — puntos por fila cruzada + bonus por cruce completo, entero acumulativo, un jugador.
-  - Viabilidad del motor: Alto — carriles con obstáculos a velocidad constante, canvas 2D simple; hay abundante referencia de implementación en JS/canvas.
-  - Controles: Alto — cuatro direcciones discretas de salto, mapeo directo a botones táctiles.
-  - Diversidad: Media — mecánica de diseño nueva, pero el esquema de control (grid 4-direccional discreto) repite exactamente el de Serpiente; y ARCADE ya tiene dos entradas (Arkanoid, Serpiente), por lo que esta sería la tercera.
-  - Riesgo legal: Medio — la asociación con "Frogger" (marca de Konami) es fuerte en la memoria colectiva; mitigar con tema y personaje propios (nada de rana ni autos clásicos).
-  - Tamaño: Alto.
-- **Riesgos / notas:** de los tres candidatos presentados es el que menos diversifica el catálogo (categoría ya cubierta dos veces, controles ya usados), por eso queda tercero pese a puntuar bien individualmente.
 - **Veredicto humano:** _(pendiente)_
 
 ## DUELO DE TANQUES (`tanks` — aplazado, mejor finalista descartado)
