@@ -695,25 +695,54 @@ export function createTetrisGame(
     }
   }
 
-  function drawGrid() {
-    ctx.strokeStyle = GRID_LINE_COLOR;
-    ctx.lineWidth = 0.5;
+  // Parte del lienzo que nunca cambia frame a frame: el fondo negro y la
+  // cuadrícula del tablero (ni depende del estado del juego ni de la skin,
+  // a diferencia de Cruce). Recibe un contexto explícito porque también se
+  // usa para rellenar `bgCache` (ver más abajo), no solo el canvas real.
+  function drawStaticBoard(target: CanvasRenderingContext2D) {
+    target.fillStyle = "#000000";
+    target.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    target.strokeStyle = GRID_LINE_COLOR;
+    target.lineWidth = 0.5;
     for (let c = 1; c < COLS; c++) {
-      ctx.beginPath();
-      ctx.moveTo(BOARD_X + c * BLOCK, BOARD_Y);
-      ctx.lineTo(BOARD_X + c * BLOCK, BOARD_Y + ROWS * BLOCK);
-      ctx.stroke();
+      target.beginPath();
+      target.moveTo(BOARD_X + c * BLOCK, BOARD_Y);
+      target.lineTo(BOARD_X + c * BLOCK, BOARD_Y + ROWS * BLOCK);
+      target.stroke();
     }
     for (let r = 1; r < ROWS; r++) {
-      ctx.beginPath();
-      ctx.moveTo(BOARD_X, BOARD_Y + r * BLOCK);
-      ctx.lineTo(BOARD_X + COLS * BLOCK, BOARD_Y + r * BLOCK);
-      ctx.stroke();
+      target.beginPath();
+      target.moveTo(BOARD_X, BOARD_Y + r * BLOCK);
+      target.lineTo(BOARD_X + COLS * BLOCK, BOARD_Y + r * BLOCK);
+      target.stroke();
     }
 
-    ctx.strokeStyle = BOARD_BORDER_COLOR;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(BOARD_X, BOARD_Y, COLS * BLOCK, ROWS * BLOCK);
+    target.strokeStyle = BOARD_BORDER_COLOR;
+    target.lineWidth = 2;
+    target.strokeRect(BOARD_X, BOARD_Y, COLS * BLOCK, ROWS * BLOCK);
+  }
+
+  // Cachea `drawStaticBoard` en un canvas auxiliar a la resolución física
+  // real (`canvas.width`/`height`, que ya incluye el devicePixelRatio que
+  // aplicó `setupHiDpiCanvas`) para no recalcular el relleno de fondo + 9
+  // líneas verticales + 19 horizontales + el borde en cada frame. A
+  // diferencia de Cruce, ni el fondo ni la cuadrícula dependen de la skin
+  // (`GRID_LINE_COLOR`/`BOARD_BORDER_COLOR` son constantes), así que se
+  // dibuja una única vez y no necesita invalidarse. Molde:
+  // `ensureBgCache`/`drawStaticBands` en components/games/cruce/engine.ts.
+  let bgCache: HTMLCanvasElement | null = null;
+
+  function ensureBgCache() {
+    if (bgCache) return;
+    bgCache = document.createElement("canvas");
+    bgCache.width = canvas.width;
+    bgCache.height = canvas.height;
+    const bgCacheCtx = getContext2D(bgCache);
+    const scaleX = canvas.width / CANVAS_W;
+    const scaleY = canvas.height / CANVAS_H;
+    bgCacheCtx.scale(scaleX, scaleY);
+    drawStaticBoard(bgCacheCtx);
   }
 
   function drawBlock(
@@ -799,9 +828,8 @@ export function createTetrisGame(
   }
 
   function draw() {
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    drawGrid();
+    ensureBgCache();
+    if (bgCache) ctx.drawImage(bgCache, 0, 0, CANVAS_W, CANVAS_H);
     drawBoard();
     drawNextPanel();
     drawEffects();

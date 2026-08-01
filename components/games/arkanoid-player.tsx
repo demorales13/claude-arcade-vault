@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
@@ -27,6 +27,15 @@ import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 
 const SKIN_GAME_ID = "arkanoid";
 const SOUND_STORAGE_KEY = "av_arkanoid_sound";
+
+// Identidad estable entre renders: si se creara inline en el JSX, un
+// `React.memo(TouchPad)` no evitaría el re-render en cada cambio de
+// score/lives/level, porque la prop `dpad` sería un objeto nuevo cada vez
+// (molde: CRUCE_DPAD en components/games/cruce-player.tsx).
+const ARKANOID_DPAD = {
+  left: "ArrowLeft",
+  right: "ArrowRight",
+} as const;
 
 function readUserName(): string {
   try {
@@ -110,13 +119,13 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     };
   }, []);
 
-  const handleSkinChange = (newSkin: SkinId) => {
+  const handleSkinChange = useCallback((newSkin: SkinId) => {
     setSkin(newSkin);
     gameRef.current?.setSkin(newSkin);
     writeStoredSkin(SKIN_GAME_ID, newSkin);
-  };
+  }, []);
 
-  const togglePause = () => {
+  const togglePause = useCallback(() => {
     if (paused) {
       gameRef.current?.resume();
       setPaused(false);
@@ -124,7 +133,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
       gameRef.current?.pause();
       setPaused(true);
     }
-  };
+  }, [paused]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -135,10 +144,10 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [over, paused]);
 
-  const advanceLevel = () => {
+  const advanceLevel = useCallback(() => {
     gameRef.current?.continueLevel();
     setLevelCleared(null);
-  };
+  }, []);
 
   useEffect(() => {
     if (levelCleared === null || over) return;
@@ -147,11 +156,11 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [levelCleared, over]);
+  }, [levelCleared, over, advanceLevel]);
 
-  const endGame = () => {
+  const endGame = useCallback(() => {
     gameRef.current?.forceGameOver();
-  };
+  }, []);
 
   const restart = () => {
     const canvas = canvasRef.current;
@@ -171,7 +180,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     }
   };
 
-  const toggleSound = () => {
+  const toggleSound = useCallback(() => {
     const next = !soundOn;
     setSoundOn(next);
     gameRef.current?.setSoundEnabled(next);
@@ -180,17 +189,20 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
     } catch {
       // localStorage no disponible; se ignora.
     }
-  };
+  }, [soundOn]);
 
   const canDragPaddle = !paused && !over && levelCleared === null;
 
-  const updatePointerX = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const logicalX = ((e.clientX - rect.left) / rect.width) * 800;
-    gameRef.current?.setPointerX(logicalX);
-  };
+  const updatePointerX = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const logicalX = ((e.clientX - rect.left) / rect.width) * 800;
+      gameRef.current?.setPointerX(logicalX);
+    },
+    [],
+  );
 
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!canDragPaddle) return;
@@ -204,6 +216,57 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.releasePointerCapture(e.pointerId);
   };
+
+  const handleTouchKey = useCallback((code: string, pressed: boolean) => {
+    gameRef.current?.setKey(code, pressed);
+  }, []);
+
+  // `HudMenu` está memoizado, pero eso no sirve de nada si `children` es un
+  // árbol JSX nuevo en cada render de `ArkanoidPlayer` (p. ej. cada vez que
+  // cambia `score`, que no afecta a nada de este bloque): memoizar aquí
+  // también el propio `children` es lo que hace que el memo de `HudMenu` se
+  // salte el re-render cuando ninguna de estas dependencias cambió (molde:
+  // hudMenuChildren en components/games/cruce-player.tsx).
+  const hudMenuChildren = useMemo(
+    () => (
+      <>
+        <div className="hud-stat hud-menu-player-dup">
+          <div className="l">Jugador</div>
+          <div className="v" style={{ color: "var(--ink)" }}>
+            {name}
+          </div>
+        </div>
+        <SkinSelector
+          value={skin}
+          onChange={handleSkinChange}
+          options={SKIN_LABELS}
+        />
+        <button className="btn ghost" onClick={toggleSound}>
+          {soundOn ? "SONIDO ON" : "SONIDO OFF"}
+        </button>
+        <button className="btn yellow" onClick={togglePause}>
+          {paused ? "REANUDAR" : "PAUSA"}
+        </button>
+        <button className="btn magenta" onClick={endGame}>
+          FIN
+        </button>
+        <Link className="btn ghost" href={`/games/${game.id}`}>
+          SALIR
+        </Link>
+      </>
+    ),
+    [
+      name,
+      skin,
+      handleSkinChange,
+      soundOn,
+      toggleSound,
+      paused,
+      togglePause,
+      endGame,
+      game.id,
+    ],
+  );
 
   return (
     <div className="av-player fade-in">
@@ -230,31 +293,7 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
         </div>
-        <HudMenu>
-          <div className="hud-stat hud-menu-player-dup">
-            <div className="l">Jugador</div>
-            <div className="v" style={{ color: "var(--ink)" }}>
-              {name}
-            </div>
-          </div>
-          <SkinSelector
-            value={skin}
-            onChange={handleSkinChange}
-            options={SKIN_LABELS}
-          />
-          <button className="btn ghost" onClick={toggleSound}>
-            {soundOn ? "SONIDO ON" : "SONIDO OFF"}
-          </button>
-          <button className="btn yellow" onClick={togglePause}>
-            {paused ? "REANUDAR" : "PAUSA"}
-          </button>
-          <button className="btn magenta" onClick={endGame}>
-            FIN
-          </button>
-          <Link className="btn ghost" href={`/games/${game.id}`}>
-            SALIR
-          </Link>
-        </HudMenu>
+        <HudMenu>{hudMenuChildren}</HudMenu>
       </div>
 
       <div className="crt-stage">
@@ -326,9 +365,9 @@ export function ArkanoidPlayer({ game }: { game: GameWithStats }) {
           </div>
         </div>
         <TouchPad
-          dpad={{ left: "ArrowLeft", right: "ArrowRight" }}
+          dpad={ARKANOID_DPAD}
           disabled={paused || over}
-          onKey={(code, pressed) => gameRef.current?.setKey(code, pressed)}
+          onKey={handleTouchKey}
         />
       </div>
 

@@ -1,20 +1,21 @@
 ---
 name: spec-impl-game
-description: Implements an approved game spec by following /spec-impl's documented phases, then automatically chains the skin-designer and mobile-porter agents onto that game, in that order.
+description: Implements an approved game spec by following /spec-impl's documented phases, then automatically chains the skin-designer, mobile-porter and game-performance agents onto that game, in that order.
 disable-model-invocation: true
 argument-hint: <NN-spec-name>
 ---
 
-# /spec-impl-game — Implementer for game specs, with skin + mobile follow-through
+# /spec-impl-game — Implementer for game specs, with skin + mobile + performance follow-through
 
 This command is a specialized wrapper around `/spec-impl`'s implementation phases. It exists
 because implementing a **game** spec is never really done at "last plan step complete" — every
-playable game is expected to end up with skins (`clasico`/`neon`/`retro`, via `skin-designer`) and,
-unless it's one of the four games spec 12 already migrated, touch/mobile support (via
-`mobile-porter`). Doing those two steps by hand after every game spec means remembering the game's
-`id`, invoking two agents, and never running them together — both edit
-`components/games/<id>-player.tsx`, so parallel invocation would race and corrupt each other's
-edits.
+playable game is expected to end up with skins (`clasico`/`neon`/`retro`, via `skin-designer`),
+touch/mobile support unless it's one of the four games spec 12 already migrated (via
+`mobile-porter`), and a performance pass against the patterns `specs/14-rendimiento-cruce.md`
+validated (via `game-performance`). Doing those three steps by hand after every game spec means
+remembering the game's `id`, invoking three agents, and never running any two of them together —
+all three edit `components/games/<id>-player.tsx`, so parallel invocation would race and corrupt
+each other's edits.
 
 **Important — this command does NOT invoke the `spec-impl` skill.** `/spec-impl` is deliberately
 human-only (`disable-model-invocation: true` in its frontmatter) and that gate is not to be
@@ -24,10 +25,10 @@ invoke it — the skill's own invocation gate stays completely untouched. **Neve
 tool with `spec-impl` as a way to shortcut this** — that would defeat the entire point of keeping
 it human-only.
 
-Once implementation finishes, this command runs `skin-designer` and, after it reports back,
-`mobile-porter`, both scoped to the game that was just implemented — with no extra confirmation
-needed for the chaining itself (though `/spec-impl`'s own step-by-step pauses inside Phase A still
-apply).
+Once implementation finishes, this command runs `skin-designer`, then, after it reports back,
+`mobile-porter`, then, after that reports back, `game-performance` — all three scoped to the game
+that was just implemented — with no extra confirmation needed for the chaining itself (though
+`/spec-impl`'s own step-by-step pauses inside Phase A still apply).
 
 **Use this only for specs that add a playable game to the catalog** (the ones `/add-game` and
 `game-jam` produce). For any other kind of spec, use `/spec-impl` directly — there is nothing here
@@ -137,13 +138,33 @@ concurrently would race on that file.
 
 ---
 
-## Phase E — Final report and stop
+## Phase E — Run `game-performance`
 
-Summarize the whole chain in three parts:
+Only after Phase D's report has come back (or its documented skip) — **never in the same tool-call
+batch as Phase D, never in parallel with it.** Like the other two agents, `game-performance` edits
+`components/games/<id>-player.tsx`.
+
+Unlike `mobile-porter`, there is **no exclusion list** — `game-performance` runs for every game,
+including the four spec 12 already migrated.
+
+Launch a single `Task` call with `subagent_type: game-performance`, naming the game's `id`
+explicitly, and mentioning that `skin-designer` and `mobile-porter` already ran on this game (so
+their reports are fresh context, not something `game-performance` needs to redo). If the agent asks
+whether to start the dev server, or whether it may touch a game's glow effect, **relay that question
+to the user verbatim** and wait for their answer — the same treatment Phase C gives Arkanoid's skin
+question. Wait for its report and summarize it to the user before moving to Phase F.
+
+---
+
+## Phase F — Final report and stop
+
+Summarize the whole chain in four parts:
 
 1. **Implementation** — which plan steps were completed (from Phase A).
 2. **Skins** — which skins the game ended up with and which is the default (from Phase C).
 3. **Mobile/touch** — what was wired in, or why it was skipped (from Phase D).
+4. **Performance** — what was audited and fixed, with before/after numbers if measured, or why
+   none were measured (from Phase E).
 
 Close with the same reminders `/spec-impl` itself ends on: verify the spec's acceptance criteria,
 flip its status to `Implemented` (or the equivalent word), and make the final commit before
@@ -156,17 +177,23 @@ didn't already do so.
 
 - **Never invoke the `spec-impl` skill via the `Skill` tool.** `/spec-impl` is deliberately
   human-only; this command only reads its documented phases as text and carries them out directly.
-- **Never launch `skin-designer` and `mobile-porter` in the same tool-call batch or otherwise
-  concurrently.** They edit the same file; Phase D must wait for Phase C's result.
-- **Never launch either agent if Phase A did not reach its own successful end state.** A stopped,
+- **Never launch any two of `skin-designer`, `mobile-porter` and `game-performance` in the same
+  tool-call batch or otherwise concurrently.** All three edit the same file; each phase must wait
+  for the previous one's result.
+- **Never launch any agent if Phase A did not reach its own successful end state.** A stopped,
   declined, or partial implementation means no agent runs.
 - **Never guess the game's `id`.** If Phase B can't determine it with confidence, stop and say so
   instead of launching an agent against a wrong or invented target.
 - **Never skip `skin-designer`** on the grounds that a game "looks legacy" — the legacy exclusion
   in Phase D applies only to `mobile-porter`, per the four hard-coded game ids in
   `.claude/agents/mobile-porter.md`. `skin-designer` has no such exclusion list.
+- **Never skip `game-performance`** on the same "looks legacy" grounds either — unlike
+  `mobile-porter`, it has no exclusion list and runs for every game.
 - **Never invert the order.** `mobile-porter` wraps the skin selector inside `<HudMenu>`
   (`.claude/agents/mobile-porter.md`, Hard rules — it never defines skins, only wraps the existing
-  selector), so it depends on `skin-designer` having already run.
+  selector), so it depends on `skin-designer` having already run. `game-performance` goes last
+  because it measures and optimizes the `-player.tsx` file only once skins and touch controls are
+  already wired into it — measuring or fixing it earlier would mean redoing that work after the
+  other two agents touch the same file.
 - **Never use this command for a non-game spec.** If `$ARGUMENTS` points at a spec that isn't
   adding a playable game, say `/spec-impl` is the right command and stop before Phase A.

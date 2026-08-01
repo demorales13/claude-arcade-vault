@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
@@ -21,6 +21,23 @@ import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 const SKIN_STORAGE_KEY = "av_tetris_skin";
 const SOUND_STORAGE_KEY = "av_tetris_sound";
 const VALID_SKINS: TetrisSkin[] = ["retro", "neon", "pastel", "pixel"];
+
+// Identidad estable entre renders: si se crearan inline en el JSX, un
+// `React.memo(TouchPad)` no evitaría el re-render en cada cambio de
+// score/lines/level/combo, porque `dpad`/`buttonA` serían objetos nuevos
+// cada vez (molde: CRUCE_DPAD en components/games/cruce-player.tsx).
+const TETRIS_DPAD = {
+  up: "ArrowUp",
+  down: "ArrowDown",
+  left: "ArrowLeft",
+  right: "ArrowRight",
+} as const;
+
+const TETRIS_BUTTON_A = {
+  code: "Space",
+  label: "SOLTAR",
+  ariaLabel: "Soltar pieza",
+} as const;
 
 function readUserName(): string {
   try {
@@ -104,7 +121,7 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
     };
   }, []);
 
-  const togglePause = () => {
+  const togglePause = useCallback(() => {
     if (paused) {
       gameRef.current?.resume();
       setPaused(false);
@@ -112,7 +129,7 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
       gameRef.current?.pause();
       setPaused(true);
     }
-  };
+  }, [paused]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -121,11 +138,11 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [over, paused]);
+  }, [over, togglePause]);
 
-  const endGame = () => {
+  const endGame = useCallback(() => {
     gameRef.current?.forceGameOver();
-  };
+  }, []);
 
   const restart = () => {
     const canvas = canvasRef.current;
@@ -143,20 +160,83 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
     }
   };
 
-  const handleSkinChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSkin = e.target.value as TetrisSkin;
-    setSkin(newSkin);
-    gameRef.current?.setSkin(newSkin);
-    localStorage.setItem(SKIN_STORAGE_KEY, newSkin);
-    e.target.blur();
-  };
+  const handleSkinChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const newSkin = e.target.value as TetrisSkin;
+      setSkin(newSkin);
+      gameRef.current?.setSkin(newSkin);
+      localStorage.setItem(SKIN_STORAGE_KEY, newSkin);
+      e.target.blur();
+    },
+    [],
+  );
 
-  const toggleSound = () => {
-    const next = !soundOn;
-    setSoundOn(next);
-    gameRef.current?.setSoundEnabled(next);
-    localStorage.setItem(SOUND_STORAGE_KEY, next ? "on" : "off");
-  };
+  const toggleSound = useCallback(() => {
+    setSoundOn((prev) => {
+      const next = !prev;
+      gameRef.current?.setSoundEnabled(next);
+      localStorage.setItem(SOUND_STORAGE_KEY, next ? "on" : "off");
+      return next;
+    });
+  }, []);
+
+  const handleTouchKey = useCallback((code: string, pressed: boolean) => {
+    gameRef.current?.setKey(code, pressed);
+  }, []);
+
+  // `HudMenu` está memoizado, pero eso no sirve de nada si `children` es un
+  // árbol JSX nuevo en cada render de `TetrisPlayer` (p. ej. cada vez que
+  // cambia `score`, que no afecta a nada de este bloque): memoizar aquí
+  // también el propio `children` es lo que hace que el memo de `HudMenu` se
+  // salte el re-render cuando ninguna de estas dependencias cambió (molde:
+  // hudMenuChildren en components/games/cruce-player.tsx).
+  const hudMenuChildren = useMemo(
+    () => (
+      <>
+        <div className="hud-stat hud-menu-player-dup">
+          <div className="l">Jugador</div>
+          <div className="v" style={{ color: "var(--ink)" }}>
+            {name}
+          </div>
+        </div>
+        <select
+          className="hud-select"
+          value={skin}
+          onChange={handleSkinChange}
+          aria-label="Cambiar skin visual"
+        >
+          {Object.entries(SKIN_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <button className="btn ghost" onClick={toggleSound}>
+          {soundOn ? "SONIDO ON" : "SONIDO OFF"}
+        </button>
+        <button className="btn yellow" onClick={togglePause}>
+          {paused ? "REANUDAR" : "PAUSA"}
+        </button>
+        <button className="btn magenta" onClick={endGame}>
+          FIN
+        </button>
+        <Link className="btn ghost" href={`/games/${game.id}`}>
+          SALIR
+        </Link>
+      </>
+    ),
+    [
+      name,
+      skin,
+      soundOn,
+      paused,
+      handleSkinChange,
+      toggleSound,
+      togglePause,
+      endGame,
+      game.id,
+    ],
+  );
 
   return (
     <div className="av-player fade-in">
@@ -187,38 +267,7 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
             </div>
           )}
         </div>
-        <HudMenu>
-          <div className="hud-stat hud-menu-player-dup">
-            <div className="l">Jugador</div>
-            <div className="v" style={{ color: "var(--ink)" }}>
-              {name}
-            </div>
-          </div>
-          <select
-            className="hud-select"
-            value={skin}
-            onChange={handleSkinChange}
-            aria-label="Cambiar skin visual"
-          >
-            {Object.entries(SKIN_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <button className="btn ghost" onClick={toggleSound}>
-            {soundOn ? "SONIDO ON" : "SONIDO OFF"}
-          </button>
-          <button className="btn yellow" onClick={togglePause}>
-            {paused ? "REANUDAR" : "PAUSA"}
-          </button>
-          <button className="btn magenta" onClick={endGame}>
-            FIN
-          </button>
-          <Link className="btn ghost" href={`/games/${game.id}`}>
-            SALIR
-          </Link>
-        </HudMenu>
+        <HudMenu>{hudMenuChildren}</HudMenu>
       </div>
 
       <div className="crt-stage">
@@ -261,20 +310,11 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
           </div>
         </div>
         <TouchPad
-          dpad={{
-            up: "ArrowUp",
-            down: "ArrowDown",
-            left: "ArrowLeft",
-            right: "ArrowRight",
-          }}
+          dpad={TETRIS_DPAD}
           dpadRepeat
-          buttonA={{
-            code: "Space",
-            label: "SOLTAR",
-            ariaLabel: "Soltar pieza",
-          }}
+          buttonA={TETRIS_BUTTON_A}
           disabled={paused || over}
-          onKey={(code, pressed) => gameRef.current?.setKey(code, pressed)}
+          onKey={handleTouchKey}
         />
       </div>
 
