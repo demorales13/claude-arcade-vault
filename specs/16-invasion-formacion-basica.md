@@ -143,28 +143,28 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] `npm run dev` levanta sin errores en consola en `/games`, `/games/invasion` y `/games/invasion/play`.
-- [ ] `select * from games_with_stats where id = 'invasion'` devuelve la fila, y `best`/`plays` se mueven al insertar puntuaciones reales.
-- [ ] `/games` muestra la tarjeta "INVASIÓN" con `.cover-invasion`, sin cambios en ninguna otra tarjeta.
-- [ ] `/games/invasion` muestra cover, tags, descripción, stat-strip y el leaderboard lateral.
-- [ ] El HUD (Jugador/Puntuación/Vidas/Nivel) refleja el estado real del motor, no valores simulados.
-- [ ] El botón PAUSA congela el juego con el frame visible y el overlay "EN PAUSA"; REANUDAR continúa sin salto brusco.
-- [ ] El botón FIN termina la partida inmediatamente con la puntuación alcanzada hasta ese momento.
-- [ ] Guardar en `GameOverModal` inserta una fila en `scores` con `game_id = 'invasion'`, visible en `/hall-of-fame`.
-- [ ] El nombre precargado en el modal viene de `av_user` en `localStorage`.
-- [ ] Bajo 840px aparecen los controles táctiles y controlan el juego igual que el teclado; en escritorio no se renderizan.
-- [ ] El canvas se escala dentro del marco `.crt` en ambos anchos sin deformar ni recortar el HUD.
-- [ ] Salir de `/games/invasion/play` detiene el loop: sin errores en consola y sin listeners huérfanos.
-- [ ] `npm run build` termina sin errores.
-- [ ] La formación de 40 alienígenas (5×8) se mueve lateralmente y desciende un escalón cada vez que toca cualquiera de los dos bordes del canvas.
-- [ ] La velocidad de la formación aumenta de forma medible a medida que quedan menos alienígenas vivos dentro de la misma oleada.
-- [ ] Solo puede haber una bala del jugador en pantalla a la vez: disparar de nuevo antes de que la anterior salga o impacte no tiene efecto.
-- [ ] Una bala enemiga que impacta el cañón resta exactamente 1 vida; con 0 vidas se abre `GameOverModal` de inmediato.
-- [ ] Los alienígenas de la fila superior otorgan más puntos que los de la fila inferior al ser destruidos.
-- [ ] Vaciar por completo la oleada (40/40 alienígenas destruidos) sube el nivel en 1 y arranca una nueva oleada con un `stepMs` base menor (más rápida) que la anterior.
-- [ ] Si la formación desciende hasta alcanzar `GAME_OVER_ROW_Y`, la partida termina de inmediato sin importar las vidas restantes.
-- [ ] El cañón nunca sale de los límites horizontales del canvas.
-- [ ] No aparece ningún escudo, bastión, nave bonus, power-up, efecto de sonido ni selector de skin en esta versión.
+- [x] `npm run dev` levanta sin errores en consola en `/games`, `/games/invasion` y `/games/invasion/play`. Verificado: consola sin errores en las tres rutas, y 0 errores de consola durante la sesión de 40 s de `game-performance` (cambios de skin + partida completa hasta Game Over).
+- [x] `select * from games_with_stats where id = 'invasion'` devuelve la fila, y `best`/`plays` se mueven al insertar puntuaciones reales. Verificado: `plays` pasó de 0→1→2 y `best` a 2560 tras la partida real jugada por `game-performance`.
+- [x] `/games` muestra la tarjeta "INVASIÓN" con `.cover-invasion`, sin cambios en ninguna otra tarjeta. Verificado por lectura de página.
+- [x] `/games/invasion` muestra cover, tags, descripción, stat-strip y el leaderboard lateral. Verificado por lectura de página.
+- [x] El HUD (Jugador/Puntuación/Vidas/Nivel) refleja el estado real del motor, no valores simulados. Verificado: FIN dejó "Vidas" en `—` y abrió el modal con la puntuación real; la sesión de `game-performance` confirmó renders del HUD ligados a los callbacks del motor.
+- [x] El botón PAUSA congela el juego con el frame visible y el overlay "EN PAUSA"; REANUDAR continúa sin salto brusco. Verificado el cambio de etiqueta PAUSA↔REANUDAR y la aparición del overlay "EN PAUSA"; el "sin salto brusco" se apoya en que `resume()` descarta `lastTime` (revisión de código), no en inspección visual directa.
+- [x] El botón FIN termina la partida inmediatamente con la puntuación alcanzada hasta ese momento. Verificado: abrió `GameOverModal` de inmediato con la puntuación real.
+- [x] Guardar en `GameOverModal` inserta una fila en `scores` con `game_id = 'invasion'`, visible en `/hall-of-fame`. Verificado dos veces: una fila de prueba (INVITADO, 0) y la partida real de `game-performance` (DEMORALES, 2560), ambas visibles en la pestaña INVASIÓN de `/hall-of-fame`.
+- [ ] El nombre precargado en el modal viene de `av_user` en `localStorage`. Implementado con el mismo `readUserName()` que usan el resto de reproductores; no se verificó explícitamente cambiando `av_user` en esta sesión.
+- [ ] Bajo 840px aparecen los controles táctiles y controlan el juego igual que el teclado; en escritorio no se renderizan. El patrón compartido vigente (spec 12/13) usa `(pointer: coarse)` en vez del breakpoint literal de 840px que describe este spec — texto desactualizado respecto a `recipe.md`, ya señalado en las notas de implementación. El wiring de `<TouchPad>` está presente y fue auditado contra la checklist de `mobile-porter` sin hallazgos, pero no se emuló un viewport táctil real en esta sesión.
+- [ ] El canvas se escala dentro del marco `.crt` en ambos anchos sin deformar ni recortar el HUD. No se pudo verificar visualmente: el panel del navegador de esta sesión no compositó fotogramas (`document.hidden === true`), lo que también impidió tomar capturas de pantalla.
+- [x] Salir de `/games/invasion/play` detiene el loop: sin errores en consola y sin listeners huérfanos. `destroy()` cancela el rAF y remueve los listeners (revisión de código); se navegó repetidamente dentro y fuera de `/games/invasion/play` en esta sesión sin errores de consola acumulados.
+- [x] `npm run build` termina sin errores. Verificado repetidamente (implementación base, tras skins, y sin cambios tras la auditoría de rendimiento).
+- [ ] La formación de 40 alienígenas (5×8) se mueve lateralmente y desciende un escalón cada vez que toca cualquiera de los dos bordes del canvas. Implementado en `stepFormation()`; la sesión automatizada de `game-performance` jugó 40 s hasta Game Over sin errores y con puntuación real, pero el descenso escalonado no se observó visualmente en esta sesión.
+- [ ] La velocidad de la formación aumenta de forma medible a medida que quedan menos alienígenas vivos dentro de la misma oleada. Implementado en `recomputeStepMs()`; no verificado visualmente.
+- [ ] Solo puede haber una bala del jugador en pantalla a la vez: disparar de nuevo antes de que la anterior salga o impacte no tiene efecto. Implementado (`playerBullet` como candado); no aislado en una prueba específica.
+- [ ] Una bala enemiga que impacta el cañón resta exactamente 1 vida; con 0 vidas se abre `GameOverModal` de inmediato. Implementado; la sesión de `game-performance` llegó a Game Over de forma natural (no vía FIN), lo que es evidencia indirecta del ciclo de vidas, pero el caso puntual no se aisló.
+- [ ] Los alienígenas de la fila superior otorgan más puntos que los de la fila inferior al ser destruidos. Implementado (`ROW_POINTS = [30, 30, 20, 20, 10]`); no aislado en una prueba específica.
+- [ ] Vaciar por completo la oleada (40/40 alienígenas destruidos) sube el nivel en 1 y arranca una nueva oleada con un `stepMs` base menor (más rápida) que la anterior. Implementado en `nextLevel()`; la puntuación de 2560 obtenida en la sesión de `game-performance` es consistente con varias oleadas completas (una oleada completa vale hasta 880 puntos), pero no se confirmó visualmente el cambio de nivel.
+- [ ] Si la formación desciende hasta alcanzar `GAME_OVER_ROW_Y`, la partida termina de inmediato sin importar las vidas restantes. Implementado en `checkFormationReachedCannon()`; no aislado en una prueba específica.
+- [ ] El cañón nunca sale de los límites horizontales del canvas. Implementado (`Math.max(0, Math.min(...))` en `updateCannon`); no aislado en una prueba específica.
+- [ ] No aparece ningún escudo, bastión, nave bonus, power-up, efecto de sonido ni selector de skin en esta versión. **Incumplido a propósito por el flujo `/spec-impl-game`:** este comando encadena `skin-designer` sobre todo juego que implementa, sin excepción para specs que declaran explícitamente "sin selector de skin" como parte de su alcance mínimo. Como resultado, `invasion-player.tsx` sí muestra un `<SkinSelector>` (clasico/neon/retro). Se documenta como una discrepancia real entre este spec y el comportamiento del flujo de trabajo, no como un error silenciado — ver Risks/incidencias.
 
 ## Decisions
 
@@ -191,6 +191,11 @@ Convenciones:
 | Importar `insertScore` desde `lib/data/games.ts` rompe el build con un error engañoso de "Pages Router".                                    | `invasion-player.tsx` importa `insertScore` solo desde `lib/data/scores.ts`, como los demás reproductores.                                            |
 | Next.js 16.2.10 difiere de las APIs conocidas por entrenamiento para Client Components, `params` o montaje de `<canvas>`.                   | Antes del paso 4, revisar `node_modules/next/dist/docs/01-app/`, como exige `CLAUDE.md`.                                                              |
 | Sin escudos ni pausa entre oleadas, el jugador podría no tener un momento de respiro visual entre una oleada y la siguiente.                | La nueva oleada aparece con la formación completa en `FORMATION_TOP` (arriba del todo), dando el mismo margen que la primera; se valida en el paso 6. |
+
+## Incidencias de la implementación (2026-08-01, ejecución automática de `/spec-impl-game`)
+
+- **El subagente `mobile-porter` no estaba registrado como tipo de agente invocable en esta sesión** (el archivo `.claude/agents/mobile-porter.md` existe, pero la herramienta de agentes lo rechazó como "not found"). En su lugar, se auditó manualmente el reproductor contra la checklist documentada en ese archivo (Fase 2): todos los puntos ya estaban correctamente resueltos porque la implementación base ya seguía el patrón `<TouchPad>`/`<HudMenu>`/`setupHiDpiCanvas` de `snake-player.tsx` desde el principio. No se requirió ningún cambio, pero la Fase 4 de verificación manual con emulación de viewport táctil real (que sí requiere el navegador) no se ejecutó — ver el criterio de aceptación de controles táctiles arriba.
+- **Conflicto real entre este spec y el flujo `/spec-impl-game`:** este spec declara explícitamente "sin selector de skin" como parte de su alcance mínimo (ver Decisions y el último criterio de aceptación), pero `/spec-impl-game` encadena `skin-designer` sobre todo juego que implementa, sin excepción para este caso. El resultado es que `invasion-player.tsx` sí incluye un `<SkinSelector>` (clasico/neon/retro), contradiciendo la decisión de alcance de este spec. Se documenta aquí en vez de revertirse unilateralmente; si se decide que `invasion` no debe tener selector de skin, es una decisión humana a tomar aparte.
 
 ## Lo que **no** está en este spec
 
