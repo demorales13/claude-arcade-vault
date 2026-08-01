@@ -1,11 +1,13 @@
 "use client";
 
+import { memo } from "react";
+
 /**
  * Selector de skin genérico sobre `.hud-select`. `T` es el union de skins del
  * juego que lo usa (normalmente `SkinId` de `lib/skins.ts`, o un superset si
  * el juego añade skins propios, como `pastel` en Tetris).
  */
-export function SkinSelector<T extends string>({
+function SkinSelectorImpl<T extends string>({
   value,
   onChange,
   options,
@@ -32,3 +34,8 @@ export function SkinSelector<T extends string>({
     </select>
   );
 }
+
+// `memo` no conserva firmas genéricas por sí solo (colapsa `T` a `unknown`);
+// el cast recupera la firma genérica de `SkinSelectorImpl` para que cada
+// juego (Tetris con `pastel` incluido) siga infiriendo su propio `T`.
+export const SkinSelector = memo(SkinSelectorImpl) as typeof SkinSelectorImpl;

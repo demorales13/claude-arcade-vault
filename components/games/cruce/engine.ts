@@ -1053,35 +1053,88 @@ export function createCruceGame(
     ctx.stroke();
   }
 
-  function drawRowBands() {
+  // Parte del tablero que no cambia frame a frame (todo salvo las ondas del
+  // río, que se animan con `totalElapsedMs`). Recibe un contexto explícito
+  // porque también se usa para rellenar `bgCache` (ver más abajo), no solo
+  // el canvas real.
+  function drawStaticBands(target: CanvasRenderingContext2D) {
     const palette = SKIN_COLORS[skin];
 
-    ctx.fillStyle = palette.bg;
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    target.fillStyle = palette.bg;
+    target.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    ctx.fillStyle = palette.goalRow;
-    ctx.fillRect(BOARD_X, BOARD_Y, BOARD_W, CELL);
+    target.fillStyle = palette.goalRow;
+    target.fillRect(BOARD_X, BOARD_Y, BOARD_W, CELL);
 
-    ctx.fillStyle = palette.river;
-    ctx.fillRect(BOARD_X, BOARD_Y + CELL, BOARD_W, CELL * RIVER_ROWS.length);
+    target.fillStyle = palette.river;
+    target.fillRect(BOARD_X, BOARD_Y + CELL, BOARD_W, CELL * RIVER_ROWS.length);
 
-    ctx.fillStyle = palette.median;
-    ctx.fillRect(BOARD_X, BOARD_Y + MEDIAN_ROW * CELL, BOARD_W, CELL);
+    target.fillStyle = palette.median;
+    target.fillRect(BOARD_X, BOARD_Y + MEDIAN_ROW * CELL, BOARD_W, CELL);
 
-    ctx.fillStyle = palette.road;
-    ctx.fillRect(
+    target.fillStyle = palette.road;
+    target.fillRect(
       BOARD_X,
       BOARD_Y + ROAD_ROWS[0] * CELL,
       BOARD_W,
       CELL * ROAD_ROWS.length,
     );
 
-    ctx.fillStyle = palette.exit;
-    ctx.fillRect(BOARD_X, BOARD_Y + EXIT_ROW * CELL, BOARD_W, CELL);
+    target.fillStyle = palette.exit;
+    target.fillRect(BOARD_X, BOARD_Y + EXIT_ROW * CELL, BOARD_W, CELL);
 
-    // ondas del río: dos líneas senoidales por carril que se desplazan en la
-    // dirección del carril, para que se lea como agua en movimiento y no como
-    // una calzada más.
+    // líneas discontinuas de la calzada
+    target.strokeStyle = palette.roadLine;
+    target.lineWidth = 2;
+    target.setLineDash([10, 8]);
+    for (const row of ROAD_ROWS) {
+      const y = BOARD_Y + row * CELL + CELL / 2;
+      target.beginPath();
+      target.moveTo(BOARD_X, y);
+      target.lineTo(BOARD_X + BOARD_W, y);
+      target.stroke();
+    }
+    target.setLineDash([]);
+
+    target.strokeStyle = palette.boardBorder;
+    target.lineWidth = 2;
+    target.strokeRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
+  }
+
+  // Cachea `drawStaticBands` en un canvas auxiliar a la resolución física
+  // real (`canvas.width`/`height`, que ya incluye el devicePixelRatio que
+  // aplicó `setupHiDpiCanvas`) para no recalcular 6 `fillRect` + las líneas
+  // discontinuas de la calzada en cada frame — solo cambia si cambia la skin.
+  // Hallazgo del profiling (spec 14): `drawRowBands` era, con diferencia, el
+  // bloque de dibujado más repetitivo por frame aunque su coste medible en
+  // esta máquina fuera bajo; cachearlo reduce el trabajo por frame sin
+  // margen que perder en gama baja.
+  let bgCache: HTMLCanvasElement | null = null;
+  let bgCacheCtx: CanvasRenderingContext2D | null = null;
+  let bgCacheSkin: SkinId | null = null;
+
+  function ensureBgCache() {
+    if (bgCache && bgCacheSkin === skin) return;
+    if (!bgCache) {
+      bgCache = document.createElement("canvas");
+      bgCache.width = canvas.width;
+      bgCache.height = canvas.height;
+      bgCacheCtx = getContext2D(bgCache);
+      const scaleX = canvas.width / CANVAS_W;
+      const scaleY = canvas.height / CANVAS_H;
+      bgCacheCtx.scale(scaleX, scaleY);
+    }
+    bgCacheSkin = skin;
+    drawStaticBands(bgCacheCtx!);
+  }
+
+  // Ondas del río: dos líneas senoidales por carril que se desplazan en la
+  // dirección del carril, para que se lea como agua en movimiento y no como
+  // una calzada más. Es la única parte de `drawStaticBands` que sí cambia
+  // cada frame (depende de `totalElapsedMs`), así que se dibuja aparte,
+  // directamente sobre el canvas real, encima del fondo cacheado.
+  function drawRiverWaves() {
+    const palette = SKIN_COLORS[skin];
     for (const row of RIVER_ROWS) {
       const lane = laneForRow(row);
       const dir = lane?.dir ?? 1;
@@ -1098,23 +1151,6 @@ export function createCruceGame(
         row * 11 + 30,
       );
     }
-
-    // líneas discontinuas de la calzada
-    ctx.strokeStyle = palette.roadLine;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([10, 8]);
-    for (const row of ROAD_ROWS) {
-      const y = BOARD_Y + row * CELL + CELL / 2;
-      ctx.beginPath();
-      ctx.moveTo(BOARD_X, y);
-      ctx.lineTo(BOARD_X + BOARD_W, y);
-      ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    ctx.strokeStyle = palette.boardBorder;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
   }
 
   function drawGoals() {
@@ -1168,7 +1204,9 @@ export function createCruceGame(
   }
 
   function draw() {
-    drawRowBands();
+    ensureBgCache();
+    if (bgCache) ctx.drawImage(bgCache, 0, 0, CANVAS_W, CANVAS_H);
+    drawRiverWaves();
     drawGoals();
     drawLanes();
     drawPlayer();
@@ -1184,6 +1222,7 @@ export function createCruceGame(
     if (!paused && !gameOver) update(frameDt);
 
     draw();
+
     rafId = requestAnimationFrame(loop);
   }
 

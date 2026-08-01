@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 export type HudMenuProps = {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ function fullscreenSupported(): boolean {
  * colapsa tras un botón `≡`. Puramente presentacional: no recibe estado del
  * juego, solo decide cómo mostrar lo que se le pasa.
  */
-export function HudMenu({ children }: HudMenuProps) {
+export const HudMenu = memo(function HudMenu({ children }: HudMenuProps) {
   const [open, setOpen] = useState(false);
   const [canFullscreen, setCanFullscreen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -70,4 +70,4 @@ export function HudMenu({ children }: HudMenuProps) {
       </div>
     </div>
   );
-}
+});
