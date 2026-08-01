@@ -14,7 +14,17 @@ import {
 } from "@/components/games/invasion/engine";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { localizedGameText } from "@/lib/i18n/localize-game";
+import {
+  DEFAULT_SKIN,
+  SKIN_LABELS,
+  readStoredSkin,
+  writeStoredSkin,
+  type SkinId,
+} from "@/lib/skins";
+import { SkinSelector } from "@/components/skin-selector";
 import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
+
+const SKIN_GAME_ID = "invasion";
 
 const INVASION_DPAD = {
   left: "ArrowLeft",
@@ -49,6 +59,7 @@ export function InvasionPlayer({ game }: { game: GameWithStats }) {
   const [over, setOver] = useState(false);
   const [name, setName] = useState("INVITADO");
   const [saved, setSaved] = useState(false);
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
 
   useEffect(() => {
     setName(readUserName());
@@ -68,14 +79,25 @@ export function InvasionPlayer({ game }: { game: GameWithStats }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const initialSkin = readStoredSkin<SkinId>(SKIN_GAME_ID);
+    setSkin(initialSkin);
+
     setupHiDpiCanvas(canvas, 800, 600);
-    const instance = createInvasionGame(canvas, buildCallbacks());
+    const instance = createInvasionGame(canvas, buildCallbacks(), {
+      skin: initialSkin,
+    });
     gameRef.current = instance;
 
     return () => {
       instance.destroy();
       gameRef.current = null;
     };
+  }, []);
+
+  const handleSkinChange = useCallback((newSkin: SkinId) => {
+    setSkin(newSkin);
+    gameRef.current?.setSkin(newSkin);
+    writeStoredSkin(SKIN_GAME_ID, newSkin);
   }, []);
 
   const togglePause = useCallback(() => {
@@ -105,7 +127,9 @@ export function InvasionPlayer({ game }: { game: GameWithStats }) {
     setSaved(false);
 
     if (canvas) {
-      gameRef.current = createInvasionGame(canvas, buildCallbacks());
+      gameRef.current = createInvasionGame(canvas, buildCallbacks(), {
+        skin,
+      });
     }
   };
 
@@ -118,6 +142,11 @@ export function InvasionPlayer({ game }: { game: GameWithStats }) {
             {name}
           </div>
         </div>
+        <SkinSelector
+          value={skin}
+          onChange={handleSkinChange}
+          options={SKIN_LABELS}
+        />
         <button className="btn yellow" onClick={togglePause}>
           {paused ? "REANUDAR" : "PAUSA"}
         </button>
@@ -129,7 +158,7 @@ export function InvasionPlayer({ game }: { game: GameWithStats }) {
         </Link>
       </>
     ),
-    [name, paused, togglePause, endGame, game.id],
+    [name, skin, paused, handleSkinChange, togglePause, endGame, game.id],
   );
 
   return (

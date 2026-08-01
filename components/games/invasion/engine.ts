@@ -1,8 +1,14 @@
+import type { SkinId } from "@/lib/skins";
+
 export type InvasionCallbacks = {
   onScoreChange?: (score: number) => void;
   onLivesChange?: (lives: number) => void;
   onLevelChange?: (level: number) => void;
   onGameOver?: (finalScore: number) => void;
+};
+
+export type InvasionOptions = {
+  skin?: SkinId;
 };
 
 export type InvasionGame = {
@@ -11,6 +17,7 @@ export type InvasionGame = {
   destroy: () => void;
   setKey: (code: string, pressed: boolean) => void;
   forceGameOver: () => void;
+  setSkin: (skin: SkinId) => void;
 };
 
 const CANVAS_W = 800;
@@ -53,13 +60,237 @@ function getContext2D(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
   return context;
 }
 
+type InvasionPalette = {
+  alien: string;
+  cannon: string;
+  playerBullet: string;
+  enemyBullet: string;
+};
+
+// Skin visual identities. `clasico` reproduces the game's original palette
+// (white aliens, cyan cannon, yellow player bullet, pink enemy bullets)
+// exactly as it looked before skins existed, so the default view never
+// changes for existing players. `neon` swaps in a saturated magenta/cyan duo
+// drawn with a black-cored glow border (mold: drawBlockNeon in
+// components/games/tetris/engine.ts). `retro` uses a short amber/green
+// range with a beveled highlight/shadow strip and no shadowBlur, evoking CRT
+// phosphor (mold: drawBlockRetro in the same file).
+const SKIN_COLORS: Record<SkinId, InvasionPalette> = {
+  clasico: {
+    alien: "#ffffff",
+    cannon: "#00ffff",
+    playerBullet: "#ffff00",
+    enemyBullet: "#ff3b6f",
+  },
+  neon: {
+    alien: "#ff00e6",
+    cannon: "#00fff9",
+    playerBullet: "#faff00",
+    enemyBullet: "#ff2d55",
+  },
+  retro: {
+    alien: "#33ff66",
+    cannon: "#ffb000",
+    playerBullet: "#ffcf6b",
+    enemyBullet: "#ff5a1f",
+  },
+};
+
+function alienShapePath(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+) {
+  context.fillRect(x + 4, y, ALIEN_W - 8, 6);
+  context.fillRect(x, y + 6, ALIEN_W, ALIEN_H - 12);
+  context.fillRect(x + 2, y + ALIEN_H - 6, 6, 6);
+  context.fillRect(x + ALIEN_W - 8, y + ALIEN_H - 6, 6, 6);
+}
+
+function drawAlienClasico(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+) {
+  context.fillStyle = color;
+  alienShapePath(context, x, y);
+}
+
+function drawAlienNeon(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+) {
+  context.save();
+  context.shadowColor = color;
+  context.shadowBlur = 10;
+  context.fillStyle = color;
+  alienShapePath(context, x, y);
+  context.restore();
+  context.save();
+  context.globalAlpha = 0.55;
+  context.fillStyle = "#ffffff";
+  context.fillRect(x + ALIEN_W / 2 - 4, y + 7, 8, ALIEN_H - 14);
+  context.restore();
+}
+
+function drawAlienRetro(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+) {
+  context.fillStyle = color;
+  alienShapePath(context, x, y);
+  context.fillStyle = "rgba(255, 255, 255, 0.25)";
+  context.fillRect(x + 4, y, ALIEN_W - 8, 2);
+  context.fillStyle = "rgba(0, 0, 0, 0.3)";
+  context.fillRect(x, y + ALIEN_H - 8, ALIEN_W, 2);
+}
+
+const ALIEN_DRAWERS: Record<
+  SkinId,
+  (
+    context: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    color: string,
+  ) => void
+> = {
+  clasico: drawAlienClasico,
+  neon: drawAlienNeon,
+  retro: drawAlienRetro,
+};
+
+function cannonPath(context: CanvasRenderingContext2D, cannonX: number) {
+  context.beginPath();
+  context.moveTo(cannonX + CANNON_W / 2, CANNON_Y - CANNON_H);
+  context.lineTo(cannonX, CANNON_Y + CANNON_H);
+  context.lineTo(cannonX + CANNON_W, CANNON_Y + CANNON_H);
+  context.closePath();
+}
+
+function drawCannonClasico(
+  context: CanvasRenderingContext2D,
+  cannonX: number,
+  color: string,
+) {
+  context.fillStyle = color;
+  cannonPath(context, cannonX);
+  context.fill();
+}
+
+function drawCannonNeon(
+  context: CanvasRenderingContext2D,
+  cannonX: number,
+  color: string,
+) {
+  context.save();
+  context.fillStyle = "#000000";
+  cannonPath(context, cannonX);
+  context.fill();
+  context.shadowColor = color;
+  context.shadowBlur = 14;
+  context.strokeStyle = color;
+  context.lineWidth = 2;
+  cannonPath(context, cannonX);
+  context.stroke();
+  context.restore();
+  context.save();
+  context.globalAlpha = 0.6;
+  context.fillStyle = color;
+  context.beginPath();
+  context.moveTo(cannonX + CANNON_W / 2, CANNON_Y - CANNON_H + 5);
+  context.lineTo(cannonX + 6, CANNON_Y + CANNON_H - 3);
+  context.lineTo(cannonX + CANNON_W - 6, CANNON_Y + CANNON_H - 3);
+  context.closePath();
+  context.fill();
+  context.restore();
+}
+
+function drawCannonRetro(
+  context: CanvasRenderingContext2D,
+  cannonX: number,
+  color: string,
+) {
+  context.fillStyle = color;
+  cannonPath(context, cannonX);
+  context.fill();
+  context.fillStyle = "rgba(255, 255, 255, 0.25)";
+  context.fillRect(cannonX, CANNON_Y + CANNON_H - 4, CANNON_W, 3);
+}
+
+const CANNON_DRAWERS: Record<
+  SkinId,
+  (context: CanvasRenderingContext2D, cannonX: number, color: string) => void
+> = {
+  clasico: drawCannonClasico,
+  neon: drawCannonNeon,
+  retro: drawCannonRetro,
+};
+
+function drawBulletClasico(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+) {
+  context.fillStyle = color;
+  context.fillRect(x - 1.5, y - 6, 3, 10);
+}
+
+function drawBulletNeon(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+) {
+  context.save();
+  context.shadowColor = color;
+  context.shadowBlur = 10;
+  context.fillStyle = color;
+  context.fillRect(x - 1.5, y - 6, 3, 10);
+  context.restore();
+}
+
+function drawBulletRetro(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+) {
+  context.fillStyle = color;
+  context.fillRect(x - 1.5, y - 6, 3, 10);
+  context.fillStyle = "rgba(255, 255, 255, 0.35)";
+  context.fillRect(x - 1.5, y - 6, 3, 2);
+}
+
+const BULLET_DRAWERS: Record<
+  SkinId,
+  (
+    context: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    color: string,
+  ) => void
+> = {
+  clasico: drawBulletClasico,
+  neon: drawBulletNeon,
+  retro: drawBulletRetro,
+};
+
 type GameState = "playing" | "gameover";
 
 export function createInvasionGame(
   canvas: HTMLCanvasElement,
   callbacks: InvasionCallbacks,
+  options: InvasionOptions = {},
 ): InvasionGame {
   const ctx = getContext2D(canvas);
+
+  let skin: SkinId = options.skin ?? "clasico";
 
   const keys: Record<string, boolean> = {};
   const justPressed: Record<string, boolean> = {};
@@ -294,21 +525,11 @@ export function createInvasionGame(
   function drawAlien(alien: Alien) {
     const x = alienX(alien);
     const y = alienY(alien);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(x + 4, y, ALIEN_W - 8, 6);
-    ctx.fillRect(x, y + 6, ALIEN_W, ALIEN_H - 12);
-    ctx.fillRect(x + 2, y + ALIEN_H - 6, 6, 6);
-    ctx.fillRect(x + ALIEN_W - 8, y + ALIEN_H - 6, 6, 6);
+    ALIEN_DRAWERS[skin](ctx, x, y, SKIN_COLORS[skin].alien);
   }
 
   function drawCannon() {
-    ctx.fillStyle = "#00ffff";
-    ctx.beginPath();
-    ctx.moveTo(cannonX + CANNON_W / 2, CANNON_Y - CANNON_H);
-    ctx.lineTo(cannonX, CANNON_Y + CANNON_H);
-    ctx.lineTo(cannonX + CANNON_W, CANNON_Y + CANNON_H);
-    ctx.closePath();
-    ctx.fill();
+    CANNON_DRAWERS[skin](ctx, cannonX, SKIN_COLORS[skin].cannon);
   }
 
   function draw() {
@@ -320,13 +541,21 @@ export function createInvasionGame(
     }
 
     if (playerBullet) {
-      ctx.fillStyle = "#ffff00";
-      ctx.fillRect(playerBullet.x - 1.5, playerBullet.y - 6, 3, 10);
+      BULLET_DRAWERS[skin](
+        ctx,
+        playerBullet.x,
+        playerBullet.y,
+        SKIN_COLORS[skin].playerBullet,
+      );
     }
 
-    ctx.fillStyle = "#ff3b6f";
     for (const bullet of enemyBullets) {
-      ctx.fillRect(bullet.x - 1.5, bullet.y - 6, 3, 10);
+      BULLET_DRAWERS[skin](
+        ctx,
+        bullet.x,
+        bullet.y,
+        SKIN_COLORS[skin].enemyBullet,
+      );
     }
 
     drawCannon();
@@ -366,5 +595,8 @@ export function createInvasionGame(
     },
     setKey,
     forceGameOver,
+    setSkin(newSkin: SkinId) {
+      skin = newSkin;
+    },
   };
 }
