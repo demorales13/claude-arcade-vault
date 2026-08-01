@@ -697,7 +697,7 @@ export function createTetrisGame(
 
   // Parte del lienzo que nunca cambia frame a frame: el fondo negro y la
   // cuadrícula del tablero (ni depende del estado del juego ni de la skin,
-  // a diferencia de Cruce). Recibe un contexto explícito porque también se
+  // a diferencia de Crossing). Recibe un contexto explícito porque también se
   // usa para rellenar `bgCache` (ver más abajo), no solo el canvas real.
   function drawStaticBoard(target: CanvasRenderingContext2D) {
     target.fillStyle = "#000000";
@@ -727,10 +727,10 @@ export function createTetrisGame(
   // real (`canvas.width`/`height`, que ya incluye el devicePixelRatio que
   // aplicó `setupHiDpiCanvas`) para no recalcular el relleno de fondo + 9
   // líneas verticales + 19 horizontales + el borde en cada frame. A
-  // diferencia de Cruce, ni el fondo ni la cuadrícula dependen de la skin
+  // diferencia de Crossing, ni el fondo ni la cuadrícula dependen de la skin
   // (`GRID_LINE_COLOR`/`BOARD_BORDER_COLOR` son constantes), así que se
   // dibuja una única vez y no necesita invalidarse. Molde:
-  // `ensureBgCache`/`drawStaticBands` en components/games/cruce/engine.ts.
+  // `ensureBgCache`/`drawStaticBands` en components/games/crossing/engine.ts.
   let bgCache: HTMLCanvasElement | null = null;
 
   function ensureBgCache() {

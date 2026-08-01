@@ -25,7 +25,7 @@ const VALID_SKINS: TetrisSkin[] = ["retro", "neon", "pastel", "pixel"];
 // Identidad estable entre renders: si se crearan inline en el JSX, un
 // `React.memo(TouchPad)` no evitaría el re-render en cada cambio de
 // score/lines/level/combo, porque `dpad`/`buttonA` serían objetos nuevos
-// cada vez (molde: CRUCE_DPAD en components/games/cruce-player.tsx).
+// cada vez (molde: CROSSING_DPAD en components/games/crossing-player.tsx).
 const TETRIS_DPAD = {
   up: "ArrowUp",
   down: "ArrowDown",
@@ -189,7 +189,7 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
   // cambia `score`, que no afecta a nada de este bloque): memoizar aquí
   // también el propio `children` es lo que hace que el memo de `HudMenu` se
   // salte el re-render cuando ninguna de estas dependencias cambió (molde:
-  // hudMenuChildren en components/games/cruce-player.tsx).
+  // hudMenuChildren en components/games/crossing-player.tsx).
   const hudMenuChildren = useMemo(
     () => (
       <>

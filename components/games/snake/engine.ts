@@ -462,8 +462,8 @@ export function createSnakeGame(
   // (`canvas.width`/`height`, que ya incluye el devicePixelRatio que aplicó
   // `setupHiDpiCanvas`) para no recalcular el fondo + 40 líneas de rejilla +
   // borde en cada frame; se dibuja una sola vez y se vuelca con `drawImage`
-  // (molde: `ensureBgCache` en components/games/cruce/engine.ts). A
-  // diferencia de Cruce, el tablero de Serpiente no tiene ninguna parte
+  // (molde: `ensureBgCache` en components/games/crossing/engine.ts). A
+  // diferencia de Crossing, el tablero de Serpiente no tiene ninguna parte
   // animada (sin ondas de río) ni depende de la skin, así que no hace falta
   // invalidar el cache nunca tras la primera vez.
   let bgCache: HTMLCanvasElement | null = null;

@@ -8,10 +8,10 @@ import { GameOverModal } from "@/components/game-over-modal";
 import { TouchPad } from "@/components/games/touch-pad";
 import { HudMenu } from "@/components/games/hud-menu";
 import {
-  createCruceGame,
-  type CruceCallbacks,
-  type CruceGame,
-} from "@/components/games/cruce/engine";
+  createCrossingGame,
+  type CrossingCallbacks,
+  type CrossingGame,
+} from "@/components/games/crossing/engine";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { localizedGameText } from "@/lib/i18n/localize-game";
 import {
@@ -24,12 +24,12 @@ import {
 import { SkinSelector } from "@/components/skin-selector";
 import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 
-const SKIN_GAME_ID = "cruce";
+const SKIN_GAME_ID = "crossing";
 
 // Identidad estable entre renders: si se creara inline en el JSX, un
 // `React.memo(TouchPad)` no evitaría el re-render en cada cambio de
 // score/lives/level, porque la prop `dpad` sería un objeto nuevo cada vez.
-const CRUCE_DPAD = {
+const CROSSING_DPAD = {
   up: "ArrowUp",
   down: "ArrowDown",
   left: "ArrowLeft",
@@ -45,11 +45,18 @@ function readUserName(): string {
   }
 }
 
-export function CrucePlayer({ game }: { game: GameWithStats }) {
+export function CrossingPlayer({ game }: { game: GameWithStats }) {
+  // TEMP-PROF-GAME-PERFORMANCE: contador temporal de renders (se retira en
+  // Phase 5, ver specs/14-rendimiento-cruce.md metodología).
+  if (typeof window !== "undefined") {
+    const w = window as any;
+    w.__crossingProf = w.__crossingProf || { frames: [], renders: 0 };
+    w.__crossingProf.renders += 1;
+  }
   const { language } = useLanguage();
   const { title } = localizedGameText(game, language);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameRef = useRef<CruceGame | null>(null);
+  const gameRef = useRef<CrossingGame | null>(null);
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -64,7 +71,7 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
     setName(readUserName());
   }, []);
 
-  const buildCallbacks = (): CruceCallbacks => ({
+  const buildCallbacks = (): CrossingCallbacks => ({
     onScoreChange: setScore,
     onLivesChange: setLives,
     onLevelChange: setLevel,
@@ -82,7 +89,7 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
     setSkin(initialSkin);
 
     setupHiDpiCanvas(canvas, 800, 600);
-    const instance = createCruceGame(canvas, buildCallbacks(), {
+    const instance = createCrossingGame(canvas, buildCallbacks(), {
       skin: initialSkin,
     });
     gameRef.current = instance;
@@ -126,12 +133,12 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
     setSaved(false);
 
     if (canvas) {
-      gameRef.current = createCruceGame(canvas, buildCallbacks(), { skin });
+      gameRef.current = createCrossingGame(canvas, buildCallbacks(), { skin });
     }
   };
 
   // `HudMenu` está memoizado, pero eso no sirve de nada si `children` es un
-  // árbol JSX nuevo en cada render de `CrucePlayer` (p. ej. cada vez que
+  // árbol JSX nuevo en cada render de `CrossingPlayer` (p. ej. cada vez que
   // cambia `score`, que no afecta a nada de este bloque): memoizar aquí
   // también el propio `children` es lo que hace que el memo de `HudMenu` se
   // salte el re-render cuando ninguna de estas dependencias cambió.
@@ -198,7 +205,7 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
               ref={canvasRef}
               width={800}
               height={600}
-              className="cruce-canvas"
+              className="crossing-canvas"
             />
             {paused && (
               <div
@@ -231,7 +238,7 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
           </div>
         </div>
         <TouchPad
-          dpad={CRUCE_DPAD}
+          dpad={CROSSING_DPAD}
           disabled={paused || over}
           onKey={handleTouchKey}
         />

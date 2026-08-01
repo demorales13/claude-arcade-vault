@@ -29,7 +29,7 @@ const SKIN_GAME_ID = "asteroids";
 // Identidad estable entre renders: si se creara inline en el JSX, un
 // `React.memo(TouchPad)` no evitaría el re-render en cada cambio de
 // score/lives/level/tripleShot, porque `dpad`/`buttonA` serían objetos
-// nuevos cada vez (mismo patrón que `CRUCE_DPAD` en cruce-player.tsx).
+// nuevos cada vez (mismo patrón que `CROSSING_DPAD` en crossing-player.tsx).
 const ASTEROIDS_DPAD = {
   up: "ArrowUp",
   left: "ArrowLeft",
@@ -145,7 +145,7 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
   // cambia `score`/`tripleShot`, que no afectan a nada de este bloque):
   // memoizar aquí también el propio `children` es lo que hace que el memo de
   // `HudMenu` se salte el re-render cuando ninguna de estas dependencias
-  // cambió (mismo patrón que `hudMenuChildren` en cruce-player.tsx).
+  // cambió (mismo patrón que `hudMenuChildren` en crossing-player.tsx).
   const hudMenuChildren = useMemo(
     () => (
       <>

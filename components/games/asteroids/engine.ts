@@ -107,7 +107,7 @@ function shadeHexUncached(hex: string, amount: number): string {
 // ship/power-up, every frame, while the `retro` skin is active. The inputs
 // never change at runtime, so the result is cached the first time each pair
 // is seen instead of being recalculated per frame (same category of fix as
-// `ensureBgCache` in cruce/engine.ts: cache work whose inputs are constant).
+// `ensureBgCache` in crossing/engine.ts: cache work whose inputs are constant).
 const shadeHexCache = new Map<string, string>();
 function shadeHex(hex: string, amount: number): string {
   const key = `${hex}|${amount}`;

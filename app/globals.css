@@ -1095,7 +1095,7 @@ a {
   filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.4));
 }
 
-.cover-cruce {
+.cover-crossing {
   /* franjas horizontales: calzada oscura (arriba) y río cian (abajo), como el tablero del motor */
   background: repeating-linear-gradient(
     0deg,
@@ -1119,7 +1119,7 @@ a {
     #052026 90% 100%
   );
 }
-.cover-cruce::after {
+.cover-crossing::after {
   /* siluetas planas: vehículo en la calzada, tronco en el río, meta en la franja superior */
   content: "";
   position: absolute;
@@ -1926,7 +1926,7 @@ a {
   display: block;
 }
 
-.cruce-canvas {
+.crossing-canvas {
   position: absolute;
   inset: 0;
   width: 100%;

@@ -29,7 +29,7 @@ const SKIN_GAME_ID = "snake";
 // Identidad estable entre renders: si se creara inline en el JSX, un
 // `React.memo(TouchPad)` no evitaría el re-render en cada cambio de
 // score/level, porque la prop `dpad` sería un objeto nuevo cada vez (molde:
-// CRUCE_DPAD en components/games/cruce-player.tsx).
+// CROSSING_DPAD en components/games/crossing-player.tsx).
 const SNAKE_DPAD = {
   up: "ArrowUp",
   down: "ArrowDown",
@@ -136,7 +136,7 @@ export function SnakePlayer({ game }: { game: GameWithStats }) {
   // cambia `score`, que no afecta a nada de este bloque): memoizar aquí
   // también el propio `children` es lo que hace que el memo de `HudMenu` se
   // salte el re-render cuando ninguna de estas dependencias cambió (molde:
-  // hudMenuChildren en components/games/cruce-player.tsx).
+  // hudMenuChildren en components/games/crossing-player.tsx).
   const hudMenuChildren = useMemo(
     () => (
       <>
