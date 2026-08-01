@@ -1,6 +1,6 @@
 # GAME JAM 01 — INVASIÓN (formación básica)
 
-> **Status:** Draft
+> **Status:** Implemented
 > **Depends on:** 05-asteroids-game, 06-leaderboard-catalogo-supabase
 > **Date:** 2026-07-29
 > **Objective:** Agregar "INVASIÓN" (`id: "invasion"`) como nuevo juego SHOOTER del catálogo: un cañón fijo en la base dispara contra una formación de 40 alienígenas que desciende oleada tras oleada y acelera a medida que quedan menos enemigos, sin escudos ni power-ups.

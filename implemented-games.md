@@ -38,6 +38,16 @@ Juegos con motor real, jugables en `/games/<id>/play`, con catálogo y puntuacio
   al comer fruta (arte tomado del atlas `references/snake-assets/`), niveles por velocidad, choque
   contra el propio cuerpo o el borde termina la partida.
 
+## INVASIÓN (`invasion`)
+
+- **Categoría / color:** SHOOTER · magenta
+- **Spec:** `specs/16-invasion-formacion-basica.md`
+- **Motor:** `components/games/invasion/engine.ts` · **Player:** `components/games/invasion-player.tsx`
+- Cañón fijo en la base dispara contra una formación de 40 alienígenas (5×8) que se mueve
+  lateralmente y desciende un escalón al chocar con cualquier borde; la velocidad de avance
+  aumenta a medida que quedan menos alienígenas vivos. Una sola bala del jugador en pantalla a
+  la vez, balas enemigas aleatorias, puntuación por fila, 3 vidas, sin escudos ni power-ups.
+
 ## CRUCE (`crossing`)
 
 - **Categoría / color:** ARCADE · cyan

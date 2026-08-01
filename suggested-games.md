@@ -8,29 +8,8 @@ Estados: `Propuesto` → `Aceptado` (existe spec) → `Implementado` · o `Recha
 
 | Juego            | Fecha      | Estado    | cat / color                                  | Resumen del veredicto                                                                                                                                                                                   |
 | ---------------- | ---------- | --------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| INVASIÓN         | 2026-07-29 | Propuesto | SHOOTER / magenta                            | Disparo fijo contra una formación de enemigos que desciende y acelera por oleadas; mecánica claramente distinta a Asteroides dentro de la misma categoría. Mejor candidato de esta ronda.               |
 | RALLY            | 2026-07-29 | Propuesto | VERSUS / yellow                              | Pong contra una IA, marcador acumulativo de puntos anotados. Única forma razonable de ocupar la categoría VERSUS, vacía hoy — pero su mecánica de rebote en paleta se solapa parcialmente con Arkanoid. |
 | DUELO DE TANQUES | 2026-07-29 | Aplazado  | SHOOTER o VERSUS (sin decidir) / sin definir | Combate de tanques estilo Battle City genérico. Motor mucho más grande (IA, paredes destructibles, balas que rebotan) y categoría ambigua — se aplaza por tamaño, no se descarta por encaje.            |
-
-## INVASIÓN (`invasion` propuesto)
-
-- **Fecha / Estado:** 2026-07-29 · Propuesto
-- **Fila de catálogo propuesta:**
-  - `cat`: `SHOOTER` · `color`: `magenta`
-  - `title`: INVASIÓN · `short`: "Repele una flota que desciende en formación y acelera con cada oleada."
-  - `long` (borrador): "Controla una nave fija en la base de la pantalla y dispara contra una formación de invasores que desciende oleada tras oleada, acelerando y devolviendo fuego a medida que quedan menos enemigos. Cada oleada eliminada sube el nivel y la velocidad de la siguiente."
-  - Portada (concepto): gradiente radial oscuro (violeta/negro) con una cuadrícula regular de siluetas alienígenas pixel-art en magenta, mismo patrón de capas que `.cover-asteroids` pero con formación de grid en vez de campo disperso.
-- **Por qué encaja:** dentro de SHOOTER, que hoy sólo tiene la física inercial de Asteroides, aporta un disparo fijo de formación descendente — un esquema de control y de amenaza completamente distinto. El modelo de puntuación (enemigo destruido, oleada completa, nivel) es un entero acumulativo directo, sin fricción con el esquema de `scores`.
-- **Criterios:**
-  - Encaje temático: Alto — pixel-art de nave/formación alienígena es estética retro/neón directa.
-  - Modelo de puntuación: Alto — puntos por enemigo + bonus por oleada, un jugador, entero acumulativo.
-  - Viabilidad del motor: Alto — grid de enemigos, colisión AABB, balas jugador/enemigo; canvas 2D puro, sin dependencias. Hay múltiples implementaciones de referencia en JS/canvas vanilla que confirman el puerto.
-  - Controles: Alto — mover izquierda/derecha + disparar, tres key codes discretos, mapeo directo a botones táctiles.
-  - Diversidad: Alto — mecánica y sensación de control opuestas a Asteroides dentro de la misma categoría; color magenta no repite dentro de SHOOTER (hoy sólo cyan).
-  - Riesgo legal: Medio — la mecánica en sí (formación que desciende) no es apropiable, pero el nombre "Space Invaders" es marca viva de Taito; el título y el diseño de enemigos deben ser propios, nunca una copia 1:1 del sprite original.
-  - Tamaño: Alto — alcance comparable al de Asteroides, cabe en un spec único sin partir.
-- **Riesgos / notas:** no usar el nombre de marca en título ni assets; diseñar el sprite del alienígena desde cero. Es el candidato con menos fricción de las tres opciones presentadas.
-- **Veredicto humano:** _(pendiente)_
 
 ## RALLY (`rally` propuesto)
 

@@ -7,6 +7,7 @@ import { TetrisPlayer } from "@/components/games/tetris-player";
 import { ArkanoidPlayer } from "@/components/games/arkanoid-player";
 import { SnakePlayer } from "@/components/games/snake-player";
 import { CrossingPlayer } from "@/components/games/crossing-player";
+import { InvasionPlayer } from "@/components/games/invasion-player";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -30,6 +31,7 @@ export default async function GamePlayerPage({
   if (game.id === "arkanoid") return <ArkanoidPlayer game={game} />;
   if (game.id === "snake") return <SnakePlayer game={game} />;
   if (game.id === "crossing") return <CrossingPlayer game={game} />;
+  if (game.id === "invasion") return <InvasionPlayer game={game} />;
 
   return <GamePlayer game={game} />;
 }
