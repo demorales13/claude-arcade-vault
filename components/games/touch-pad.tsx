@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 
 export type TouchPadButton = {
   code: string;
@@ -48,7 +48,7 @@ const DPAD_ARROW_PATHS: Record<keyof TouchPadDpad, string> = {
  * código asociado se dibuja atenuada e inerte en vez de ocultarse, para que
  * el mando nunca cambie de forma entre juegos.
  */
-export function TouchPad({
+export const TouchPad = memo(function TouchPad({
   dpad,
   dpadRepeat = false,
   buttonA,
@@ -189,4 +189,4 @@ export function TouchPad({
       </div>
     </div>
   );
-}
+});
