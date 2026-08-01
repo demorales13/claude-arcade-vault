@@ -46,13 +46,6 @@ function readUserName(): string {
 }
 
 export function CrossingPlayer({ game }: { game: GameWithStats }) {
-  // TEMP-PROF-GAME-PERFORMANCE: contador temporal de renders (se retira en
-  // Phase 5, ver specs/14-rendimiento-cruce.md metodología).
-  if (typeof window !== "undefined") {
-    const w = window as any;
-    w.__crossingProf = w.__crossingProf || { frames: [], renders: 0 };
-    w.__crossingProf.renders += 1;
-  }
   const { language } = useLanguage();
   const { title } = localizedGameText(game, language);
   const canvasRef = useRef<HTMLCanvasElement>(null);

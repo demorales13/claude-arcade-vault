@@ -1334,20 +1334,9 @@ export function createCrossingGame(
       lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, 0.05);
     lastTime = ts;
 
-    // TEMP-PROF-GAME-PERFORMANCE: instrumentación temporal de medición (se
-    // retira en Phase 5, ver specs/14-rendimiento-cruce.md metodología).
-    const __profStart =
-      typeof performance !== "undefined" ? performance.now() : 0;
-
     if (!paused && !gameOver) update(frameDt);
 
     draw();
-
-    if (typeof window !== "undefined" && (window as any).__crossingProf) {
-      (window as any).__crossingProf.frames.push(
-        performance.now() - __profStart,
-      );
-    }
 
     rafId = requestAnimationFrame(loop);
   }
