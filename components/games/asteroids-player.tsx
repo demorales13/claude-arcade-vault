@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { GameWithStats } from "@/lib/data/games";
 import { insertScore } from "@/lib/data/scores";
@@ -25,6 +25,22 @@ import { SkinSelector } from "@/components/skin-selector";
 import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 
 const SKIN_GAME_ID = "asteroids";
+
+// Identidad estable entre renders: si se creara inline en el JSX, un
+// `React.memo(TouchPad)` no evitaría el re-render en cada cambio de
+// score/lives/level/tripleShot, porque `dpad`/`buttonA` serían objetos
+// nuevos cada vez (mismo patrón que `CROSSING_DPAD` en crossing-player.tsx).
+const ASTEROIDS_DPAD = {
+  up: "ArrowUp",
+  left: "ArrowLeft",
+  right: "ArrowRight",
+} as const;
+
+const ASTEROIDS_BUTTON_A = {
+  code: "Space",
+  label: "FUEGO",
+  ariaLabel: "Disparar",
+} as const;
 
 function readUserName(): string {
   try {
@@ -85,13 +101,13 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
     };
   }, []);
 
-  const handleSkinChange = (newSkin: SkinId) => {
+  const handleSkinChange = useCallback((newSkin: SkinId) => {
     setSkin(newSkin);
     gameRef.current?.setSkin(newSkin);
     writeStoredSkin(SKIN_GAME_ID, newSkin);
-  };
+  }, []);
 
-  const togglePause = () => {
+  const togglePause = useCallback(() => {
     if (paused) {
       gameRef.current?.resume();
       setPaused(false);
@@ -99,11 +115,15 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
       gameRef.current?.pause();
       setPaused(true);
     }
-  };
+  }, [paused]);
 
-  const endGame = () => {
+  const endGame = useCallback(() => {
     gameRef.current?.forceGameOver();
-  };
+  }, []);
+
+  const handleTouchKey = useCallback((code: string, pressed: boolean) => {
+    gameRef.current?.setKey(code, pressed);
+  }, []);
 
   const restart = () => {
     const canvas = canvasRef.current;
@@ -119,6 +139,40 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
       });
     }
   };
+
+  // `HudMenu` está memoizado, pero eso no sirve de nada si `children` es un
+  // árbol JSX nuevo en cada render de `AsteroidsPlayer` (p. ej. cada vez que
+  // cambia `score`/`tripleShot`, que no afectan a nada de este bloque):
+  // memoizar aquí también el propio `children` es lo que hace que el memo de
+  // `HudMenu` se salte el re-render cuando ninguna de estas dependencias
+  // cambió (mismo patrón que `hudMenuChildren` en crossing-player.tsx).
+  const hudMenuChildren = useMemo(
+    () => (
+      <>
+        <div className="hud-stat hud-menu-player-dup">
+          <div className="l">Jugador</div>
+          <div className="v" style={{ color: "var(--ink)" }}>
+            {name}
+          </div>
+        </div>
+        <SkinSelector
+          value={skin}
+          onChange={handleSkinChange}
+          options={SKIN_LABELS}
+        />
+        <button className="btn yellow" onClick={togglePause}>
+          {paused ? "REANUDAR" : "PAUSA"}
+        </button>
+        <button className="btn magenta" onClick={endGame}>
+          FIN
+        </button>
+        <Link className="btn ghost" href={`/games/${game.id}`}>
+          SALIR
+        </Link>
+      </>
+    ),
+    [name, skin, paused, handleSkinChange, togglePause, endGame, game.id],
+  );
 
   return (
     <div className="av-player fade-in">
@@ -151,28 +205,7 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
             </div>
           )}
         </div>
-        <HudMenu>
-          <div className="hud-stat hud-menu-player-dup">
-            <div className="l">Jugador</div>
-            <div className="v" style={{ color: "var(--ink)" }}>
-              {name}
-            </div>
-          </div>
-          <SkinSelector
-            value={skin}
-            onChange={handleSkinChange}
-            options={SKIN_LABELS}
-          />
-          <button className="btn yellow" onClick={togglePause}>
-            {paused ? "REANUDAR" : "PAUSA"}
-          </button>
-          <button className="btn magenta" onClick={endGame}>
-            FIN
-          </button>
-          <Link className="btn ghost" href={`/games/${game.id}`}>
-            SALIR
-          </Link>
-        </HudMenu>
+        <HudMenu>{hudMenuChildren}</HudMenu>
       </div>
 
       <div className="crt-stage">
@@ -215,10 +248,10 @@ export function AsteroidsPlayer({ game }: { game: GameWithStats }) {
           </div>
         </div>
         <TouchPad
-          dpad={{ up: "ArrowUp", left: "ArrowLeft", right: "ArrowRight" }}
-          buttonA={{ code: "Space", label: "FUEGO", ariaLabel: "Disparar" }}
+          dpad={ASTEROIDS_DPAD}
+          buttonA={ASTEROIDS_BUTTON_A}
           disabled={paused || over}
-          onKey={(code, pressed) => gameRef.current?.setKey(code, pressed)}
+          onKey={handleTouchKey}
         />
       </div>
 

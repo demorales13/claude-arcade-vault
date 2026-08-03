@@ -4,6 +4,7 @@
 > **Depends on:** 05-asteroids-game, 06-leaderboard-catalogo-supabase
 > **Date:** 2026-07-29
 > **Objective:** Diseñar "CRUCE" (`id: "cruce"`) como versión clásica de pantalla fija del cruce de carriles propuesto en `suggested-games.md`, con motor de saltos discretos, tráfico, río y tres vidas antes de game over.
+> **Nota posterior:** durante la implementación el `id` final quedó como `"crossing"` (no `"cruce"`), y así aparece en el código (`components/games/crossing/`, `crossing-player.tsx`) e `implemented-games.md`. Este spec no se reescribió para reflejarlo; es el registro histórico de la decisión original.
 
 ## Why this spec exists
 

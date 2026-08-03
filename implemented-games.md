@@ -38,15 +38,26 @@ Juegos con motor real, jugables en `/games/<id>/play`, con catálogo y puntuacio
   al comer fruta (arte tomado del atlas `references/snake-assets/`), niveles por velocidad, choque
   contra el propio cuerpo o el borde termina la partida.
 
-## CRUCE (`cruce`)
+## INVASIÓN (`invasion`)
+
+- **Categoría / color:** SHOOTER · magenta
+- **Spec:** `specs/16-invasion-formacion-basica.md`
+- **Motor:** `components/games/invasion/engine.ts` · **Player:** `components/games/invasion-player.tsx`
+- Cañón fijo en la base dispara contra una formación de 40 alienígenas (5×8) que se mueve
+  lateralmente y desciende un escalón al chocar con cualquier borde; la velocidad de avance
+  aumenta a medida que quedan menos alienígenas vivos. Una sola bala del jugador en pantalla a
+  la vez, balas enemigas aleatorias, puntuación por fila, 3 vidas, sin escudos ni power-ups.
+
+## CRUCE (`crossing`)
 
 - **Categoría / color:** ARCADE · cyan
-- **Spec:** `specs/game-jam/03-cruce-clasico.md`
-- **Motor:** `components/games/cruce/engine.ts` · **Player:** `components/games/cruce-player.tsx`
+- **Spec:** `specs/15-cruce-clasico.md`
+- **Motor:** `components/games/crossing/engine.ts` · **Player:** `components/games/crossing-player.tsx`
 - Cruce de carriles clásico diseñado desde cero: tablero fijo de 11×13 celdas (metas, río con
   troncos, mediana, calzada con vehículos, salida), salto discreto por celda con bloqueo de
-  repetición (`HOP_LOCK_MS`), 3 vidas, 5 metas por nivel. Incluye selector de skin (`clasico`,
-  `neon`, `retro`) persistido en `localStorage`.
+  repetición (`HOP_LOCK_MS`), animación de salto con arco y animación de golpe/reaparición al
+  perder una vida, 3 vidas, 5 metas por nivel. Incluye selector de skin (`clasico`, `neon`,
+  `retro`) persistido en `localStorage`.
 
 ---
 

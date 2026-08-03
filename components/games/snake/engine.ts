@@ -425,33 +425,60 @@ export function createSnakeGame(
   }
 
   // ---- dibujado ----
-  function drawBoard() {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  // Tablero (fondo negro + rejilla + borde): no depende de la skin (colores
+  // fijos) ni cambia nunca durante la partida, así que es 100% estático
+  // frame a frame. Recibe un contexto explícito porque también se usa para
+  // rellenar `bgCache` (ver más abajo), no solo el canvas real.
+  function drawBoard(target: CanvasRenderingContext2D) {
+    target.fillStyle = "#000";
+    target.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    ctx.fillStyle = "#001a0d";
-    ctx.fillRect(BOARD_X, BOARD_Y, COLS * CELL, ROWS * CELL);
+    target.fillStyle = "#001a0d";
+    target.fillRect(BOARD_X, BOARD_Y, COLS * CELL, ROWS * CELL);
 
-    ctx.strokeStyle = "rgba(0, 255, 136, 0.08)";
-    ctx.lineWidth = 1;
+    target.strokeStyle = "rgba(0, 255, 136, 0.08)";
+    target.lineWidth = 1;
     for (let col = 0; col <= COLS; col++) {
       const x = BOARD_X + col * CELL + 0.5;
-      ctx.beginPath();
-      ctx.moveTo(x, BOARD_Y);
-      ctx.lineTo(x, BOARD_Y + ROWS * CELL);
-      ctx.stroke();
+      target.beginPath();
+      target.moveTo(x, BOARD_Y);
+      target.lineTo(x, BOARD_Y + ROWS * CELL);
+      target.stroke();
     }
     for (let row = 0; row <= ROWS; row++) {
       const y = BOARD_Y + row * CELL + 0.5;
-      ctx.beginPath();
-      ctx.moveTo(BOARD_X, y);
-      ctx.lineTo(BOARD_X + COLS * CELL, y);
-      ctx.stroke();
+      target.beginPath();
+      target.moveTo(BOARD_X, y);
+      target.lineTo(BOARD_X + COLS * CELL, y);
+      target.stroke();
     }
 
-    ctx.strokeStyle = "rgba(0, 255, 136, 0.5)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(BOARD_X, BOARD_Y, COLS * CELL, ROWS * CELL);
+    target.strokeStyle = "rgba(0, 255, 136, 0.5)";
+    target.lineWidth = 2;
+    target.strokeRect(BOARD_X, BOARD_Y, COLS * CELL, ROWS * CELL);
+  }
+
+  // Cachea `drawBoard` en un canvas auxiliar a la resolución física real
+  // (`canvas.width`/`height`, que ya incluye el devicePixelRatio que aplicó
+  // `setupHiDpiCanvas`) para no recalcular el fondo + 40 líneas de rejilla +
+  // borde en cada frame; se dibuja una sola vez y se vuelca con `drawImage`
+  // (molde: `ensureBgCache` en components/games/crossing/engine.ts). A
+  // diferencia de Crossing, el tablero de Serpiente no tiene ninguna parte
+  // animada (sin ondas de río) ni depende de la skin, así que no hace falta
+  // invalidar el cache nunca tras la primera vez.
+  let bgCache: HTMLCanvasElement | null = null;
+  let bgCacheCtx: CanvasRenderingContext2D | null = null;
+
+  function ensureBgCache() {
+    if (bgCache) return;
+    bgCache = document.createElement("canvas");
+    bgCache.width = canvas.width;
+    bgCache.height = canvas.height;
+    bgCacheCtx = getContext2D(bgCache);
+    const scaleX = canvas.width / CANVAS_W;
+    const scaleY = canvas.height / CANVAS_H;
+    bgCacheCtx.scale(scaleX, scaleY);
+    drawBoard(bgCacheCtx);
   }
 
   function drawFruit() {
@@ -536,7 +563,8 @@ export function createSnakeGame(
   }
 
   function draw() {
-    drawBoard();
+    ensureBgCache();
+    if (bgCache) ctx.drawImage(bgCache, 0, 0, CANVAS_W, CANVAS_H);
     drawFruit();
     drawSnake();
   }

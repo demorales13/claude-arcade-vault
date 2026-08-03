@@ -8,10 +8,10 @@ import { GameOverModal } from "@/components/game-over-modal";
 import { TouchPad } from "@/components/games/touch-pad";
 import { HudMenu } from "@/components/games/hud-menu";
 import {
-  createCruceGame,
-  type CruceCallbacks,
-  type CruceGame,
-} from "@/components/games/cruce/engine";
+  createInvasionGame,
+  type InvasionCallbacks,
+  type InvasionGame,
+} from "@/components/games/invasion/engine";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { localizedGameText } from "@/lib/i18n/localize-game";
 import {
@@ -24,16 +24,17 @@ import {
 import { SkinSelector } from "@/components/skin-selector";
 import { setupHiDpiCanvas } from "@/lib/canvas-hidpi";
 
-const SKIN_GAME_ID = "cruce";
+const SKIN_GAME_ID = "invasion";
 
-// Identidad estable entre renders: si se creara inline en el JSX, un
-// `React.memo(TouchPad)` no evitaría el re-render en cada cambio de
-// score/lives/level, porque la prop `dpad` sería un objeto nuevo cada vez.
-const CRUCE_DPAD = {
-  up: "ArrowUp",
-  down: "ArrowDown",
+const INVASION_DPAD = {
   left: "ArrowLeft",
   right: "ArrowRight",
+} as const;
+
+const INVASION_BUTTON_A = {
+  code: "Space",
+  label: "DISPARAR",
+  ariaLabel: "Disparar",
 } as const;
 
 function readUserName(): string {
@@ -45,11 +46,11 @@ function readUserName(): string {
   }
 }
 
-export function CrucePlayer({ game }: { game: GameWithStats }) {
+export function InvasionPlayer({ game }: { game: GameWithStats }) {
   const { language } = useLanguage();
   const { title } = localizedGameText(game, language);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameRef = useRef<CruceGame | null>(null);
+  const gameRef = useRef<InvasionGame | null>(null);
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -64,7 +65,7 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
     setName(readUserName());
   }, []);
 
-  const buildCallbacks = (): CruceCallbacks => ({
+  const buildCallbacks = (): InvasionCallbacks => ({
     onScoreChange: setScore,
     onLivesChange: setLives,
     onLevelChange: setLevel,
@@ -82,7 +83,7 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
     setSkin(initialSkin);
 
     setupHiDpiCanvas(canvas, 800, 600);
-    const instance = createCruceGame(canvas, buildCallbacks(), {
+    const instance = createInvasionGame(canvas, buildCallbacks(), {
       skin: initialSkin,
     });
     gameRef.current = instance;
@@ -126,15 +127,12 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
     setSaved(false);
 
     if (canvas) {
-      gameRef.current = createCruceGame(canvas, buildCallbacks(), { skin });
+      gameRef.current = createInvasionGame(canvas, buildCallbacks(), {
+        skin,
+      });
     }
   };
 
-  // `HudMenu` está memoizado, pero eso no sirve de nada si `children` es un
-  // árbol JSX nuevo en cada render de `CrucePlayer` (p. ej. cada vez que
-  // cambia `score`, que no afecta a nada de este bloque): memoizar aquí
-  // también el propio `children` es lo que hace que el memo de `HudMenu` se
-  // salte el re-render cuando ninguna de estas dependencias cambió.
   const hudMenuChildren = useMemo(
     () => (
       <>
@@ -198,7 +196,7 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
               ref={canvasRef}
               width={800}
               height={600}
-              className="cruce-canvas"
+              className="invasion-canvas"
             />
             {paused && (
               <div
@@ -231,7 +229,8 @@ export function CrucePlayer({ game }: { game: GameWithStats }) {
           </div>
         </div>
         <TouchPad
-          dpad={CRUCE_DPAD}
+          dpad={INVASION_DPAD}
+          buttonA={INVASION_BUTTON_A}
           disabled={paused || over}
           onKey={handleTouchKey}
         />

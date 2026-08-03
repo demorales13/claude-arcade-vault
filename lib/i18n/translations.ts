@@ -49,7 +49,7 @@ const es = {
     sectionGamesTitle: "JUEGOS DISPONIBLES AHORA",
     viewAllGames: "VER TODOS LOS JUEGOS →",
     stats: [
-      { n: "3+", unit: "JUEGOS", sub: "Y CONTANDO" },
+      { n: "5+", unit: "JUEGOS", sub: "Y CONTANDO" },
       { n: "MILES", unit: "DE PARTIDAS", sub: "JUGADAS CADA DÍA" },
       { n: "GLOBAL", unit: "RANKING", sub: "COMPITE CON EL MUNDO" },
     ],
@@ -226,7 +226,7 @@ const en: typeof es = {
     sectionGamesTitle: "GAMES AVAILABLE NOW",
     viewAllGames: "VIEW ALL GAMES →",
     stats: [
-      { n: "3+", unit: "GAMES", sub: "AND COUNTING" },
+      { n: "5+", unit: "GAMES", sub: "AND COUNTING" },
       { n: "THOUSANDS", unit: "OF MATCHES", sub: "PLAYED EVERY DAY" },
       { n: "GLOBAL", unit: "RANKING", sub: "COMPETE WITH THE WORLD" },
     ],

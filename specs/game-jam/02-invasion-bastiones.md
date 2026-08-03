@@ -7,7 +7,7 @@
 
 ## Why this spec exists
 
-Este es uno de los dos specs alternativos generados en la misma ejecución del agente `game-jam` a partir del candidato "INVASIÓN" de `suggested-games.md` (fila `2026-07-29 · Propuesto`). Su hermano es `specs/game-jam/01-invasion-formacion-basica.md`. Los separa el eje **Alcance**: aquel spec es el mínimo viable (motor + HUD + leaderboard, sin escudos ni power-ups); este es la versión ambiciosa, con escudos/bastiones, nave bonus, power-ups, sonido y skins — el mismo mecanismo central de formación descendente y acelerada, con más alrededor. Solo uno de los dos se implementará; el humano elige cuál promover a `specs/`.
+Este es uno de los dos specs alternativos generados en la misma ejecución del agente `game-jam` a partir del candidato "INVASIÓN" de `suggested-games.md` (fila `2026-07-29 · Propuesto`). Su hermano es `specs/16-invasion-formacion-basica.md`. Los separa el eje **Alcance**: aquel spec es el mínimo viable (motor + HUD + leaderboard, sin escudos ni power-ups); este es la versión ambiciosa, con escudos/bastiones, nave bonus, power-ups, sonido y skins — el mismo mecanismo central de formación descendente y acelerada, con más alrededor. Solo uno de los dos se implementará; el humano elige cuál promover a `specs/`.
 
 Dentro de `SHOOTER`, el catálogo hoy solo tiene ASTEROIDES (movimiento libre con inercia, objetivos que se fragmentan). Esta versión de INVASIÓN, igual que su hermana mínima, aporta el mecanismo opuesto — cañón acotado, formación estructurada, velocidad creciente — y además demuestra el patrón de "alcance ambicioso" ya usado por TETRIS (spec 07, sonido + 4 skins) y ARKANOID (spec 08, sonido), aplicado por primera vez a un shooter de formación.
 
@@ -28,7 +28,7 @@ Dentro de `SHOOTER`, el catálogo hoy solo tiene ASTEROIDES (movimiento libre co
 
 **Out of scope (para otro spec):**
 
-- La versión mínima sin estas features es exactamente `specs/game-jam/01-invasion-formacion-basica.md` — no se fusionan ni coexisten, es una elección exclusiva del humano.
+- La versión mínima sin estas features es exactamente `specs/16-invasion-formacion-basica.md` — no se fusionan ni coexisten, es una elección exclusiva del humano.
 - Música de fondo; solo se portan los 6 efectos puntuales.
 - Multijugador local (dos cañones) o modo cooperativo.
 - Jefe de fin de nivel (alienígena único con vida múltiple) — la variedad de esta versión viene de los patrones de formación y los power-ups, no de un boss.
@@ -277,7 +277,7 @@ Convenciones:
 
 ## Lo que **no** está en este spec
 
-- La versión mínima sin escudos/power-ups/sonido/skins — es `specs/game-jam/01-invasion-formacion-basica.md`.
+- La versión mínima sin escudos/power-ups/sonido/skins — es `specs/16-invasion-formacion-basica.md`.
 - Música de fondo.
 - Multijugador local o modo cooperativo.
 - Jefe de fin de nivel.

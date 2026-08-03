@@ -90,7 +90,7 @@ const SKIN_COLORS: Record<SkinId, AsteroidsPalette> = {
   },
 };
 
-function shadeHex(hex: string, amount: number): string {
+function shadeHexUncached(hex: string, amount: number): string {
   const num = parseInt(hex.slice(1), 16);
   let r = (num >> 16) + amount;
   let g = ((num >> 8) & 0x00ff) + amount;
@@ -99,6 +99,24 @@ function shadeHex(hex: string, amount: number): string {
   g = Math.min(255, Math.max(0, g));
   b = Math.min(255, Math.max(0, b));
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+// `shadeHex` is only ever called with the same handful of (color, amount)
+// pairs — the fixed palette colors in `SKIN_COLORS` — yet `strokeWithSkin`
+// recomputed it from scratch on every `stroke()` call, i.e. every asteroid/
+// ship/power-up, every frame, while the `retro` skin is active. The inputs
+// never change at runtime, so the result is cached the first time each pair
+// is seen instead of being recalculated per frame (same category of fix as
+// `ensureBgCache` in crossing/engine.ts: cache work whose inputs are constant).
+const shadeHexCache = new Map<string, string>();
+function shadeHex(hex: string, amount: number): string {
+  const key = `${hex}|${amount}`;
+  let cached = shadeHexCache.get(key);
+  if (cached === undefined) {
+    cached = shadeHexUncached(hex, amount);
+    shadeHexCache.set(key, cached);
+  }
+  return cached;
 }
 
 // Strokes the current path with the active skin's treatment. Assumes the

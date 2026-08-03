@@ -1,17 +1,17 @@
 import type { SkinId } from "@/lib/skins";
 
-export type CruceCallbacks = {
+export type CrossingCallbacks = {
   onScoreChange?: (score: number) => void;
   onLivesChange?: (lives: number) => void;
   onLevelChange?: (level: number) => void;
   onGameOver?: (finalScore: number) => void;
 };
 
-export type CruceOptions = {
+export type CrossingOptions = {
   skin?: SkinId;
 };
 
-export type CruceGame = {
+export type CrossingGame = {
   pause: () => void;
   resume: () => void;
   destroy: () => void;
@@ -36,6 +36,15 @@ const POINTS_PER_ADVANCE = 10;
 const GOAL_BONUS = 50;
 const HOP_LOCK_MS = 120;
 const LANE_SPEED_STEP = 0.15;
+// La animación de salto dura exactamente lo mismo que el bloqueo de salto
+// (HOP_LOCK_MS): así nunca se solapan dos saltos animados y no hace falta
+// gestionar una cola de animaciones.
+const HOP_ANIM_MS = HOP_LOCK_MS;
+const HOP_ARC_HEIGHT = 0.35; // altura del arco de salto, en celdas
+// Al perder una vida el jugador queda "muerto" en el sitio (mundo sigue
+// moviéndose) el tiempo suficiente para leer el golpe antes de reaparecer o
+// de disparar el game over, en vez del respawn instantáneo anterior.
+const DEATH_ANIM_MS = 450;
 
 // Márgenes de colisión (fracción de celda excluida en cada extremo) para que
 // el hit-test coincida con lo que realmente se dibuja: sin esto el jugador
@@ -197,7 +206,7 @@ function getContext2D(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
   return context;
 }
 
-type CrucePalette = {
+type CrossingPalette = {
   bg: string;
   goalRow: string;
   goalUnfilled: string;
@@ -224,7 +233,7 @@ type CrucePalette = {
 // `retro` usa un rango corto ámbar/verde/naranja tipo fósforo CRT con bisel
 // (highlight/shadow planos) y sin resplandor (molde: drawBlockPixel/
 // drawBlockRetro en el mismo archivo).
-const SKIN_COLORS: Record<SkinId, CrucePalette> = {
+const SKIN_COLORS: Record<SkinId, CrossingPalette> = {
   clasico: {
     bg: "#000000",
     goalRow: "#04202a",
@@ -281,14 +290,14 @@ const SKIN_COLORS: Record<SkinId, CrucePalette> = {
   },
 };
 
-type CruceDrawers = {
+type CrossingDrawers = {
   goal: (
     context: CanvasRenderingContext2D,
     cx: number,
     cy: number,
     r: number,
     filled: boolean,
-    palette: CrucePalette,
+    palette: CrossingPalette,
   ) => void;
   log: (
     context: CanvasRenderingContext2D,
@@ -296,7 +305,7 @@ type CruceDrawers = {
     y: number,
     w: number,
     h: number,
-    palette: CrucePalette,
+    palette: CrossingPalette,
   ) => void;
   vehicle: (
     context: CanvasRenderingContext2D,
@@ -311,7 +320,7 @@ type CruceDrawers = {
     cx: number,
     cy: number,
     size: number,
-    palette: CrucePalette,
+    palette: CrossingPalette,
   ) => void;
 };
 
@@ -321,7 +330,7 @@ function drawGoalClasico(
   cy: number,
   r: number,
   filled: boolean,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   context.save();
   if (filled) {
@@ -343,7 +352,7 @@ function drawGoalNeon(
   cy: number,
   r: number,
   filled: boolean,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   const color = filled ? palette.goalFilled : palette.goalUnfilled;
   context.save();
@@ -374,7 +383,7 @@ function drawGoalRetro(
   cy: number,
   r: number,
   filled: boolean,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   const color = filled ? palette.goalFilled : palette.goalUnfilled;
   context.save();
@@ -453,7 +462,7 @@ function drawLogClasico(
   y: number,
   w: number,
   h: number,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   context.save();
   context.fillStyle = palette.log;
@@ -469,7 +478,7 @@ function drawLogNeon(
   y: number,
   w: number,
   h: number,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   context.save();
   context.fillStyle = "#000000";
@@ -492,7 +501,7 @@ function drawLogRetro(
   y: number,
   w: number,
   h: number,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   context.save();
   context.fillStyle = palette.log;
@@ -744,7 +753,7 @@ function drawPlayerClasico(
   cx: number,
   cy: number,
   size: number,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   const g = frogGeometry(cx, cy, size);
   context.save();
@@ -768,7 +777,7 @@ function drawPlayerNeon(
   cx: number,
   cy: number,
   size: number,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   const g = frogGeometry(cx, cy, size);
   context.save();
@@ -793,7 +802,7 @@ function drawPlayerRetro(
   cx: number,
   cy: number,
   size: number,
-  palette: CrucePalette,
+  palette: CrossingPalette,
 ) {
   const g = frogGeometry(cx, cy, size);
   context.save();
@@ -819,7 +828,7 @@ function drawPlayerRetro(
   context.restore();
 }
 
-const SKIN_DRAWERS: Record<SkinId, CruceDrawers> = {
+const SKIN_DRAWERS: Record<SkinId, CrossingDrawers> = {
   clasico: {
     goal: drawGoalClasico,
     log: drawLogClasico,
@@ -840,11 +849,11 @@ const SKIN_DRAWERS: Record<SkinId, CruceDrawers> = {
   },
 };
 
-export function createCruceGame(
+export function createCrossingGame(
   canvas: HTMLCanvasElement,
-  callbacks: CruceCallbacks,
-  options: CruceOptions = {},
-): CruceGame {
+  callbacks: CrossingCallbacks,
+  options: CrossingOptions = {},
+): CrossingGame {
   const ctx = getContext2D(canvas);
   let skin: SkinId = options.skin ?? "clasico";
 
@@ -883,6 +892,27 @@ export function createCruceGame(
   let rafId = 0;
   let lastTime: number | null = null;
 
+  // Animación puramente visual del salto: la posición lógica (`player`) se
+  // actualiza al instante en `applyHop` para que colisiones y arrastre de
+  // troncos sigan siendo exactos; `hopAnim` solo interpola dónde se dibuja
+  // la rana entre la celda de origen y la de destino durante HOP_ANIM_MS.
+  type HopAnim = {
+    fromRow: number;
+    fromCol: number;
+    toRow: number;
+    toCol: number;
+    elapsedMs: number;
+  };
+  let hopAnim: HopAnim | null = null;
+
+  // Estado de "muerte": al perder una vida el jugador se congela en el punto
+  // del golpe (deathAt) durante DEATH_ANIM_MS -mundo y carriles siguen
+  // moviéndose- antes de reaparecer o, si era la última vida, de disparar
+  // game over. Antes esto ocurría sin ninguna transición.
+  let dying = false;
+  let dyingElapsedMs = 0;
+  let deathAt = { row: EXIT_ROW, col: START_COL };
+
   function laneForRow(row: number): Lane | undefined {
     return lanes.find((l) => l.row === row);
   }
@@ -902,15 +932,13 @@ export function createCruceGame(
   }
 
   function loseLife() {
-    if (gameOver) return;
+    if (gameOver || dying) return;
     lives -= 1;
     callbacks.onLivesChange?.(Math.max(lives, 0));
-    if (lives <= 0) {
-      endGame();
-      return;
-    }
-    respawnPlayer();
-    minRowReached = EXIT_ROW;
+    hopAnim = null;
+    dying = true;
+    dyingElapsedMs = 0;
+    deathAt = { row: player.row, col: player.col };
   }
 
   function fillGoal(index: number) {
@@ -926,7 +954,7 @@ export function createCruceGame(
   }
 
   function requestHop(dir: Direction) {
-    if (paused || gameOver) return;
+    if (paused || gameOver || dying) return;
     if (totalElapsedMs < hopLockUntilMs) return;
     hopLockUntilMs = totalElapsedMs + HOP_LOCK_MS;
     applyHop(dir);
@@ -956,10 +984,24 @@ export function createCruceGame(
       const goalCol = Math.round(newCol);
       const goalIndex = GOAL_COLS.indexOf(goalCol);
       if (goalIndex === -1 || filledGoals[goalIndex]) return; // seto o meta ya ocupada
+      hopAnim = {
+        fromRow: player.row,
+        fromCol: player.col,
+        toRow: GOAL_ROW,
+        toCol: goalCol,
+        elapsedMs: 0,
+      };
       fillGoal(goalIndex);
       return;
     }
 
+    hopAnim = {
+      fromRow: player.row,
+      fromCol: player.col,
+      toRow: newRow,
+      toCol: newCol,
+      elapsedMs: 0,
+    };
     player = { row: newRow, col: newCol };
     if (newRow < minRowReached) {
       minRowReached = newRow;
@@ -988,7 +1030,7 @@ export function createCruceGame(
   }
 
   function checkPlayerSafety(dt: number) {
-    if (gameOver) return;
+    if (gameOver || dying) return;
     if (ROAD_ROWS.includes(player.row)) {
       const lane = laneForRow(player.row);
       if (!lane) return;
@@ -1028,6 +1070,28 @@ export function createCruceGame(
     if (gameOver) return;
     totalElapsedMs += dt * 1000;
     advanceLanes(dt);
+
+    if (hopAnim) {
+      hopAnim.elapsedMs += dt * 1000;
+      if (hopAnim.elapsedMs >= HOP_ANIM_MS) hopAnim = null;
+    }
+
+    if (dying) {
+      dyingElapsedMs += dt * 1000;
+      if (dyingElapsedMs >= DEATH_ANIM_MS) {
+        dying = false;
+        // Recién aquí -tras la animación, no en el instante del golpe- se
+        // decide si toca reaparecer o disparar el game over.
+        if (lives <= 0) {
+          endGame();
+        } else {
+          respawnPlayer();
+          minRowReached = EXIT_ROW;
+        }
+      }
+      return;
+    }
+
     checkPlayerSafety(dt);
   }
 
@@ -1197,7 +1261,58 @@ export function createCruceGame(
     ctx.restore();
   }
 
+  // Salpicadura al perder una vida: la rana se congela en `deathAt`,
+  // desvaneciéndose y expandiéndose mientras un anillo de choque se abre a
+  // su alrededor. Reutiliza el sprite normal en vez de un dibujante propio
+  // por skin -queda coherente con las tres paletas sin triplicar código-.
+  function drawDeathEffect(progress: number) {
+    const palette = SKIN_COLORS[skin];
+    const cx = BOARD_X + (deathAt.col + 0.5) * CELL;
+    const cy = BOARD_Y + (deathAt.row + 0.5) * CELL;
+    const fade = Math.max(0, 1 - progress);
+
+    ctx.save();
+    ctx.globalAlpha = fade;
+    const scale = 1 + progress * 0.7;
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+    ctx.translate(-cx, -cy);
+    SKIN_DRAWERS[skin].player(ctx, cx, cy, CELL, palette);
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = fade * 0.8;
+    ctx.strokeStyle = palette.player;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, CELL * 0.25 + progress * CELL * 0.7, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawPlayer() {
+    if (dying) {
+      drawDeathEffect(Math.min(dyingElapsedMs / DEATH_ANIM_MS, 1));
+      return;
+    }
+
+    if (hopAnim) {
+      const t = Math.min(hopAnim.elapsedMs / HOP_ANIM_MS, 1);
+      const col = hopAnim.fromCol + (hopAnim.toCol - hopAnim.fromCol) * t;
+      const row = hopAnim.fromRow + (hopAnim.toRow - hopAnim.fromRow) * t;
+      const arc = Math.sin(t * Math.PI) * HOP_ARC_HEIGHT;
+      const cx = BOARD_X + (col + 0.5) * CELL;
+      const cy = BOARD_Y + (row + 0.5) * CELL - arc * CELL;
+      const stretch = 1 + Math.sin(t * Math.PI) * 0.12;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(1 / stretch, stretch);
+      ctx.translate(-cx, -cy);
+      SKIN_DRAWERS[skin].player(ctx, cx, cy, CELL, SKIN_COLORS[skin]);
+      ctx.restore();
+      return;
+    }
+
     const cx = BOARD_X + (player.col + 0.5) * CELL;
     const cy = BOARD_Y + (player.row + 0.5) * CELL;
     SKIN_DRAWERS[skin].player(ctx, cx, cy, CELL, SKIN_COLORS[skin]);
@@ -1236,6 +1351,9 @@ export function createCruceGame(
     minRowReached = EXIT_ROW;
     totalElapsedMs = 0;
     hopLockUntilMs = 0;
+    hopAnim = null;
+    dying = false;
+    dyingElapsedMs = 0;
     respawnPlayer();
 
     callbacks.onScoreChange?.(score);
