@@ -7,7 +7,7 @@
 
 ## Why this spec exists
 
-Este spec es una de dos alternativas del mismo concepto — la hermana es `specs/game-jam/03-cruce-clasico.md` ("CRUCE"). El eje que las separa es **Mecánica**: en la hermana el jugador cruza una pantalla fija de carriles (tráfico + río) hacia una fila de metas y la pantalla se reinicia al completarla; aquí no hay pantalla fija ni metas — el jugador asciende sin fin por carriles generados proceduralmente mientras una línea de peligro sube desde abajo cada vez más rápido, obligándolo a avanzar. Solo una de las dos se implementará.
+Este spec es una de dos alternativas del mismo concepto — la hermana es `specs/15-cruce-clasico.md` ("CRUCE"). El eje que las separa es **Mecánica**: en la hermana el jugador cruza una pantalla fija de carriles (tráfico + río) hacia una fila de metas y la pantalla se reinicia al completarla; aquí no hay pantalla fija ni metas — el jugador asciende sin fin por carriles generados proceduralmente mientras una línea de peligro sube desde abajo cada vez más rápido, obligándolo a avanzar. Solo una de las dos se implementará.
 
 ASCENSO toma la mecánica base de cruce de carriles de `suggested-games.md` (fila CRUCE, 2026-07-29) y le añade el twist de presión temporal continua, en la línea de "Reinterpretación con un twist propio" del menú de ejes.
 
@@ -24,7 +24,7 @@ ASCENSO toma la mecánica base de cruce de carriles de `suggested-games.md` (fil
 
 **Out of scope (para otro spec):**
 
-- La versión clásica de pantalla fija — vive en `specs/game-jam/03-cruce-clasico.md`, un spec independiente.
+- La versión clásica de pantalla fija — vive en `specs/15-cruce-clasico.md`, un spec independiente.
 - Sonido y música — no fue pedido y no hay assets de audio disponibles.
 - Sprites de vehículos, troncos o personaje — todo se dibuja con formas planas en canvas; ningún asset bajo `public/`.
 - Selector de skin o tema visual alternativo.
@@ -132,7 +132,7 @@ Convenciones:
    _Test:_ la tarjeta en `/games` y el hero de `/games/ascenso` muestran el arte nuevo; ninguna otra `.cover-*` cambia, incluida `.cover-cruce`.
 3. **Motor.** Crear `components/games/ascenso/engine.ts`: generación procedural de carriles bajo demanda, cámara que sigue al jugador, línea de peligro ascendente, salto discreto con `HOP_LOCK_MS`, colisión de calzada, ahogamiento de río, checkpoints, vidas, nivel, y la API `pause`/`resume`/`destroy`/`setKey`/`forceGameOver`. No se conecta a ningún componente todavía.
    _Test:_ `npm run build` compila sin errores de tipos.
-4. **Reproductor y rama de ruta.** Crear `components/games/ascenso-player.tsx` siguiendo la estructura de `cruce-player.tsx`/`snake-player.tsx`: HUD con Jugador / Puntuación / Vidas / Nivel, marco `.crt` con el canvas 800×600 y el overlay "EN PAUSA", `.crt-bottom`, botones PAUSA/FIN/SALIR, `GameOverModal` con `insertScore` de `lib/data/scores.ts`, nombre precargado desde `av_user`. Agregar `.ascenso-canvas` en `app/globals.css` y la línea `if (game.id === "ascenso") return <AscensoPlayer game={game} />;` en `app/games/[id]/play/page.tsx`.
+4. **Reproductor y rama de ruta.** Crear `components/games/ascenso-player.tsx` siguiendo la estructura de `crossing-player.tsx`/`snake-player.tsx`: HUD con Jugador / Puntuación / Vidas / Nivel, marco `.crt` con el canvas 800×600 y el overlay "EN PAUSA", `.crt-bottom`, botones PAUSA/FIN/SALIR, `GameOverModal` con `insertScore` de `lib/data/scores.ts`, nombre precargado desde `av_user`. Agregar `.ascenso-canvas` en `app/globals.css` y la línea `if (game.id === "ascenso") return <AscensoPlayer game={game} />;` en `app/games/[id]/play/page.tsx`.
    _Test manual:_ en `/games/ascenso/play` se juega con las flechas; la cámara sigue al jugador mientras se generan carriles nuevos arriba; la línea de peligro sube visiblemente; el HUD refleja el estado real del motor; PAUSA congela con el frame visible (incluida la línea de peligro) y REANUDAR continúa sin salto; FIN abre `GameOverModal` con la puntuación alcanzada; guardar inserta una fila en `scores` con `game_id = 'ascenso'`.
 5. **Controles táctiles.** Agregar el bloque `.ascenso-touch-controls` (`.td-pad` con las cuatro direcciones, sin `.td-actions`) y su CSS con el `@media (max-width: 840px)`, siguiendo `.cruce-touch-controls`. Cada botón usa `onPointerDown`/`onPointerUp`/`onPointerLeave`/`onPointerCancel` sobre `setKey`.
    _Test manual:_ bajo 840px los cuatro botones saltan igual que el teclado, respetando el mismo `HOP_LOCK_MS`; en escritorio no se renderizan.
@@ -203,7 +203,7 @@ Convenciones:
 
 ## Lo que **no** está en este spec
 
-- La versión clásica de pantalla fija (`specs/game-jam/03-cruce-clasico.md`).
+- La versión clásica de pantalla fija (`specs/15-cruce-clasico.md`).
 - Sonido y música.
 - Sprites de vehículos, troncos o personaje.
 - Selector de skin o tema visual alternativo.

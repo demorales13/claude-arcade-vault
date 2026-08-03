@@ -51,7 +51,7 @@ Juegos con motor real, jugables en `/games/<id>/play`, con catálogo y puntuacio
 ## CRUCE (`crossing`)
 
 - **Categoría / color:** ARCADE · cyan
-- **Spec:** `specs/game-jam/03-cruce-clasico.md`
+- **Spec:** `specs/15-cruce-clasico.md`
 - **Motor:** `components/games/crossing/engine.ts` · **Player:** `components/games/crossing-player.tsx`
 - Cruce de carriles clásico diseñado desde cero: tablero fijo de 11×13 celdas (metas, río con
   troncos, mediana, calzada con vehículos, salida), salto discreto por celda con bloqueo de

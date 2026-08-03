@@ -10,7 +10,7 @@ model: inherit
 Like `skin-designer` and `mobile-porter`, this agent is a declared exception to the "never write
 code" rule followed by `game-planner` and `game-jam`. Its job ends in working code: it audits and,
 where warranted, fixes the runtime performance of **a single game, explicitly chosen by whoever
-invokes it**, applying the patterns `specs/14-rendimiento-cruce.md` validated on `cruce` —
+invokes it**, applying the patterns `specs/14-rendimiento-cruce.md` validated on `crossing` —
 static-background canvas caching and stable props feeding the already-memoized HUD children
 (`TouchPad`, `HudMenu`, `SkinSelector`).
 
@@ -19,7 +19,7 @@ future spec, "se evalúa en un spec futuro si este fix confirma que el patrón e
 replicable: today, `asteroids`, `tetris`, `arkanoid` and `snake` all pass `dpad={{...}}` inline to
 the `React.memo`-wrapped `<TouchPad>` (defeating the memoization), use zero `useCallback`/`useMemo`
 in their players, and cache no static background in their engines — the exact antipatterns spec 14
-found and fixed in `cruce`. This agent exists so that knowledge doesn't stay locked to one game.
+found and fixed in `crossing`. This agent exists so that knowledge doesn't stay locked to one game.
 
 Always reply in the language of the prompt that invoked it. The code it writes follows the language
 convention already used in each file (identifiers in English, comments and UI labels in Spanish).
@@ -46,8 +46,8 @@ Read in this order before touching anything:
 2. `specs/14-rendimiento-cruce.md` in full — the source of truth for what was measured, what was
    fixed, and why. Its `Decisions` and `What is not in this spec` sections contain explicit "No"s
    this agent inherits (see Hard rules).
-3. `components/games/cruce/engine.ts` — `drawStaticBands`, `ensureBgCache`, `draw` — and
-   `components/games/cruce-player.tsx` — the module-level `CRUCE_DPAD` constant, its `useCallback`
+3. `components/games/crossing/engine.ts` — `drawStaticBands`, `ensureBgCache`, `draw` — and
+   `components/games/crossing-player.tsx` — the module-level `CROSSING_DPAD` constant, its `useCallback`
    handlers, and the `useMemo`-wrapped `hudMenuChildren`. This is the reference mold, even when the
    target game is a different one.
 4. `components/games/touch-pad.tsx`, `components/games/hud-menu.tsx`, `components/skin-selector.tsx`
@@ -81,12 +81,12 @@ whether each is present / absent / not applicable:
 **Player (`-player.tsx`)**
 
 7. Unstable-identity props passed to memoized children: inline `dpad={{...}}`, inline
-   `onKey={(c, p) => ...}`, inline `options={{...}}` → a module-level constant (like `CRUCE_DPAD`)
-   or `useCallback`/`useMemo`. **Currently fails in all four non-`cruce` games.**
+   `onKey={(c, p) => ...}`, inline `options={{...}}` → a module-level constant (like `CROSSING_DPAD`)
+   or `useCallback`/`useMemo`. **Currently fails in all four non-`crossing` games.**
 8. Unstabilized handlers (`togglePause`, `endGame`, `handleSkinChange`, the touch `onKey`) →
    `useCallback`.
 9. `<HudMenu>` children built as a fresh JSX tree every render → `useMemo` (see
-   `cruce-player.tsx`'s comment on why the child's own memo isn't enough without this).
+   `crossing-player.tsx`'s comment on why the child's own memo isn't enough without this).
 10. `useState` for values that never actually render to the DOM → `useRef`.
 11. The engine-creation `useEffect` re-running with dependencies that recreate the engine
     unnecessarily.
@@ -122,7 +122,7 @@ Preferred but degradable — never invent numbers.
 
 ## Phase 4 — Fix
 
-Apply only what Phase 2/Phase 3 flagged, in order of measured impact, reusing `cruce`'s patterns
+Apply only what Phase 2/Phase 3 flagged, in order of measured impact, reusing `crossing`'s patterns
 verbatim (same `ensureBgCache` shape, same module-level dpad-constant shape). No opportunistic
 refactors beyond what the audit found.
 

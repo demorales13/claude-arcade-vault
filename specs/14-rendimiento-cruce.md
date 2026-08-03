@@ -1,24 +1,24 @@
 # SPEC 14 — Diagnóstico y optimización de rendimiento en Cruce
 
-> **Status:** Implementado
+> **Status:** Implemented
 > **Depends on:** Ninguno
 > **Date:** 2026-07-31
-> **Objective:** Diagnosticar con Chrome DevTools (Performance, Memory y React Profiler) el origen de las caídas de FPS, el lag de entrada y la posible fuga de memoria observados en Cruce (`components/games/cruce/engine.ts` / `components/games/cruce-player.tsx`), y corregirlo sin degradar perceptiblemente el aspecto visual de sus tres skins ni el comportamiento del HUD.
+> **Objective:** Diagnosticar con Chrome DevTools (Performance, Memory y React Profiler) el origen de las caídas de FPS, el lag de entrada y la posible fuga de memoria observados en Cruce (`components/games/crossing/engine.ts` / `components/games/crossing-player.tsx`), y corregirlo sin degradar perceptiblemente el aspecto visual de sus tres skins ni el comportamiento del HUD.
 
 ## Scope
 
 **In:**
 
-- Perfilar `components/games/cruce/engine.ts` con la pestaña **Performance** de Chrome DevTools durante
+- Perfilar `components/games/crossing/engine.ts` con la pestaña **Performance** de Chrome DevTools durante
   una partida representativa (varios niveles, skin `neon` incluida por ser la más cargada de
   `shadowBlur`) para identificar dónde se va el tiempo de frame.
 - Perfilar memoria con la pestaña **Memory** (heap snapshots al inicio de la partida y tras varios
   minutos jugando) para confirmar o descartar una fuga real, dado el síntoma "se agrava con el tiempo".
-- Perfilar los re-renders de React en `components/games/cruce-player.tsx` con el **React DevTools
+- Perfilar los re-renders de React en `components/games/crossing-player.tsx` con el **React DevTools
   Profiler** durante la misma sesión, para medir cuántos re-renders dispara el componente, qué los
   provoca (los `useState` de `score`, `lives`, `level`, `paused`, `over`, `name`, `saved`, `skin`) y qué
   hijos (`TouchPad`, `HudMenu`, `SkinSelector`) se re-renderizan innecesariamente en cada uno.
-- Aplicar optimizaciones dirigidas por esos hallazgos dentro de `engine.ts` y `cruce-player.tsx`,
+- Aplicar optimizaciones dirigidas por esos hallazgos dentro de `engine.ts` y `crossing-player.tsx`,
   priorizando mantener el aspecto visual actual de las tres skins y el comportamiento del HUD sin
   cambios perceptibles.
 - Como parte de la optimización de re-renders (independientemente de lo que confirme el profiler, por
@@ -51,8 +51,8 @@
 
 ## Data model
 
-Este spec no introduce estructuras de datos nuevas. Reutiliza el estado ya existente en `createCruceGame`
-(`components/games/cruce/engine.ts`) — `lanes`, `player`, `filledGoals`, etc. Cualquier optimización de
+Este spec no introduce estructuras de datos nuevas. Reutiliza el estado ya existente en `createCrossingGame`
+(`components/games/crossing/engine.ts`) — `lanes`, `player`, `filledGoals`, etc. Cualquier optimización de
 dibujado (por ejemplo, cachear geometría o paletas ya calculadas por frame) es un detalle interno de
 implementación, no una estructura de datos nueva del juego.
 
@@ -63,14 +63,14 @@ implementación, no una estructura de datos nueva del juego.
    sesión de **React DevTools Profiler** (vista "Ranked"), y tomando heap snapshots al segundo 0, minuto
    2 y minuto 5. No se toca código en este paso. Documentar en este spec (sección "Hallazgos del
    profiling") qué funciones/componentes consumen más tiempo por frame o por re-render, cuántos
-   re-renders dispara `CrucePlayer` durante la sesión y si el heap crece de snapshot a snapshot.
+   re-renders dispara `CrossingPlayer` durante la sesión y si el heap crece de snapshot a snapshot.
 2. Aplicar la memoización de re-renders acordada en el Scope: envolver `TouchPad`, `HudMenu` y
    `SkinSelector` con `React.memo`, y estabilizar con `useCallback` los manejadores que
-   `components/games/cruce-player.tsx` les pasa (`onKey`, `togglePause`, `endGame`,
+   `components/games/crossing-player.tsx` les pasa (`onKey`, `togglePause`, `endGame`,
    `handleSkinChange`). Verificar manualmente que el HUD (marcador, vidas, nivel, pausa, skin) se sigue
    actualizando en pantalla con normalidad.
 3. Con la causa del coste de canvas ya confirmada por el paso 1, aplicar la optimización correspondiente
-   en `components/games/cruce/engine.ts` sin alterar el resultado visual de las 3 skins. Según lo que
+   en `components/games/crossing/engine.ts` sin alterar el resultado visual de las 3 skins. Según lo que
    confirme el profiling, la técnica concreta será una de estas (o la que el hallazgo indique):
    - Si domina el redibujado de las bandas estáticas del tablero, pre-renderizarlas a un canvas auxiliar
      una sola vez (o al cambiar de skin) y volcarlas cada frame con `drawImage`.
@@ -92,7 +92,7 @@ instrumentado temporalmente para medir): sesión en escritorio a dpr=1, sesión 
 dpr=3 (equivalente a un iPhone moderno), y sesiones con _CPU throttling_ de Chrome a 4x y 6x (para
 simular hardware de gama media/baja, ya que el desarrollo ocurre en una máquina rápida). En cada una se
 midió: coste de dibujado por frame, memoria (`usedJSHeapSize` en 3 instantes), _long tasks_ del
-navegador, y re-renders de React del componente `CrucePlayer` y sus hijos del HUD.
+navegador, y re-renders de React del componente `CrossingPlayer` y sus hijos del HUD.
 
 **Qué mejoraba el rendimiento (encontrado por las pruebas):**
 
@@ -106,18 +106,18 @@ navegador, y re-renders de React del componente `CrucePlayer` y sus hijos del HU
   tablero** (`drawRowBands`: 6 `fillRect` + líneas de la calzada + borde), que apenas cambia entre un
   frame y el siguiente salvo por la animación de las ondas del río.
 - Los componentes del HUD (`TouchPad`, `HudMenu`, `SkinSelector`) se re-renderizaban en React aunque sus
-  propias props no hubieran cambiado, simplemente porque `CrucePlayer` se re-renderizaba por cambios de
+  propias props no hubieran cambiado, simplemente porque `CrossingPlayer` se re-renderizaba por cambios de
   score/vidas/nivel que no les afectaban a ellos.
 
 **Qué mejoras se implementaron como resultado:**
 
-1. **Cacheo del fondo estático del tablero** (`components/games/cruce/engine.ts`): en vez de
+1. **Cacheo del fondo estático del tablero** (`components/games/crossing/engine.ts`): en vez de
    recalcularlo entero cada frame, se dibuja una sola vez por skin en un canvas auxiliar
    (`ensureBgCache`) y se vuelca con `drawImage`; solo la animación de las ondas del río se sigue
    dibujando cada frame. **Resultado medido:** el pico de frame más lento bajó de 50.8ms a 18.3ms bajo
    _throttling_ 6x (0 frames por encima de 50ms tras el cambio, antes había 1), y en escritorio el pico
    bajó de 20.5ms a 4.3ms.
-2. **Memoización del HUD** (`components/games/cruce-player.tsx`, `touch-pad.tsx`, `hud-menu.tsx`,
+2. **Memoización del HUD** (`components/games/crossing-player.tsx`, `touch-pad.tsx`, `hud-menu.tsx`,
    `skin-selector.tsx`): `TouchPad`, `HudMenu` y `SkinSelector` ahora usan `React.memo`, con sus props
    (callbacks, `children`) estabilizadas vía `useCallback`/`useMemo` para que la memoización sea
    efectiva. **Resultado verificado:** estos componentes dejan de re-renderizar cuando cambian
@@ -126,7 +126,7 @@ navegador, y re-renders de React del componente `CrucePlayer` y sus hijos del HU
 **Metodología (adaptada para ejecución automatizada):** en vez de operar manualmente los paneles de
 Chrome DevTools, se instrumentó temporalmente el motor (`window.__cruceProf.frames`: duración en ms de
 cada `update()+draw()` dentro de `loop()`; `window.__cruceProf.renders`: contador de renders de
-`CrucePlayer`) y se condujo una sesión de juego automatizada con Playwright (pulsaciones de flechas
+`CrossingPlayer`) y se condujo una sesión de juego automatizada con Playwright (pulsaciones de flechas
 cada 140ms durante 60s con skin `neon`, la más cargada de `shadowBlur`), con un `PerformanceObserver`
 de `longtask` y muestreo de `performance.memory.usedJSHeapSize` en 3 instantes. Esta instrumentación es
 temporal y se elimina en el paso siguiente del plan (ver sección de instrumentación temporal más abajo).
@@ -137,7 +137,7 @@ temporal y se elimina en el paso siguiente del plan (ver sección de instrumenta
   60fps); 0 frames superaron 50ms. 0 _long tasks_.
 - Memoria: 35.2MB → 24.3MB (30s) → 24.6MB (60s). **Sin crecimiento sostenido — no hay evidencia de fuga
   de memoria.** El descenso inicial es un ciclo de GC normal.
-- Re-renders de `CrucePlayer`: 12 en 60s (con el patrón de bot usado, que no siempre pierde vidas ni
+- Re-renders de `CrossingPlayer`: 12 en 60s (con el patrón de bot usado, que no siempre pierde vidas ni
   avanza fila). Bajo en términos absolutos.
 
 **HiDPI simulado, dpr=3 (canvas real 2400×1800, igualando un iPhone moderno; sesión de 25s):**
@@ -203,7 +203,7 @@ recalcular cada frame algo que apenas cambia.
 En vez de instalar la extensión de React DevTools en el navegador automatizado, se verificó la
 memoización de forma directa y controlada: se instrumentó temporalmente `TouchPad` (revertido de
 inmediato tras la prueba) para contar sus propios renders, y se ejecutó una secuencia de 12 saltos
-(ArrowUp/ArrowDown alternados) que solo cambia `score`/`lives` en `CrucePlayer` — sin tocar pausa ni
+(ArrowUp/ArrowDown alternados) que solo cambia `score`/`lives` en `CrossingPlayer` — sin tocar pausa ni
 skin — hasta terminar la partida (3 vidas perdidas y reaparición, `score` 0→30). `TouchPad` solo
 re-renderizó **una vez** en toda la secuencia (contando el doble-render de `StrictMode` en desarrollo:
 2→4), y esa única vez coincide exactamente con el momento en que `over` pasa a `true` (fin de partida),
@@ -278,13 +278,13 @@ memoizados solo re-renderizan cuando sus propias props cambian, no cuando lo hac
 
 ## Risks
 
-| Risk                                                                                                                                                 | Mitigation                                                                                                                                                   |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| La técnica de cacheo (offscreen canvas) introduce diferencias visuales sutiles (aliasing, bordes) frente al dibujado directo actual                  | Comparación de capturas lado a lado antes de dar el fix por terminado (paso 5 del plan); si hay diferencia perceptible, ajustar hasta igualar                |
-| Una sola traza de Performance puede ser ruidosa y llevar a diagnosticar mal la causa                                                                 | Repetir la captura al menos dos veces con el mismo guion de juego antes de decidir la causa dominante                                                        |
-| La fuga de memoria (si existe) está fuera de `engine.ts`/`cruce-player.tsx` (p. ej. en `HudMenu`, `SkinSelector` o el propio ciclo de vida de React) | El paso 3 del plan ya contempla ampliar la corrección a otro archivo si el heap snapshot señala la retención ahí                                             |
-| Las mediciones se hacen en desktop con emulación de dispositivo móvil de Chrome, no en un móvil real                                                 | Se documenta explícitamente esta limitación en los hallazgos del spec; la validación en hardware real queda fuera de este spec                               |
-| `React.memo` mal aplicado (con props de identidad inestable) puede ocultar un bug donde el HUD deja de actualizarse en pantalla                      | El paso 2 del plan incluye una verificación manual explícita de que marcador, vidas, nivel, pausa y skin se siguen actualizando con normalidad tras memoizar |
+| Risk                                                                                                                                                    | Mitigation                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| La técnica de cacheo (offscreen canvas) introduce diferencias visuales sutiles (aliasing, bordes) frente al dibujado directo actual                     | Comparación de capturas lado a lado antes de dar el fix por terminado (paso 5 del plan); si hay diferencia perceptible, ajustar hasta igualar                |
+| Una sola traza de Performance puede ser ruidosa y llevar a diagnosticar mal la causa                                                                    | Repetir la captura al menos dos veces con el mismo guion de juego antes de decidir la causa dominante                                                        |
+| La fuga de memoria (si existe) está fuera de `engine.ts`/`crossing-player.tsx` (p. ej. en `HudMenu`, `SkinSelector` o el propio ciclo de vida de React) | El paso 3 del plan ya contempla ampliar la corrección a otro archivo si el heap snapshot señala la retención ahí                                             |
+| Las mediciones se hacen en desktop con emulación de dispositivo móvil de Chrome, no en un móvil real                                                    | Se documenta explícitamente esta limitación en los hallazgos del spec; la validación en hardware real queda fuera de este spec                               |
+| `React.memo` mal aplicado (con props de identidad inestable) puede ocultar un bug donde el HUD deja de actualizarse en pantalla                         | El paso 2 del plan incluye una verificación manual explícita de que marcador, vidas, nivel, pausa y skin se siguen actualizando con normalidad tras memoizar |
 
 ## What is **not** in this spec
 
