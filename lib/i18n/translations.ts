@@ -192,6 +192,13 @@ const es = {
     successMessagePrefix: "MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS,",
     successButton: "ENVIAR OTRO MENSAJE",
   },
+  gameOver: {
+    guestCannotSave:
+      "Jugando como invitado. Inicia sesión para guardar tu puntuación en el ranking.",
+    signInToSave: "INICIAR SESIÓN",
+    saveError: "No se pudo guardar la puntuación. Intenta de nuevo.",
+    saving: "GUARDANDO…",
+  },
   hallOfFame: {
     title: "SALÓN DE LA FAMA",
     subtitle: "LOS NOMBRES QUE NUNCA SE BORRAN DE LA PANTALLA",
@@ -397,6 +404,13 @@ const en: typeof es = {
     successTransmitting: "[OK] Transmitting packet…",
     successMessagePrefix: "MESSAGE RECEIVED. WE'LL REPLY SOON. THANKS,",
     successButton: "SEND ANOTHER MESSAGE",
+  },
+  gameOver: {
+    guestCannotSave:
+      "You're playing as a guest. Sign in to save your score to the leaderboard.",
+    signInToSave: "SIGN IN",
+    saveError: "Couldn't save the score. Please try again.",
+    saving: "SAVING…",
   },
   hallOfFame: {
     title: "HALL OF FAME",
