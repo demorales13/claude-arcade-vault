@@ -141,6 +141,16 @@ const es = {
     checkEmailTitle: "REVISA TU CORREO",
     checkEmailBody:
       "Te enviamos un enlace de confirmación. Ábrelo para activar tu cuenta y poder iniciar sesión.",
+    forgotPasswordLink: "¿Olvidaste tu contraseña?",
+    forgotPasswordTitle: "RECUPERAR CONTRASEÑA",
+    submitForgotPassword: "ENVIAR ENLACE",
+    submitForgotPasswordPending: "ENVIANDO…",
+    updatePasswordTitle: "NUEVA CONTRASEÑA",
+    fieldNewPassword: "Nueva contraseña",
+    fieldConfirmPassword: "Confirmar contraseña",
+    submitUpdatePassword: "GUARDAR CONTRASEÑA",
+    submitUpdatePasswordPending: "GUARDANDO…",
+    errorPasswordMismatch: "Las contraseñas no coinciden.",
   },
   about: {
     kicker: "▸ ACERCA DE",
@@ -328,6 +338,16 @@ const en: typeof es = {
     checkEmailTitle: "CHECK YOUR EMAIL",
     checkEmailBody:
       "We sent you a confirmation link. Open it to activate your account and sign in.",
+    forgotPasswordLink: "Forgot your password?",
+    forgotPasswordTitle: "RESET PASSWORD",
+    submitForgotPassword: "SEND RESET LINK",
+    submitForgotPasswordPending: "SENDING…",
+    updatePasswordTitle: "NEW PASSWORD",
+    fieldNewPassword: "New password",
+    fieldConfirmPassword: "Confirm password",
+    submitUpdatePassword: "SAVE PASSWORD",
+    submitUpdatePasswordPending: "SAVING…",
+    errorPasswordMismatch: "Passwords don't match.",
   },
   about: {
     kicker: "▸ ABOUT",

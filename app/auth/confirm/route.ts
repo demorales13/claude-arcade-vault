@@ -12,7 +12,8 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type });
 
     if (!error) {
-      return NextResponse.redirect(new URL("/", origin));
+      const destination = type === "recovery" ? "/update-password" : "/";
+      return NextResponse.redirect(new URL(destination, origin));
     }
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -169,6 +170,21 @@ export function AuthForm() {
                 onChange={(e) => setPass(e.target.value)}
                 placeholder={dict.auth.passwordPlaceholder}
               />
+              {tab === "in" && (
+                <Link
+                  href="/forgot-password"
+                  className="mono"
+                  style={{
+                    display: "block",
+                    marginTop: 8,
+                    fontSize: 11,
+                    color: "var(--ink-faint)",
+                    textAlign: "right",
+                  }}
+                >
+                  {dict.auth.forgotPasswordLink}
+                </Link>
+              )}
             </div>
 
             {error && (
