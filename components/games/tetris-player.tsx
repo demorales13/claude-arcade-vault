@@ -39,6 +39,12 @@ const TETRIS_BUTTON_A = {
   ariaLabel: "Soltar pieza",
 } as const;
 
+const TETRIS_BUTTON_B = {
+  code: "ArrowUp",
+  label: "GIRAR",
+  ariaLabel: "Girar pieza",
+} as const;
+
 function readUserName(): string {
   try {
     const u = JSON.parse(localStorage.getItem("av_user") || "null");
@@ -313,6 +319,7 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
           dpad={TETRIS_DPAD}
           dpadRepeat
           buttonA={TETRIS_BUTTON_A}
+          buttonB={TETRIS_BUTTON_B}
           disabled={paused || over}
           onKey={handleTouchKey}
         />
