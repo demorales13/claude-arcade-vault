@@ -225,3 +225,7 @@ Convenciones:
 - Cambios visuales/de diseño.
 
 Cada uno de estos, si se implementa, va en su propio spec.
+
+## Actualización posterior (2026-08-04, spec 23)
+
+"Supabase CLI / migraciones versionadas" quedó **parcialmente revertido**: desde `specs/23-migracion-a-produccion.md`, todo DDL nuevo (incluido el `insert into games` que este spec documenta como SQL manual) se versiona como un archivo en `supabase/migrations/`, aplicado a dev vía la tool MCP `apply_migration`. El CLI instalado (`link`/`db push`) sigue fuera de alcance.

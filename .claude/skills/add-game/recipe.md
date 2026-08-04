@@ -14,7 +14,7 @@ Adding a game touches exactly six things:
 
 | #   | What         | Where                                                                                            |
 | --- | ------------ | ------------------------------------------------------------------------------------------------ |
-| 1   | Catalog row  | `insert into games (...)` — **manual SQL**, Supabase SQL Editor                                  |
+| 1   | Catalog row  | `insert into games (...)` — new migration in `supabase/migrations/`, applied via MCP (see §2)    |
 | 2   | Card art     | `.cover-<id>` in `app/globals.css` (cover block, near the other `.cover-*`)                      |
 | 3   | Engine       | `components/games/<id>/engine.ts` — pure TS, no JSX, no React                                    |
 | 4   | Player       | `components/games/<id>-player.tsx` — `"use client"` wrapper                                      |
@@ -37,11 +37,22 @@ them.
 
 ## 2. The catalog row
 
+As of `specs/23-migracion-a-produccion.md`, every database change is a versioned migration, not an
+ad hoc SQL Editor paste — this makes it replayable against the separate production project later.
+Create `supabase/migrations/<timestamp>_add_game_<id>.sql` (timestamp format `YYYYMMDDHHMMSS`,
+matching the existing files in that folder) with:
+
 ```sql
 insert into games (id, title, short, long, cat, cover, color, title_en, short_en, long_en) values
   ('<id>', '<TÍTULO>', '<una línea>', '<un párrafo>', '<CAT>', 'cover-<id>', '<color>',
    '<TITLE>', '<one line>', '<one paragraph>');
 ```
+
+Apply it to dev with the `mcp__supabase__apply_migration` tool (name: `add_game_<id>`, query: the
+`insert` above) — never `mcp__supabase__execute_sql` for this, since that wouldn't leave a
+replayable file behind. The tool assigns the real timestamp when it applies; rename the local file
+to match afterward, the same way `supabase/migrations/20260804221357_baseline_schema.sql` and
+`..._baseline_seed_games.sql` got their names.
 
 Both constrained by CHECK — a wrong value fails the insert:
 
@@ -248,7 +259,8 @@ spec 12, and must not be duplicated per game.
 Adapt, don't copy blindly. Drop step 5 if the game has no assets. Each step leaves the app runnable
 and carries its own `Test:`.
 
-1. **SQL (manual, user).** Run the `insert into games` in the Supabase SQL Editor.
+1. **Migration.** Create `supabase/migrations/<timestamp>_add_game_<id>.sql` with the `insert into
+games` and apply it to dev via `mcp__supabase__apply_migration` (see §2).
    _Test:_ `/games` shows the new card; `/games/<id>` shows the detail page with `best = 0`,
    `plays = 0` and an empty leaderboard; `/games/<id>/play` still renders the generic mock player.
 2. **Cover art.** Add `.cover-<id>` to `app/globals.css`.
