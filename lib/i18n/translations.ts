@@ -155,6 +155,9 @@ const es = {
     submitChooseUsername: "GUARDAR Y ENTRAR",
     submitChooseUsernamePending: "GUARDANDO…",
     errorUsernameEmpty: "Ingresa un nombre de usuario.",
+    errorUsernameTaken: "Ese nombre de usuario ya está en uso.",
+    errorUsernameInvalid:
+      "Nombre inválido: 3-12 caracteres, solo letras, números y guion bajo.",
   },
   about: {
     kicker: "▸ ACERCA DE",
@@ -356,6 +359,9 @@ const en: typeof es = {
     submitChooseUsername: "SAVE AND ENTER",
     submitChooseUsernamePending: "SAVING…",
     errorUsernameEmpty: "Enter a username.",
+    errorUsernameTaken: "That username is already taken.",
+    errorUsernameInvalid:
+      "Invalid name: 3-12 characters, letters, numbers and underscore only.",
   },
   about: {
     kicker: "▸ ABOUT",

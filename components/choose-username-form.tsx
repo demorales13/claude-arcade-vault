@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
-import { createClient } from "@/lib/supabase/client";
-
-function normalizeName(name: string) {
-  return name.toUpperCase().slice(0, 12);
-}
+import { claimUsername } from "@/app/actions/username";
 
 export function ChooseUsernameForm() {
   const router = useRouter();
@@ -26,14 +22,17 @@ export function ChooseUsernameForm() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({
-      data: { display_name: normalizeName(username) },
-    });
+    const result = await claimUsername(username);
     setLoading(false);
 
-    if (updateError) {
-      setError(dict.auth.errorGeneric);
+    if (!result.ok) {
+      if (result.error === "taken") {
+        setError(dict.auth.errorUsernameTaken);
+      } else if (result.error === "invalid") {
+        setError(dict.auth.errorUsernameInvalid);
+      } else {
+        setError(dict.auth.errorGeneric);
+      }
       return;
     }
 
