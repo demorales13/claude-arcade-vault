@@ -151,6 +151,8 @@ const es = {
     submitUpdatePassword: "GUARDAR CONTRASEÑA",
     submitUpdatePasswordPending: "GUARDANDO…",
     errorPasswordMismatch: "Las contraseñas no coinciden.",
+    errorPasswordWeak:
+      "La contraseña debe tener 8+ caracteres, mayúscula, minúscula, número y símbolo.",
     chooseUsernameTitle: "ELIGE TU NOMBRE",
     submitChooseUsername: "GUARDAR Y ENTRAR",
     submitChooseUsernamePending: "GUARDANDO…",
@@ -355,6 +357,8 @@ const en: typeof es = {
     submitUpdatePassword: "SAVE PASSWORD",
     submitUpdatePasswordPending: "SAVING…",
     errorPasswordMismatch: "Passwords don't match.",
+    errorPasswordWeak:
+      "Password must be 8+ characters with uppercase, lowercase, number and symbol.",
     chooseUsernameTitle: "CHOOSE YOUR NAME",
     submitChooseUsername: "SAVE AND ENTER",
     submitChooseUsernamePending: "SAVING…",

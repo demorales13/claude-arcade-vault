@@ -34,7 +34,7 @@ Implications for any work in this repo:
 - A feature-sized change should normally go through `specs/NN-slug.md` first, not straight into code. If asked to build something nontrivial without a spec, point this workflow out.
 - Never implement a spec whose status isn't `Approved` (or a same-meaning word in another language) — that gate is intentional and enforced by the human, not by the agent.
 - Spec status values: `Draft` → `In review` → `Approved` → `Implemented` → `Obsolete` (or the equivalent terms in whatever language the repo's specs use — stay consistent with what's already there).
-- Numbering is sequential (`01-`, `02-`, ...); `specs/` currently runs `01`–`20`, so the next free number is `21`. `specs/game-jam/` numbers separately and holds unpromoted alternatives (currently `02`, `04`, `05`, `06` in `Draft` — `01` and `03` were promoted into `specs/16-` and `specs/15-` respectively). Check both before creating a new spec.
+- Numbering is sequential (`01-`, `02-`, ...); `specs/` currently runs `01`–`21`, so the next free number is `22`. `specs/game-jam/` numbers separately and holds unpromoted alternatives (currently `02`, `04`, `05`, `06` in `Draft` — `01` and `03` were promoted into `specs/16-` and `specs/15-` respectively). Check both before creating a new spec.
 
 ## Skills
 

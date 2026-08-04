@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const PROTECTED_PATHS = ["/choose-username", "/update-password"];
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request,
@@ -27,7 +29,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user && PROTECTED_PATHS.includes(request.nextUrl.pathname)) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
 
   return response;
 }
