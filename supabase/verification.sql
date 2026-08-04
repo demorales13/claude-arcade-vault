@@ -1,8 +1,11 @@
 -- Arcade Vault — verificación post-migración para PRODUCCIÓN.
 --
--- Ejecutar después de 01-baseline.sql y 02-seed-games.sql. Todas son consultas
--- de solo lectura. Compara cada resultado con el "esperado" documentado aquí y
--- en specs/23-migracion-a-produccion.md.
+-- Ejecutar después de aplicar, en orden, todos los archivos de
+-- supabase/migrations/. Todas son consultas de solo lectura. Compara cada
+-- resultado con el "esperado" documentado aquí y en
+-- specs/23-migracion-a-produccion.md. No es una migración en sí misma — no
+-- vive en supabase/migrations/ porque nunca debe aplicarse contra el
+-- historial de migraciones.
 
 -- 1) Catálogo de juegos: se esperan 6 filas.
 select count(*) as total_games from public.games;

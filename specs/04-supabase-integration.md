@@ -111,3 +111,7 @@ Dos detalles del texto literal del spec no coincidían con la realidad del proye
 
 - **Nombre de variable:** el proyecto real ya usa `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (el nombre vigente de Supabase para la anon key pública), no `NEXT_PUBLIC_SUPABASE_ANON_KEY` como decía el spec. `.env.example`/`.env.local` y ambos clientes (`lib/supabase/client.ts`, `lib/supabase/server.ts`) usan `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 - **Código de error de tabla inexistente:** `@supabase/supabase-js` habla con Postgres a través de PostgREST, que envuelve el error de tabla inexistente en su propio código `PGRST205` ("Could not find the table ... in the schema cache"), no en el código crudo de Postgres `42P01` que asumía el spec — ese código nunca llega a través del cliente JS. `app/debug/supabase/page.tsx` (ya eliminado) verificó "Database: conectado" comprobando `error.code === "PGRST205"`.
+
+## Actualización posterior (2026-08-04, spec 23)
+
+La decisión "No: Supabase CLI local ni carpeta `supabase/migrations/`" de este spec quedó **parcialmente revertida**: todo cambio de esquema se versiona ahora como una migración en `supabase/migrations/`, aplicada vía la tool MCP `apply_migration` — ver `specs/23-migracion-a-produccion.md`. El CLI en sí (`supabase link`/`db push`) sigue sin adoptarse; solo cambió el hecho de que el SQL deja de pegarse suelto en el SQL Editor sin dejar rastro versionado.

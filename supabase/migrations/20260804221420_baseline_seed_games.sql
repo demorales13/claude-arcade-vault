@@ -1,13 +1,5 @@
--- Arcade Vault — catálogo inicial de juegos para PRODUCCIÓN.
---
--- Exportado del proyecto de DESARROLLO el 2026-08-04 (6 filas de `public.games`).
--- No incluye `scores` ni `profiles`: producción arranca con el leaderboard vacío
--- (misma decisión que specs/06-leaderboard-catalogo-supabase.md tomó para dev).
---
--- Idempotente: `on conflict (id) do nothing` permite re-ejecutar sin duplicar filas
--- ni pisar ediciones manuales que se hayan hecho ya en producción.
---
--- Requiere que db/prod/01-baseline.sql se haya ejecutado antes (tabla `games`).
+-- Baseline: catálogo de juegos tal como existía en desarrollo el 2026-08-04
+-- (6 filas). Idempotente vía on conflict do nothing.
 
 insert into public.games
   (id, title, short, long, cat, cover, color, title_en, short_en, long_en)

@@ -1,18 +1,10 @@
--- Arcade Vault — baseline de esquema para el proyecto Supabase de PRODUCCIÓN.
+-- Baseline: transcripción del esquema `public` tal como existía en desarrollo el
+-- 2026-08-04, antes de que este repo empezara a versionar migraciones (ver
+-- specs/23-migracion-a-produccion.md). Reconstruye games, scores, profiles,
+-- índices, la vista games_with_stats y RLS en un único archivo idempotente.
 --
--- Transcripción fiel del esquema `public` verificado en el proyecto de DESARROLLO
--- (project_ref enmvnepuigjuhjpikkqn) el 2026-08-04, vía `list_tables` / `pg_policies` /
--- `pg_indexes` — no una concatenación de los fragmentos SQL de specs/04, specs/06,
--- specs/11, specs/20 y specs/22, que quedaron desfasados entre sí.
---
--- Idempotente: se puede volver a pegar este archivo sin que falle ni cambie nada.
--- Pensado para pegarse tal cual en el SQL Editor del proyecto de producción.
---
--- Orden: games -> scores -> profiles -> índices -> vista games_with_stats -> RLS -> grants.
+-- A partir de este archivo, todo cambio de esquema nuevo es su propia migración.
 
--- =========================================================================
--- Tabla: games
--- =========================================================================
 create table if not exists public.games (
   id text primary key,
   title text not null,
@@ -27,9 +19,6 @@ create table if not exists public.games (
   long_en text
 );
 
--- =========================================================================
--- Tabla: scores
--- =========================================================================
 create table if not exists public.scores (
   id uuid primary key default gen_random_uuid(),
   game_id text not null references public.games (id),
@@ -39,24 +28,15 @@ create table if not exists public.scores (
   user_id uuid not null default auth.uid() references auth.users (id) on delete cascade
 );
 
--- =========================================================================
--- Tabla: profiles
--- =========================================================================
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   username text not null check (username ~ '^[A-Z0-9_]{3,12}$'),
   created_at timestamptz not null default now()
 );
 
--- =========================================================================
--- Índices
--- =========================================================================
 create index if not exists scores_game_id_score_idx on public.scores (game_id, score desc);
 create unique index if not exists profiles_username_key on public.profiles (lower(username));
 
--- =========================================================================
--- Vista: games_with_stats (best/plays calculados en lectura, sin columnas propias)
--- =========================================================================
 create or replace view public.games_with_stats
 with (security_invoker = true) as
 select
@@ -77,9 +57,6 @@ from public.games g
 left join public.scores s on s.game_id = g.id
 group by g.id;
 
--- =========================================================================
--- Row Level Security
--- =========================================================================
 alter table public.games enable row level security;
 alter table public.scores enable row level security;
 alter table public.profiles enable row level security;
@@ -116,7 +93,4 @@ create policy "own update profile" on public.profiles
   using (auth.uid() = id)
   with check (auth.uid() = id);
 
--- =========================================================================
--- Grants (games_with_stats necesita GRANT explícito por ser una vista nueva)
--- =========================================================================
 grant select on public.games_with_stats to anon, authenticated;
