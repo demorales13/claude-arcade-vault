@@ -1,6 +1,7 @@
 export function isValidPassword(pass: string): boolean {
   return (
     pass.length >= 8 &&
+    pass.length <= 72 &&
     /[a-z]/.test(pass) &&
     /[A-Z]/.test(pass) &&
     /[0-9]/.test(pass) &&
