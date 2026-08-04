@@ -1,6 +1,6 @@
 # SPEC 20 — Username único
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** 17-autenticacion-email-password, 19-auth-oauth-social
 > **Date:** 2026-08-04
 > **Objective:** Impedir que dos cuentas compartan el mismo nombre de jugador, garantizándolo con una restricción de base de datos en vez de solo en el cliente.
