@@ -3,11 +3,31 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { createClient } from "@/lib/supabase/client";
+import type { Dictionary } from "@/lib/i18n/translations";
 
 function saveUser(name: string) {
   try {
     localStorage.setItem("av_user", JSON.stringify({ name }));
   } catch {}
+}
+
+function normalizeName(name: string) {
+  return (name || "PLAYER1").toUpperCase().slice(0, 10);
+}
+
+function mapAuthError(code: string | undefined, dict: Dictionary): string {
+  switch (code) {
+    case "invalid_credentials":
+      return dict.auth.errorInvalidCredentials;
+    case "email_not_confirmed":
+      return dict.auth.errorEmailNotConfirmed;
+    case "user_already_exists":
+    case "email_exists":
+      return dict.auth.errorEmailTaken;
+    default:
+      return dict.auth.errorGeneric;
+  }
 }
 
 export function AuthForm() {
@@ -17,16 +37,56 @@ export function AuthForm() {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [checkEmailSent, setCheckEmailSent] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    saveUser((user || "PLAYER1").toUpperCase().slice(0, 10));
+    setError(null);
+    setLoading(true);
+    const supabase = createClient();
+
+    if (tab === "up") {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: pass,
+        options: { data: { display_name: normalizeName(user) } },
+      });
+      setLoading(false);
+
+      if (signUpError) {
+        setError(mapAuthError(signUpError.code, dict));
+        return;
+      }
+
+      setCheckEmailSent(true);
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: pass,
+    });
+    setLoading(false);
+
+    if (signInError) {
+      setError(mapAuthError(signInError.code, dict));
+      return;
+    }
+
     router.push("/");
   };
 
   const playAsGuest = () => {
     saveUser("INVITADO");
     router.push("/");
+  };
+
+  const switchTab = (next: "in" | "up") => {
+    setTab(next);
+    setError(null);
+    setCheckEmailSent(false);
   };
 
   return (
@@ -51,29 +111,48 @@ export function AuthForm() {
         <div className="auth-tabs">
           <button
             className={tab === "in" ? "on" : ""}
-            onClick={() => setTab("in")}
+            onClick={() => switchTab("in")}
           >
             {dict.auth.tabSignIn}
           </button>
           <button
             className={tab === "up" ? "on" : ""}
-            onClick={() => setTab("up")}
+            onClick={() => switchTab("up")}
           >
             {dict.auth.tabSignUp}
           </button>
         </div>
 
-        <form onSubmit={submit}>
-          <div className="field">
-            <label>{dict.auth.fieldUser}</label>
-            <input
-              value={user}
-              onChange={(e) => setUser(e.target.value)}
-              placeholder={dict.auth.userPlaceholder}
-            />
+        {tab === "up" && checkEmailSent ? (
+          <div className="field slide-in" style={{ textAlign: "center" }}>
+            <h3 className="neon-cyan" style={{ fontSize: 15 }}>
+              {dict.auth.checkEmailTitle}
+            </h3>
+            <p
+              className="mono"
+              style={{
+                fontSize: 12,
+                color: "var(--ink-faint)",
+                marginTop: 10,
+                lineHeight: 1.6,
+              }}
+            >
+              {dict.auth.checkEmailBody}
+            </p>
           </div>
-          {tab === "up" && (
-            <div className="field slide-in">
+        ) : (
+          <form onSubmit={submit}>
+            {tab === "up" && (
+              <div className="field slide-in">
+                <label>{dict.auth.fieldUser}</label>
+                <input
+                  value={user}
+                  onChange={(e) => setUser(e.target.value)}
+                  placeholder={dict.auth.userPlaceholder}
+                />
+              </div>
+            )}
+            <div className="field">
               <label>{dict.auth.fieldEmail}</label>
               <input
                 type="email"
@@ -82,25 +161,45 @@ export function AuthForm() {
                 placeholder={dict.auth.emailPlaceholder}
               />
             </div>
-          )}
-          <div className="field">
-            <label>{dict.auth.fieldPassword}</label>
-            <input
-              type="password"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-              placeholder={dict.auth.passwordPlaceholder}
-            />
-          </div>
+            <div className="field">
+              <label>{dict.auth.fieldPassword}</label>
+              <input
+                type="password"
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                placeholder={dict.auth.passwordPlaceholder}
+              />
+            </div>
 
-          <button
-            className="btn lg"
-            type="submit"
-            style={{ width: "100%", marginTop: 8 }}
-          >
-            {tab === "in" ? dict.auth.submitSignIn : dict.auth.submitSignUp}
-          </button>
-        </form>
+            {error && (
+              <div
+                className="mono slide-in"
+                style={{
+                  fontSize: 11,
+                  color: "var(--magenta)",
+                  marginTop: 4,
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <button
+              className="btn lg"
+              type="submit"
+              disabled={loading}
+              style={{ width: "100%", marginTop: 8 }}
+            >
+              {tab === "in"
+                ? loading
+                  ? dict.auth.submitSignInPending
+                  : dict.auth.submitSignIn
+                : loading
+                  ? dict.auth.submitSignUpPending
+                  : dict.auth.submitSignUp}
+            </button>
+          </form>
+        )}
 
         <button
           className="btn ghost"
@@ -109,16 +208,6 @@ export function AuthForm() {
         >
           {dict.auth.guestButton}
         </button>
-
-        <div className="auth-divider">{dict.auth.socialDivider}</div>
-        <div className="social">
-          <button className="btn ghost" type="button">
-            {dict.auth.googleButton}
-          </button>
-          <button className="btn ghost" type="button">
-            {dict.auth.githubButton}
-          </button>
-        </div>
 
         <div
           style={{

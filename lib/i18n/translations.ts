@@ -126,11 +126,21 @@ const es = {
     passwordPlaceholder: "••••••••",
     submitSignIn: "ENTRAR AL VAULT",
     submitSignUp: "CREAR Y JUGAR",
+    submitSignInPending: "ENTRANDO…",
+    submitSignUpPending: "CREANDO CUENTA…",
     guestButton: "JUGAR COMO INVITADO",
     socialDivider: "O CONTINÚA CON",
     googleButton: "◆ GOOGLE",
     githubButton: "▣ GITHUB",
     termsLine: "AL ENTRAR ACEPTAS LOS TÉRMINOS DEL SALÓN ARCADE",
+    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
+    errorInvalidCredentials: "Correo o contraseña incorrectos.",
+    errorEmailTaken: "Ese correo ya está registrado.",
+    errorEmailNotConfirmed:
+      "Todavía no confirmaste tu correo. Revisa tu bandeja de entrada.",
+    checkEmailTitle: "REVISA TU CORREO",
+    checkEmailBody:
+      "Te enviamos un enlace de confirmación. Ábrelo para activar tu cuenta y poder iniciar sesión.",
   },
   about: {
     kicker: "▸ ACERCA DE",
@@ -303,11 +313,21 @@ const en: typeof es = {
     passwordPlaceholder: "••••••••",
     submitSignIn: "ENTER THE VAULT",
     submitSignUp: "CREATE AND PLAY",
+    submitSignInPending: "ENTERING…",
+    submitSignUpPending: "CREATING ACCOUNT…",
     guestButton: "PLAY AS GUEST",
     socialDivider: "OR CONTINUE WITH",
     googleButton: "◆ GOOGLE",
     githubButton: "▣ GITHUB",
     termsLine: "BY ENTERING YOU ACCEPT THE ARCADE HALL TERMS",
+    errorGeneric: "Something went wrong. Please try again.",
+    errorInvalidCredentials: "Incorrect email or password.",
+    errorEmailTaken: "That email is already registered.",
+    errorEmailNotConfirmed:
+      "You haven't confirmed your email yet. Check your inbox.",
+    checkEmailTitle: "CHECK YOUR EMAIL",
+    checkEmailBody:
+      "We sent you a confirmation link. Open it to activate your account and sign in.",
   },
   about: {
     kicker: "▸ ABOUT",

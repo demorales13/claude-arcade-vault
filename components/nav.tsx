@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { createClient } from "@/lib/supabase/client";
 
 type AvUser = { name: string } | null;
 
@@ -51,13 +52,46 @@ export function Nav() {
     setOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        try {
+          localStorage.removeItem("av_user");
+        } catch {}
+        setUser(null);
+        return;
+      }
+
+      if (
+        (event === "SIGNED_IN" || event === "INITIAL_SESSION") &&
+        session?.user
+      ) {
+        const displayName = session.user.user_metadata?.display_name;
+        if (typeof displayName === "string" && displayName) {
+          const next = { name: displayName };
+          try {
+            localStorage.setItem("av_user", JSON.stringify(next));
+          } catch {}
+          setUser(next);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const isHome = pathname === "/";
   const isBiblioteca = pathname.startsWith("/games");
   const isSalon = pathname === "/hall-of-fame";
   const isAbout = pathname === "/about";
   const isAuth = pathname === "/login";
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
     try {
       localStorage.removeItem("av_user");
     } catch {}
