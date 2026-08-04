@@ -16,6 +16,14 @@ function readUser(): AvUser {
   }
 }
 
+function isSafeAvatarUrl(url: string): boolean {
+  try {
+    return ["http:", "https:"].includes(new URL(url).protocol);
+  } catch {
+    return false;
+  }
+}
+
 function UserAvatar({ user }: { user: NonNullable<AvUser> }) {
   const [broken, setBroken] = useState(false);
   if (user.avatar && !broken) {
@@ -113,7 +121,8 @@ export function Nav() {
           const avatar =
             session.user.user_metadata?.avatar_url ||
             session.user.user_metadata?.picture;
-          if (typeof avatar === "string" && avatar) next.avatar = avatar;
+          if (typeof avatar === "string" && isSafeAvatarUrl(avatar))
+            next.avatar = avatar;
           try {
             localStorage.setItem("av_user", JSON.stringify(next));
           } catch {}
