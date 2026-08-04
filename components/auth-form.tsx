@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -10,10 +11,6 @@ function saveUser(name: string) {
   try {
     localStorage.setItem("av_user", JSON.stringify({ name }));
   } catch {}
-}
-
-function normalizeName(name: string) {
-  return (name || "PLAYER1").toUpperCase().slice(0, 10);
 }
 
 function mapAuthError(code: string | undefined, dict: Dictionary): string {
@@ -34,7 +31,6 @@ export function AuthForm() {
   const router = useRouter();
   const { dict } = useLanguage();
   const [tab, setTab] = useState<"in" | "up">("in");
-  const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,7 +47,6 @@ export function AuthForm() {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password: pass,
-        options: { data: { display_name: normalizeName(user) } },
       });
       setLoading(false);
 
@@ -81,6 +76,14 @@ export function AuthForm() {
   const playAsGuest = () => {
     saveUser("INVITADO");
     router.push("/");
+  };
+
+  const signInWithOAuth = async (provider: "google" | "github") => {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
   };
 
   const switchTab = (next: "in" | "up") => {
@@ -142,16 +145,6 @@ export function AuthForm() {
           </div>
         ) : (
           <form onSubmit={submit}>
-            {tab === "up" && (
-              <div className="field slide-in">
-                <label>{dict.auth.fieldUser}</label>
-                <input
-                  value={user}
-                  onChange={(e) => setUser(e.target.value)}
-                  placeholder={dict.auth.userPlaceholder}
-                />
-              </div>
-            )}
             <div className="field">
               <label>{dict.auth.fieldEmail}</label>
               <input
@@ -169,6 +162,21 @@ export function AuthForm() {
                 onChange={(e) => setPass(e.target.value)}
                 placeholder={dict.auth.passwordPlaceholder}
               />
+              {tab === "in" && (
+                <Link
+                  href="/forgot-password"
+                  className="mono"
+                  style={{
+                    display: "block",
+                    marginTop: 8,
+                    fontSize: 11,
+                    color: "var(--ink-faint)",
+                    textAlign: "right",
+                  }}
+                >
+                  {dict.auth.forgotPasswordLink}
+                </Link>
+              )}
             </div>
 
             {error && (
@@ -199,6 +207,41 @@ export function AuthForm() {
                   : dict.auth.submitSignUp}
             </button>
           </form>
+        )}
+
+        {!(tab === "up" && checkEmailSent) && (
+          <>
+            <div
+              className="mono"
+              style={{
+                textAlign: "center",
+                fontSize: 11,
+                color: "var(--ink-faint)",
+                letterSpacing: "0.1em",
+                margin: "18px 0 10px",
+              }}
+            >
+              {dict.auth.socialDivider}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                className="btn ghost"
+                style={{ flex: 1 }}
+                onClick={() => signInWithOAuth("google")}
+              >
+                {dict.auth.googleButton}
+              </button>
+              <button
+                type="button"
+                className="btn ghost"
+                style={{ flex: 1 }}
+                onClick={() => signInWithOAuth("github")}
+              >
+                {dict.auth.githubButton}
+              </button>
+            </div>
+          </>
         )}
 
         <button

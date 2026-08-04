@@ -291,6 +291,88 @@ a {
 .av-nav .hamburger {
   display: none;
 }
+.user-menu {
+  position: relative;
+  margin-left: 16px;
+}
+.user-menu .auth-btn {
+  margin-left: 0;
+}
+.user-menu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 240px;
+  padding: 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.15);
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+  z-index: 60;
+}
+.user-menu-panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.user-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(0, 245, 255, 0.4);
+  flex-shrink: 0;
+}
+.auth-btn .user-avatar {
+  margin-right: 2px;
+}
+.user-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    45deg,
+    var(--magenta) 0 50%,
+    var(--cyan) 50% 100%
+  );
+  background-blend-mode: screen;
+  font-family: var(--pixel);
+  font-size: 10px;
+  color: var(--ink);
+}
+.user-menu-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-menu-identity .user-avatar {
+  width: 32px;
+  height: 32px;
+}
+.user-menu-name {
+  font-family: var(--pixel);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.user-menu-email {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  word-break: break-all;
+}
+.mobile-user-info {
+  padding: 10px 12px;
+  border-bottom: 1px dashed var(--line-2);
+  margin-bottom: 4px;
+}
+.mobile-user-info .user-menu-email {
+  margin-top: 4px;
+}
 .lang-toggle {
   display: flex;
   border: 1px solid var(--line);

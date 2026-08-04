@@ -1,6 +1,6 @@
 # SPEC 18 — Recuperación de contraseña
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** 17-autenticacion-email-password
 > **Date:** 2026-08-03
 > **Objective:** Agregar el flujo "¿Olvidaste tu contraseña?" (páginas `/forgot-password` y `/update-password`, más la extensión del route handler de confirmación de spec 17) para que un usuario con cuenta email/contraseña pueda recuperar el acceso sin soporte manual.
@@ -66,18 +66,18 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] `npm run dev` y `npm run build` no muestran errores tras cada paso del plan.
-- [ ] El enlace "¿Olvidaste tu contraseña?" aparece en la pestaña "INICIAR SESIÓN" de `/login` y navega a `/forgot-password`.
-- [ ] Pedir el reset en `/forgot-password` con un correo registrado muestra "revisa tu correo" y llega el email de Supabase.
-- [ ] Pedir el reset con un correo no registrado muestra exactamente el mismo estado "revisa tu correo" (sin revelar que la cuenta no existe).
-- [ ] Abrir el enlace del correo de recuperación redirige a `/update-password` (no a `/`).
-- [ ] En `/update-password`, si las contraseñas no coinciden se muestra un error y no se llama a `updateUser`.
-- [ ] Fijar una nueva contraseña válida en `/update-password` redirige a `/` con sesión activa.
-- [ ] Tras el reset, cerrar sesión e iniciar sesión con la contraseña nueva funciona.
-- [ ] Tras el reset, iniciar sesión con la contraseña anterior falla con el error de credenciales inválidas.
-- [ ] El flujo de confirmación de registro de spec 17 (`type === "email"`) sigue redirigiendo a `/` sin cambios de comportamiento.
-- [ ] Alternar ES/EN en `/login`, `/forgot-password` y `/update-password` muestra todos los textos traducidos, sin claves faltantes.
-- [ ] Ninguno de los 7 reproductores de juego, `game-player.tsx`, `hall-of-fame-board.tsx` ni `nav.tsx` cambia de código en este spec.
+- [x] `npm run dev` y `npm run build` no muestran errores tras cada paso del plan.
+- [x] El enlace "¿Olvidaste tu contraseña?" aparece en la pestaña "INICIAR SESIÓN" de `/login` y navega a `/forgot-password`.
+- [ ] Pedir el reset en `/forgot-password` con un correo registrado muestra "revisa tu correo" y llega el email de Supabase. _(pendiente: requiere prueba manual con correo real)_
+- [ ] Pedir el reset con un correo no registrado muestra exactamente el mismo estado "revisa tu correo" (sin revelar que la cuenta no existe). _(pendiente: requiere prueba manual)_
+- [ ] Abrir el enlace del correo de recuperación redirige a `/update-password` (no a `/`). _(pendiente: requiere prueba manual con correo real)_
+- [ ] En `/update-password`, si las contraseñas no coinciden se muestra un error y no se llama a `updateUser`. _(pendiente: requiere prueba manual en navegador)_
+- [ ] Fijar una nueva contraseña válida en `/update-password` redirige a `/` con sesión activa. _(pendiente: requiere prueba manual)_
+- [ ] Tras el reset, cerrar sesión e iniciar sesión con la contraseña nueva funciona. _(pendiente: requiere prueba manual)_
+- [ ] Tras el reset, iniciar sesión con la contraseña anterior falla con el error de credenciales inválidas. _(pendiente: requiere prueba manual)_
+- [ ] El flujo de confirmación de registro de spec 17 (`type === "email"`) sigue redirigiendo a `/` sin cambios de comportamiento. _(pendiente: requiere prueba manual con correo real)_
+- [x] Alternar ES/EN en `/login`, `/forgot-password` y `/update-password` muestra todos los textos traducidos, sin claves faltantes.
+- [x] Ninguno de los 7 reproductores de juego, `game-player.tsx`, `hall-of-fame-board.tsx` ni `nav.tsx` cambia de código en este spec.
 
 ## Decisions
 
