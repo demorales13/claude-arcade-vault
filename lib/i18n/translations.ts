@@ -151,6 +151,8 @@ const es = {
     submitUpdatePassword: "GUARDAR CONTRASEÑA",
     submitUpdatePasswordPending: "GUARDANDO…",
     errorPasswordMismatch: "Las contraseñas no coinciden.",
+    errorPasswordWeak:
+      "La contraseña debe tener 8+ caracteres, mayúscula, minúscula, número y símbolo.",
     chooseUsernameTitle: "ELIGE TU NOMBRE",
     submitChooseUsername: "GUARDAR Y ENTRAR",
     submitChooseUsernamePending: "GUARDANDO…",
@@ -189,6 +191,13 @@ const es = {
     successTransmitting: "[OK] Transmitiendo paquete…",
     successMessagePrefix: "MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS,",
     successButton: "ENVIAR OTRO MENSAJE",
+  },
+  gameOver: {
+    guestCannotSave:
+      "Jugando como invitado. Inicia sesión para guardar tu puntuación en el ranking.",
+    signInToSave: "INICIAR SESIÓN",
+    saveError: "No se pudo guardar la puntuación. Intenta de nuevo.",
+    saving: "GUARDANDO…",
   },
   hallOfFame: {
     title: "SALÓN DE LA FAMA",
@@ -355,6 +364,8 @@ const en: typeof es = {
     submitUpdatePassword: "SAVE PASSWORD",
     submitUpdatePasswordPending: "SAVING…",
     errorPasswordMismatch: "Passwords don't match.",
+    errorPasswordWeak:
+      "Password must be 8+ characters with uppercase, lowercase, number and symbol.",
     chooseUsernameTitle: "CHOOSE YOUR NAME",
     submitChooseUsername: "SAVE AND ENTER",
     submitChooseUsernamePending: "SAVING…",
@@ -393,6 +404,13 @@ const en: typeof es = {
     successTransmitting: "[OK] Transmitting packet…",
     successMessagePrefix: "MESSAGE RECEIVED. WE'LL REPLY SOON. THANKS,",
     successButton: "SEND ANOTHER MESSAGE",
+  },
+  gameOver: {
+    guestCannotSave:
+      "You're playing as a guest. Sign in to save your score to the leaderboard.",
+    signInToSave: "SIGN IN",
+    saveError: "Couldn't save the score. Please try again.",
+    saving: "SAVING…",
   },
   hallOfFame: {
     title: "HALL OF FAME",

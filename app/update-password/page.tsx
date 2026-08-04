@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
+import { isValidPassword } from "@/lib/password";
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
@@ -16,6 +17,11 @@ export default function UpdatePasswordPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!isValidPassword(password)) {
+      setError(dict.auth.errorPasswordWeak);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError(dict.auth.errorPasswordMismatch);

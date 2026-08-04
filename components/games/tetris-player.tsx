@@ -321,16 +321,10 @@ export function TetrisPlayer({ game }: { game: GameWithStats }) {
       {over && (
         <GameOverModal
           score={score}
-          name={name}
-          onNameChange={setName}
           saved={saved}
-          onSave={async () => {
-            try {
-              await insertScore({ game: game.id, score, name });
-              setSaved(true);
-            } catch (err) {
-              console.error("No se pudo guardar la puntuación", err);
-            }
+          onSave={async (playerName) => {
+            await insertScore({ game: game.id, score, name: playerName });
+            setSaved(true);
           }}
           onRestart={restart}
           backHref="/games"

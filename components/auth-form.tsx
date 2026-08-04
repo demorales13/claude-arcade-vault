@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
 import type { Dictionary } from "@/lib/i18n/translations";
+import { isValidPassword } from "@/lib/password";
 
 function saveUser(name: string) {
   try {
@@ -44,6 +45,12 @@ export function AuthForm() {
     const supabase = createClient();
 
     if (tab === "up") {
+      if (!isValidPassword(pass)) {
+        setError(dict.auth.errorPasswordWeak);
+        setLoading(false);
+        return;
+      }
+
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password: pass,
