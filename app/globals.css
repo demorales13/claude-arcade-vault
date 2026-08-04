@@ -413,6 +413,13 @@ a {
   .av-nav .coin-counter {
     display: none;
   }
+  .av-nav .lang-toggle {
+    display: none;
+  }
+  .av-nav .user-menu,
+  .av-nav > .auth-btn {
+    display: none;
+  }
   .av-nav .hamburger {
     display: inline-flex;
   }
