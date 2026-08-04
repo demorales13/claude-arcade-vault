@@ -14,7 +14,7 @@ function saveUser(name: string) {
 }
 
 function normalizeName(name: string) {
-  return (name || "PLAYER1").toUpperCase().slice(0, 10);
+  return (name || "PLAYER1").toUpperCase().slice(0, 12);
 }
 
 function mapAuthError(code: string | undefined, dict: Dictionary): string {
@@ -82,6 +82,14 @@ export function AuthForm() {
   const playAsGuest = () => {
     saveUser("INVITADO");
     router.push("/");
+  };
+
+  const signInWithOAuth = async (provider: "google" | "github") => {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
   };
 
   const switchTab = (next: "in" | "up") => {
@@ -215,6 +223,41 @@ export function AuthForm() {
                   : dict.auth.submitSignUp}
             </button>
           </form>
+        )}
+
+        {!(tab === "up" && checkEmailSent) && (
+          <>
+            <div
+              className="mono"
+              style={{
+                textAlign: "center",
+                fontSize: 11,
+                color: "var(--ink-faint)",
+                letterSpacing: "0.1em",
+                margin: "18px 0 10px",
+              }}
+            >
+              {dict.auth.socialDivider}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                className="btn ghost"
+                style={{ flex: 1 }}
+                onClick={() => signInWithOAuth("google")}
+              >
+                {dict.auth.googleButton}
+              </button>
+              <button
+                type="button"
+                className="btn ghost"
+                style={{ flex: 1 }}
+                onClick={() => signInWithOAuth("github")}
+              >
+                {dict.auth.githubButton}
+              </button>
+            </div>
+          </>
         )}
 
         <button

@@ -151,6 +151,10 @@ const es = {
     submitUpdatePassword: "GUARDAR CONTRASEÑA",
     submitUpdatePasswordPending: "GUARDANDO…",
     errorPasswordMismatch: "Las contraseñas no coinciden.",
+    chooseUsernameTitle: "ELIGE TU NOMBRE",
+    submitChooseUsername: "GUARDAR Y ENTRAR",
+    submitChooseUsernamePending: "GUARDANDO…",
+    errorUsernameEmpty: "Ingresa un nombre de usuario.",
   },
   about: {
     kicker: "▸ ACERCA DE",
@@ -348,6 +352,10 @@ const en: typeof es = {
     submitUpdatePassword: "SAVE PASSWORD",
     submitUpdatePasswordPending: "SAVING…",
     errorPasswordMismatch: "Passwords don't match.",
+    chooseUsernameTitle: "CHOOSE YOUR NAME",
+    submitChooseUsername: "SAVE AND ENTER",
+    submitChooseUsernamePending: "SAVING…",
+    errorUsernameEmpty: "Enter a username.",
   },
   about: {
     kicker: "▸ ABOUT",

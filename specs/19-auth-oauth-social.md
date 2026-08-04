@@ -1,6 +1,6 @@
 # SPEC 19 — Login con Google y GitHub (OAuth)
 
-> **Status:** Draft
+> **Status:** Approved
 > **Depends on:** 17-autenticacion-email-password
 > **Date:** 2026-08-03
 > **Objective:** Activar los botones GOOGLE/GITHUB ya presentes (pero ocultos desde spec 17) en `components/auth-form.tsx`, con un nuevo callback OAuth y una pantalla de onboarding obligatoria (`/choose-username`) para capturar el nombre de jugador en el primer login social.
@@ -11,7 +11,7 @@
 
 - Botones GOOGLE/GITHUB y su divisor "O CONTINÚA CON" en `components/auth-form.tsx`, visibles en ambas pestañas (INICIAR SESIÓN y CREAR CUENTA), ya no ocultos como en spec 17. `onClick` llama a `supabase.auth.signInWithOAuth({ provider: "google" | "github", options: { redirectTo: `${origin}/auth/callback` } })`.
 - Route Handler `app/auth/callback/route.ts`: recibe el `code` que Supabase agrega al volver del proveedor, llama a `supabase.auth.exchangeCodeForSession(code)` con el cliente de servidor. Si el usuario resultante no tiene `user_metadata.display_name`, redirige a `/choose-username`; si ya lo tiene (login OAuth de un usuario que ya pasó por onboarding antes), redirige a `/`.
-- Página `app/choose-username/page.tsx`: formulario con un solo campo (Nombre de usuario), obligatorio, normalizado igual que en spec 17 (mayúsculas, máx. 10 caracteres). Al enviar, llama a `supabase.auth.updateUser({ data: { display_name } })` y redirige a `/`. Sin botón de omitir. Si se visita sin sesión activa, redirige a `/login`.
+- Página `app/choose-username/page.tsx`: formulario con un solo campo (Nombre de usuario), obligatorio, normalizado igual que en spec 17 (mayúsculas, máx. 12 caracteres). Al enviar, llama a `supabase.auth.updateUser({ data: { display_name } })` y redirige a `/`. Sin botón de omitir. Si se visita sin sesión activa, redirige a `/login`.
 - Extensión de `components/nav.tsx` (construido en spec 17): su listener `onAuthStateChange` ahora también reacciona a `USER_UPDATED` (disparado cuando `/choose-username` guarda el nombre) para sincronizar `av_user` en ese momento; además, en `SIGNED_IN`, si `user_metadata.display_name` todavía no existe (primer login OAuth antes de pasar por onboarding), **no** escribe nada en `av_user` — evita guardar un nombre vacío/indefinido mientras el usuario está en camino a `/choose-username`.
 - Nuevas claves en `dict.auth` (ES y EN) para `/choose-username` (título, campo, botón, error de nombre vacío).
 - Paso manual (usuario), documentado explícitamente como prerrequisito: crear un OAuth Client de Google (Google Cloud Console) y una OAuth App de GitHub, ambos con el callback URL que da Supabase (`https://<project>.supabase.co/auth/v1/callback`), y cargar sus Client ID/Secret en el dashboard de Supabase (Authentication → Providers). Sin este paso, los botones existen pero Supabase rechaza el intento de OAuth.
@@ -31,7 +31,7 @@ Este spec no crea tablas nuevas. Reutiliza `auth.users`/`user_metadata` ya defin
 ```ts
 // user_metadata tras completar /choose-username
 type OAuthMetadata = {
-  display_name: string; // igual normalización que en spec 17: mayúsculas, máx. 10 caracteres
+  display_name: string; // igual normalización que en spec 17: mayúsculas, máx. 12 caracteres
 };
 
 // app/auth/callback/route.ts
@@ -55,7 +55,7 @@ Convenciones:
 1. **Callback route de OAuth.** Crear `app/auth/callback/route.ts`: lee `code` de la query, llama a `supabase.auth.exchangeCodeForSession(code)` con el cliente de servidor; si el usuario resultante no tiene `user_metadata.display_name`, redirige a `/choose-username`; si ya lo tiene, redirige a `/`.
    _Test:_ `npm run build` compila; la ruta no está enlazada desde ningún lado todavía.
 
-2. **Página `/choose-username`.** Crear `app/choose-username/page.tsx`: si no hay sesión activa, redirige a `/login`; si la hay, muestra el formulario de un solo campo, normaliza (mayúsculas, máx. 10) y llama a `supabase.auth.updateUser({ data: { display_name } })`, luego `router.push("/")`.
+2. **Página `/choose-username`.** Crear `app/choose-username/page.tsx`: si no hay sesión activa, redirige a `/login`; si la hay, muestra el formulario de un solo campo, normaliza (mayúsculas, máx. 12) y llama a `supabase.auth.updateUser({ data: { display_name } })`, luego `router.push("/")`.
    _Test:_ `npm run build` compila; visitar `/choose-username` sin sesión redirige a `/login`.
 
 3. **Extender `nav.tsx`.** Agregar el manejo de `USER_UPDATED` en el listener `onAuthStateChange` (sincroniza `av_user` cuando se guarda el nombre); en `SIGNED_IN`, si `user_metadata.display_name` no existe, no escribir `av_user` todavía.
@@ -75,19 +75,19 @@ Convenciones:
 
 ## Acceptance criteria
 
-- [ ] `npm run dev` y `npm run build` no muestran errores tras cada paso del plan.
-- [ ] Los botones GOOGLE y GITHUB, con su divisor "O CONTINÚA CON", son visibles en ambas pestañas de `/login`.
-- [ ] Hacer clic en GOOGLE o GITHUB redirige al proveedor correspondiente para autenticarse.
-- [ ] El primer login con una cuenta OAuth nueva redirige a `/choose-username` en vez de `/`.
-- [ ] En `/choose-username`, intentar continuar con el campo vacío muestra un error y no llama a `updateUser`.
-- [ ] Guardar un nombre válido en `/choose-username` redirige a `/` con `nav.tsx` mostrando ese nombre.
-- [ ] Cerrar sesión y volver a iniciar sesión con la misma cuenta OAuth ya onboardeada redirige directo a `/`, sin pasar por `/choose-username`.
-- [ ] Visitar `/choose-username` sin sesión activa redirige a `/login`.
-- [ ] Tras completar el onboarding OAuth, entrar a cualquiera de los 7 juegos precarga el mismo nombre en el modal de puntuación, sin haber tocado ningún archivo de `components/games/`.
-- [ ] El flujo de email/contraseña de spec 17 (registro, login, confirmación) sigue funcionando sin cambios de comportamiento.
-- [ ] El flujo de recuperación de contraseña de spec 18 sigue funcionando sin cambios de comportamiento.
-- [ ] Alternar ES/EN en `/login` y `/choose-username` muestra todos los textos traducidos, sin claves faltantes.
-- [ ] Ninguno de los 7 reproductores de juego, `game-player.tsx` ni `hall-of-fame-board.tsx` cambia de código en este spec.
+- [x] `npm run dev` y `npm run build` no muestran errores tras cada paso del plan.
+- [x] Los botones GOOGLE y GITHUB, con su divisor "O CONTINÚA CON", son visibles en ambas pestañas de `/login`.
+- [ ] Hacer clic en GOOGLE o GITHUB redirige al proveedor correspondiente para autenticarse. _(pendiente: requiere proveedores configurados en el dashboard de Supabase — paso 5, manual)_
+- [ ] El primer login con una cuenta OAuth nueva redirige a `/choose-username` en vez de `/`. _(pendiente: requiere prueba manual con proveedor real)_
+- [ ] En `/choose-username`, intentar continuar con el campo vacío muestra un error y no llama a `updateUser`. _(pendiente: requiere prueba manual en navegador)_
+- [ ] Guardar un nombre válido en `/choose-username` redirige a `/` con `nav.tsx` mostrando ese nombre. _(pendiente: requiere prueba manual)_
+- [ ] Cerrar sesión y volver a iniciar sesión con la misma cuenta OAuth ya onboardeada redirige directo a `/`, sin pasar por `/choose-username`. _(pendiente: requiere prueba manual)_
+- [ ] Visitar `/choose-username` sin sesión activa redirige a `/login`. _(pendiente: requiere prueba manual en navegador)_
+- [ ] Tras completar el onboarding OAuth, entrar a cualquiera de los 7 juegos precarga el mismo nombre en el modal de puntuación, sin haber tocado ningún archivo de `components/games/`. _(pendiente: requiere prueba manual; el código no tocó `components/games/`)_
+- [ ] El flujo de email/contraseña de spec 17 (registro, login, confirmación) sigue funcionando sin cambios de comportamiento. _(pendiente: requiere prueba manual)_
+- [ ] El flujo de recuperación de contraseña de spec 18 sigue funcionando sin cambios de comportamiento. _(pendiente: requiere prueba manual)_
+- [x] Alternar ES/EN en `/login` y `/choose-username` muestra todos los textos traducidos, sin claves faltantes.
+- [x] Ninguno de los 7 reproductores de juego, `game-player.tsx` ni `hall-of-fame-board.tsx` cambia de código en este spec.
 
 ## Decisions
 

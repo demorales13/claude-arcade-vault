@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { createClient } from "@/lib/supabase/client";
 
-type AvUser = { name: string } | null;
+type AvUser = { name: string; email?: string; avatar?: string } | null;
 
 function readUser(): AvUser {
   try {
@@ -14,6 +14,27 @@ function readUser(): AvUser {
   } catch {
     return null;
   }
+}
+
+function UserAvatar({ user }: { user: NonNullable<AvUser> }) {
+  const [broken, setBroken] = useState(false);
+  if (user.avatar && !broken) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        className="user-avatar"
+        src={user.avatar}
+        alt=""
+        referrerPolicy="no-referrer"
+        onError={() => setBroken(true)}
+      />
+    );
+  }
+  return (
+    <span className="user-avatar user-avatar-fallback" aria-hidden="true">
+      {user.name.slice(0, 1)}
+    </span>
+  );
 }
 
 function LanguageToggle() {
@@ -41,8 +62,10 @@ function LanguageToggle() {
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [user, setUser] = useState<AvUser>(null);
   const { dict } = useLanguage();
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setUser(readUser());
@@ -50,7 +73,19 @@ export function Nav() {
 
   useEffect(() => {
     setOpen(false);
+    setUserMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (!userMenuRef.current?.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [userMenuOpen]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -66,12 +101,19 @@ export function Nav() {
       }
 
       if (
-        (event === "SIGNED_IN" || event === "INITIAL_SESSION") &&
+        (event === "SIGNED_IN" ||
+          event === "INITIAL_SESSION" ||
+          event === "USER_UPDATED") &&
         session?.user
       ) {
         const displayName = session.user.user_metadata?.display_name;
         if (typeof displayName === "string" && displayName) {
-          const next = { name: displayName };
+          const next: NonNullable<AvUser> = { name: displayName };
+          if (session.user.email) next.email = session.user.email;
+          const avatar =
+            session.user.user_metadata?.avatar_url ||
+            session.user.user_metadata?.picture;
+          if (typeof avatar === "string" && avatar) next.avatar = avatar;
           try {
             localStorage.setItem("av_user", JSON.stringify(next));
           } catch {}
@@ -90,6 +132,7 @@ export function Nav() {
   const isAuth = pathname === "/login";
 
   const handleSignOut = async () => {
+    setUserMenuOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
     try {
@@ -128,9 +171,35 @@ export function Nav() {
         </div>
         <LanguageToggle />
         {user ? (
-          <button className="btn ghost auth-btn" onClick={handleSignOut}>
-            {user.name} ▾
-          </button>
+          <div className="user-menu" ref={userMenuRef}>
+            <button
+              className="btn ghost auth-btn"
+              onClick={() => setUserMenuOpen((v) => !v)}
+              aria-haspopup="true"
+              aria-expanded={userMenuOpen}
+            >
+              <UserAvatar user={user} />
+              {user.name} ▾
+            </button>
+            <div className={"user-menu-panel" + (userMenuOpen ? " open" : "")}>
+              <div className="user-menu-identity">
+                <UserAvatar user={user} />
+                <div>
+                  <div className="user-menu-name neon-cyan">{user.name}</div>
+                  {user.email && (
+                    <div className="user-menu-email mono">{user.email}</div>
+                  )}
+                </div>
+              </div>
+              <button
+                className="btn ghost"
+                style={{ width: "100%", marginTop: 12 }}
+                onClick={handleSignOut}
+              >
+                {dict.nav.signOut}
+              </button>
+            </div>
+          </div>
         ) : (
           <Link href="/login" className="btn auth-btn">
             {dict.nav.signIn}
@@ -186,7 +255,18 @@ export function Nav() {
           {dict.nav.about}
         </Link>
         {user ? (
-          <a onClick={handleSignOut}>{dict.nav.signOut}</a>
+          <>
+            <div className="mobile-user-info user-menu-identity">
+              <UserAvatar user={user} />
+              <div>
+                <div className="user-menu-name neon-cyan">{user.name}</div>
+                {user.email && (
+                  <div className="user-menu-email mono">{user.email}</div>
+                )}
+              </div>
+            </div>
+            <a onClick={handleSignOut}>{dict.nav.signOut}</a>
+          </>
         ) : (
           <Link
             href="/login"

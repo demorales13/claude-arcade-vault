@@ -21,7 +21,7 @@ Se partió en tres porque, tratado como una sola feature, tocaba más de cinco f
 
 **In:**
 
-- Registro real con Supabase Auth (`supabase.auth.signUp`): campos Nombre de usuario (display name, mayúsculas, máx. 10 caracteres — misma convención que hoy), Correo electrónico, Contraseña. El display name se guarda en `user_metadata.display_name`.
+- Registro real con Supabase Auth (`supabase.auth.signUp`): campos Nombre de usuario (display name, mayúsculas, máx. 12 caracteres — misma convención que hoy), Correo electrónico, Contraseña. El display name se guarda en `user_metadata.display_name`.
 - Confirmación de correo obligatoria antes de poder iniciar sesión (config. "Confirm email" de Supabase Auth, verificada como paso manual en el dashboard). Tras registrarse, la tarjeta de `auth-form.tsx` muestra un estado "revisa tu correo" en vez de navegar.
 - Route Handler `app/auth/confirm/route.ts`: recibe el enlace del correo de confirmación (`token_hash` + `type`), llama a `supabase.auth.verifyOtp`, y redirige a `/` con la sesión ya activa.
 - Inicio de sesión real (`supabase.auth.signInWithPassword`) con Correo electrónico + Contraseña (ya no "Usuario" — el login pasa a ser por email).
@@ -50,10 +50,11 @@ Este spec no crea tablas nuevas — Supabase Auth gestiona `auth.users` internam
 ```ts
 // user_metadata guardado en supabase.auth.signUp({ email, password, options: { data } })
 type SignUpMetadata = {
-  display_name: string; // normalizado: mayúsculas, máx. 10 caracteres, mismo criterio que hoy usa saveUser()
+  display_name: string; // normalizado: mayúsculas, máx. 12 caracteres, mismo criterio que hoy usa saveUser()
 };
 
 // av_user en localStorage — forma sin cambios respecto a hoy
+// (nav.tsx agregó luego un campo opcional `email`, usado por el menú de usuario)
 type AvUser = { name: string } | null;
 
 // lib/supabase/middleware.ts
@@ -67,7 +68,7 @@ export function updateSession(request: NextRequest): Promise<NextResponse>;
 Convenciones:
 
 - `av_user` sigue siendo la única fuente que leen los 7 reproductores, `game-player.tsx` y `hall-of-fame-board.tsx`; con sesión real, su valor lo escribe el listener de `onAuthStateChange` en `nav.tsx`, no el formulario de login directamente.
-- El normalizado de `display_name` (mayúsculas, máx. 10 caracteres) se aplica una sola vez, en el submit de "CREAR CUENTA" antes de mandarlo a Supabase — igual que hoy hace `saveUser()` en `auth-form.tsx`.
+- El normalizado de `display_name` (mayúsculas, máx. 12 caracteres) se aplica una sola vez, en el submit de "CREAR CUENTA" antes de mandarlo a Supabase — igual que hoy hace `saveUser()` en `auth-form.tsx`.
 - `scores.player_name` no cambia de tipo ni de origen: sigue siendo el valor de `av_user.name` en el momento de guardar, sea cuenta real o invitado.
 
 ## Implementation plan
@@ -78,7 +79,7 @@ Convenciones:
 2. **Route handler de confirmación.** Crear `app/auth/confirm/route.ts`: lee `token_hash` y `type` de la query, llama a `supabase.auth.verifyOtp(...)` con el cliente de servidor, y redirige a `/`.
    _Test:_ `npm run build` compila; la ruta no está enlazada desde ningún lado todavía, así que no hay cambio visible.
 
-3. **Reescribir `auth-form.tsx` — registro.** Pestaña "CREAR CUENTA": el submit normaliza el nombre (mayúsculas, máx. 10) y llama a `supabase.auth.signUp({ email, password, options: { data: { display_name } } })`; en éxito, la tarjeta cambia a un estado "revisa tu correo" (sin `router.push`); en error, banner traducido bajo el botón. Ocultar el divisor y los botones GOOGLE/GITHUB.
+3. **Reescribir `auth-form.tsx` — registro.** Pestaña "CREAR CUENTA": el submit normaliza el nombre (mayúsculas, máx. 12) y llama a `supabase.auth.signUp({ email, password, options: { data: { display_name } } })`; en éxito, la tarjeta cambia a un estado "revisa tu correo" (sin `router.push`); en error, banner traducido bajo el botón. Ocultar el divisor y los botones GOOGLE/GITHUB.
    _Test manual:_ registrar un correo real en `/login` → aparece el estado "revisa tu correo" → llega el email de Supabase.
 
 4. **Confirmar y validar sesión.** Abrir el enlace del correo → cae en `/auth/confirm` → redirige a `/`.
