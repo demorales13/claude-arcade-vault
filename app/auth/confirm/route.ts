@@ -9,10 +9,21 @@ export async function GET(request: NextRequest) {
 
   if (token_hash && type) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type });
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash,
+      type,
+    });
 
     if (!error) {
-      const destination = type === "recovery" ? "/update-password" : "/";
+      if (type === "recovery") {
+        return NextResponse.redirect(new URL("/update-password", origin));
+      }
+
+      const displayName = data.user?.user_metadata?.display_name;
+      const destination =
+        typeof displayName === "string" && displayName
+          ? "/"
+          : "/choose-username";
       return NextResponse.redirect(new URL(destination, origin));
     }
   }

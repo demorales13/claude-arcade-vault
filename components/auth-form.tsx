@@ -13,10 +13,6 @@ function saveUser(name: string) {
   } catch {}
 }
 
-function normalizeName(name: string) {
-  return (name || "PLAYER1").toUpperCase().slice(0, 12);
-}
-
 function mapAuthError(code: string | undefined, dict: Dictionary): string {
   switch (code) {
     case "invalid_credentials":
@@ -35,7 +31,6 @@ export function AuthForm() {
   const router = useRouter();
   const { dict } = useLanguage();
   const [tab, setTab] = useState<"in" | "up">("in");
-  const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,7 +47,6 @@ export function AuthForm() {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password: pass,
-        options: { data: { display_name: normalizeName(user) } },
       });
       setLoading(false);
 
@@ -151,16 +145,6 @@ export function AuthForm() {
           </div>
         ) : (
           <form onSubmit={submit}>
-            {tab === "up" && (
-              <div className="field slide-in">
-                <label>{dict.auth.fieldUser}</label>
-                <input
-                  value={user}
-                  onChange={(e) => setUser(e.target.value)}
-                  placeholder={dict.auth.userPlaceholder}
-                />
-              </div>
-            )}
             <div className="field">
               <label>{dict.auth.fieldEmail}</label>
               <input
